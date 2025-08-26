@@ -11,5 +11,4 @@ Route::get('products', function (Request $r) {
     return $builder->paginate(12);
 });
 
-Route::get('products/{slug}', fn($slug) => Product::where('slug', $slug)->with('images', 'category')->firstOrFail()
-);
+Route::get('products/{slug}', fn($slug) => Product::where('slug', $slug)->with('images', 'category')->firstOrFail());

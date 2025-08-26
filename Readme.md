@@ -11,6 +11,7 @@ php artisan about --only=environment
 php artisan config:show database
 composer require filament/filament -W
 php artisan filament:install --panels  
+docker compose exec app php artisan make:filament-user
 
 docker compose build --no-cache app
 docker compose up -d --build
@@ -88,7 +89,21 @@ docker compose exec app php artisan make:filament-resource Product --generate
 docker compose exec app php artisan make:filament-resource Category --generate
 docker compose exec app php artisan make:filament-resource Order --generate
 
+docker compose exec app php artisan make:filament-resource Product --generate --panel=mine
+docker compose exec app php artisan make:filament-resource Category --generate --panel=mine
+docker compose exec app php artisan make:filament-resource Order --generate --panel=mine
+
 docker compose exec app composer dump-autoload
 docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan filament:clear
 docker compose exec app sh -lc "wget -qO- http://meilisearch:7700/health"
+docker compose exec app php artisan route:list | grep -i mine || true
+
+php artisan route:list | grep filament -i || true
+docker compose exec app sh -lc "mkdir -p storage/logs bootstrap/cache && chmod -R 777 storage bootstrap/cache"
+
+docker compose exec app sh -lc "tail -n 100 storage/logs/laravel.log"
+
+Далі — генеруємо Filament-ресурси (Product/Category/Order) і переходимо до Cart/Order API та простого checkout. 
+Якщо хочеш, додам роль is_admin і політику доступу відразу, щоб продакшн-логіка була чистою з перших кроків.
 

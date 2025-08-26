@@ -157,7 +157,8 @@ return [
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
+            'database' => env('REDIS_DB', 0),          // для cache — REDIS_CACHE_DB або 1
+            'persistent' => false,                     // ← ключове
         ],
 
         'cache' => [
@@ -167,6 +168,7 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
+            'persistent' => false,                     // ← ключове
         ],
 
     ],
