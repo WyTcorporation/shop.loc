@@ -16,6 +16,12 @@ class ProductImage extends Model
         'sort' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function ($img) {
+            if ($img->path) \Storage::disk($img->disk)->delete($img->path);
+        });
+    }
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

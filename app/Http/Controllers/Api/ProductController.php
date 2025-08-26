@@ -4,35 +4,47 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // GET /api/products?search=&page=&per_page=
-    public function index(Request $r)
+
+    public function index(Request $r): JsonResponse
     {
-        $perPage = min(max((int) $r->integer('per_page', 12), 1), 100);
-        $search  = trim((string) $r->query('search', ''));
+        $perPage    = clamp((int) $r->integer('per_page', 12), 1, 100);
+        $search     = trim((string) $r->query('search', ''));
+        $categoryId = $r->integer('category');
+        $sort       = (string) $r->query('sort', 'new'); // new|price_asc|price_desc
 
         $qb = Product::query()->where('is_active', true);
 
-        if ($search !== '') {
-            // простий пошук через like; Scout/Meili додамо пізніше
+        if ($search !== '' && config('scout.driver') === 'meilisearch') {
+            $ids = Product::search($search)->take(1000)->keys();
+            $qb->whereIn('id', $ids->all());
+        } elseif ($search !== '') {
             $qb->where('name', 'like', "%{$search}%");
         }
 
-        $products = $qb->orderByDesc('id')->paginate($perPage);
+        if ($categoryId) {
+            $qb->where('category_id', $categoryId);
+        }
 
-        return response()->json($products);
+        match ($sort) {
+            'price_asc'  => $qb->orderBy('price'),
+            'price_desc' => $qb->orderByDesc('price'),
+            default      => $qb->orderByDesc('id'), // newest
+        };
+
+        return response()->json($qb->paginate($perPage));
     }
 
-    // GET /api/products/{slug}
-    public function show(string $slug)
+    public function show(string $slug): JsonResponse
     {
         $product = Product::query()
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->with('images', 'category')
+            ->with(['images' => fn($q) => $q->orderBy('sort'),'category'])
             ->firstOrFail();
 
         return response()->json($product);

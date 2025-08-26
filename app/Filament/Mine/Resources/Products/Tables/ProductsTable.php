@@ -8,6 +8,8 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\ImageColumn;
+use Illuminate\Support\Facades\Storage;
 
 class ProductsTable
 {
@@ -48,6 +50,11 @@ class ProductsTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                ImageColumn::make('thumb')
+                    ->label('Image')
+                    ->getStateUsing(fn($record) => optional($record->images()->orderBy('sort')->first())->path)
+                    ->url(fn($state) => $state ? Storage::disk('s3')->temporaryUrl($state, now()->addMinutes(5)) : null)
+                    ->circular()
             ])
             ->filters([
                 //

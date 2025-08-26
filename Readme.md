@@ -96,6 +96,8 @@ docker compose exec app php artisan make:filament-resource Order --generate --pa
 docker compose exec app composer dump-autoload
 docker compose exec app php artisan optimize:clear
 docker compose exec app php artisan filament:clear
+docker compose exec app php artisan migrate --pretend
+
 docker compose exec app sh -lc "wget -qO- http://meilisearch:7700/health"
 docker compose exec app php artisan route:list | grep -i mine || true
 
@@ -106,5 +108,6 @@ docker compose exec app sh -lc "tail -n 100 storage/logs/laravel.log"
 
 php artisan make:mail OrderPlacedMail --markdown=emails.orders.placed
 php artisan make:job SendOrderConfirmation
+php artisan make:listener MergeGuestCart
 
-
+docker compose exec app php artisan make:filament-relation-manager Products Images --panel=mine

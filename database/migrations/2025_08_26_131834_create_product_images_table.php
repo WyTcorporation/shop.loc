@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->string('disk')->default('s3');
             $table->string('path'); // S3 object key
+            $table->string('alt')->nullable();
             $table->unsignedSmallInteger('sort')->default(0);
             $table->timestamps();
         });

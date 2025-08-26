@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Forms;
 
 class ProductResource extends Resource
 {
@@ -36,13 +37,6 @@ class ProductResource extends Resource
         return ProductsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
@@ -55,5 +49,12 @@ class ProductResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         return (string) Product::count();
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\ImagesRelationManager::class,
+        ];
     }
 }
