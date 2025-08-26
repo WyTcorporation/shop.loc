@@ -14,9 +14,16 @@ class Cart extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
+    protected $fillable = ['user_id', 'status'];
+
     protected static function booted(): void
     {
-        static::creating(fn($m) => $m->id = (string)Str::uuid());
+        static::creating(function (self $m) {
+            if (!$m->getKey()) {
+                $m->setAttribute($m->getKeyName(), (string)Str::uuid());
+            }
+            $m->status ??= 'active';
+        });
     }
 
     public function items(): HasMany

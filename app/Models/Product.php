@@ -4,11 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
     use HasFactory, Searchable;
+
+    protected $fillable = [
+        'name','slug','sku','category_id','attributes','stock','price','price_old','is_active'
+    ];
 
     protected $casts = [
         'attributes' => 'array',
@@ -17,12 +23,13 @@ class Product extends Model
         'price_old' => 'decimal:2',
     ];
 
-    public function category()
+
+    public function category():BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function images()
+    public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
     }

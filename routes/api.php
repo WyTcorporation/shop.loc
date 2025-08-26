@@ -1,14 +1,22 @@
 <?php
 
-use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\ProductController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CartItemController;
+use App\Http\Controllers\Api\OrderController;
 
-Route::get('products', function (Request $r) {
-    $q = $r->get('search');
-    $builder = $q ? Product::search($q) : Product::query();
-    if (!$q) $builder = $builder->where('is_active', true)->latest();
-    return $builder->paginate(12);
-});
+// Products
+Route::get('products', [ProductController::class, 'index']);
+Route::get('products/{slug}', [ProductController::class, 'show']);
 
-Route::get('products/{slug}', fn($slug) => Product::where('slug', $slug)->with('images', 'category')->firstOrFail());
+// Cart
+Route::post('cart', [CartController::class, 'store']);
+Route::get('cart/{id}', [CartController::class, 'show']);
+
+// Cart items
+Route::post('cart/{id}/items', [CartItemController::class, 'store']);
+Route::delete('cart/{id}/items/{itemId}', [CartItemController::class, 'destroy']);
+
+// Checkout
+Route::post('orders', [OrderController::class, 'store']);

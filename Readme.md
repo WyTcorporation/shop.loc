@@ -104,6 +104,7 @@ docker compose exec app sh -lc "mkdir -p storage/logs bootstrap/cache && chmod -
 
 docker compose exec app sh -lc "tail -n 100 storage/logs/laravel.log"
 
-Далі — генеруємо Filament-ресурси (Product/Category/Order) і переходимо до Cart/Order API та простого checkout. 
-Якщо хочеш, додам роль is_admin і політику доступу відразу, щоб продакшн-логіка була чистою з перших кроків.
+php artisan make:mail OrderPlacedMail --markdown=emails.orders.placed
+php artisan make:job SendOrderConfirmation
+
 
