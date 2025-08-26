@@ -1,92 +1,85 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    container_name: shop-app
-    volumes:
-      - .:/var/www/html
-    environment:
-      WWWUSER: 1000
-      WWWGROUP: 1000
-    depends_on:
-      - pg
-      - redis
-    networks: [shopnet]
+    app:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        image: shop-php:dev
+        container_name: shop-app
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - pg
+            - redis
+        networks: [shopnet]
 
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: shop-nginx
-    ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on: [app]
-    networks: [shopnet]
+    horizon:
+        image: shop-php:dev
+        container_name: shop-horizon
+        command: sh -lc "php artisan horizon"
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - app
+            - redis
+        networks: [shopnet]
 
-  pg:
-    image: postgres:16-alpine
-    container_name: shop-pg
-    environment:
-      POSTGRES_DB: shop
-      POSTGRES_USER: shop
-      POSTGRES_PASSWORD: shop
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks: [shopnet]
+    nginx:
+        image: nginx:1.27-alpine
+        container_name: shop-nginx
+        ports: ["8080:80"]
+        volumes:
+            - .:/var/www/html
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+        depends_on: [app]
+        networks: [shopnet]
 
-  redis:
-    image: redis:7-alpine
-    container_name: shop-redis
-    networks: [shopnet]
+    pg:
+        image: postgres:16-alpine
+        container_name: shop-pg
+        environment:
+            POSTGRES_DB: shop
+            POSTGRES_USER: shop
+            POSTGRES_PASSWORD: shop
+        ports: ["5432:5432"]
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        networks: [shopnet]
 
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: shop-mailpit
-    ports:
-      - "8025:8025"
-    networks: [shopnet]
+    redis:
+        image: redis:7-alpine
+        container_name: shop-redis
+        networks: [shopnet]
 
-  minio:
-    image: minio/minio:latest
-    container_name: shop-minio
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio12345
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio:/data
-    networks: [shopnet]
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: shop-mailpit
+        ports: ["8025:8025"]
+        networks: [shopnet]
 
-  meilisearch:
-    image: getmeili/meilisearch:v1.8
-    container_name: shop-meili
-    environment:
-      MEILI_NO_ANALYTICS: "true"
-    ports:
-      - "7700:7700"
-    networks: [shopnet]
+    minio:
+        image: minio/minio:latest
+        container_name: shop-minio
+        environment:
+            MINIO_ROOT_USER: minioadmin
+            MINIO_ROOT_PASSWORD: minioadmin
+        command: server /data --console-address ":9001"
+        ports: ["9000:9000", "9001:9001"]
+        volumes:
+            - minio:/data
+        networks: [shopnet]
 
-  horizon:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    container_name: shop-horizon
-    command: sh -lc "php artisan horizon"
-    volumes:
-      - .:/var/www/html
-    depends_on: [app, redis]
-    networks: [shopnet]
+    meilisearch:
+        image: getmeili/meilisearch:v1.8
+        container_name: shop-meili
+        environment:
+            MEILI_NO_ANALYTICS: "true"
+        ports: ["7700:7700"]
+        networks: [shopnet]
 
 networks:
-  shopnet:
+    shopnet:
 
 volumes:
-  pgdata:
-  minio:
+    pgdata:
+    minio:
