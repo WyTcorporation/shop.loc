@@ -14,6 +14,7 @@ php artisan filament:install --panels
 
 docker compose build --no-cache app
 docker compose up -d --build
+docker compose down
 
 docker compose exec app composer create-project laravel/laravel .
 docker compose exec app composer require laravel/scout meilisearch/meilisearch-php filament/filament laravel/horizon predis/predis nunomaduro/larastan pestphp/pest --dev laravel/pint --dev
@@ -74,4 +75,20 @@ php artisan make:seeder: Створює новий сидер для запов�
 php artisan make:test: Створює новий тест.
 
 docker compose exec app php artisan make:model Category -m
+docker compose exec app php artisan make:seeder DemoCatalogSeeder
+docker compose exec app php artisan make:factory CategoryFactory --model=Category
+
+docker compose exec app php artisan config:clear
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan migrate:fresh --seed
+
+docker compose exec app php artisan scout:import "App\Models\Product"
+
+docker compose exec app php artisan make:filament-resource Product --generate
+docker compose exec app php artisan make:filament-resource Category --generate
+docker compose exec app php artisan make:filament-resource Order --generate
+
+docker compose exec app composer dump-autoload
+docker compose exec app php artisan optimize:clear
+docker compose exec app sh -lc "wget -qO- http://meilisearch:7700/health"
 
