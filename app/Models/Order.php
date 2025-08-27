@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use App\Enums\OrderStatus;
+use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
@@ -35,6 +36,37 @@ class Order extends Model
             if (!$m->number) {
                 $m->number = 'ORD-' . now()->format('Ymd') . '-' . Str::ulid();
             }
+        });
+    }
+
+    public function canTransitionTo(OrderStatus $to): bool
+    {
+        return match ($this->status) {
+            OrderStatus::New      => in_array($to, [OrderStatus::Paid, OrderStatus::Cancelled], true),
+            OrderStatus::Paid     => in_array($to, [OrderStatus::Shipped, OrderStatus::Cancelled], true),
+            OrderStatus::Shipped  => false,
+            OrderStatus::Cancelled => false,
+        };
+    }
+
+    public function transitionTo(OrderStatus $to): void
+    {
+        if (! $this->canTransitionTo($to)) {
+            throw new \DomainException("Cannot transition from {$this->status->value} to {$to->value}");
+        }
+
+        DB::transaction(function () use ($to) {
+            if ($to === OrderStatus::Paid && $this->status === OrderStatus::New) {
+                foreach ($this->items as $item) {
+                    $item->product->adjustStock(-$item->qty);
+                }
+            }
+            if ($to === OrderStatus::Cancelled && $this->status === OrderStatus::Paid) {
+                foreach ($this->items as $item) {
+                    $item->product->adjustStock($item->qty);
+                }
+            }
+            $this->update(['status' => $to]);
         });
     }
 

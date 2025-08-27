@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Support\Facades\Storage;
@@ -24,9 +25,7 @@ class ProductsTable
                 TextColumn::make('sku')
                     ->label('SKU')
                     ->searchable(),
-                TextColumn::make('category_id')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('category.name')->label('Category')->sortable()->toggleable()->sortable(),
                 TextColumn::make('attributes')
                     ->label('Attrs')
                     ->formatStateUsing(function ($state) {
@@ -62,15 +61,14 @@ class ProductsTable
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                ImageColumn::make('thumb')
-                    ->label('Image')
-                    ->getStateUsing(fn($record) => optional($record->images()->orderBy('sort')->first())->path)
-                    ->url(fn($state) => $state ? Storage::disk('s3')->temporaryUrl($state, now()->addMinutes(5)) : null)
-                    ->circular()
+                    ->toggleable(isToggledHiddenByDefault: true)
             ])
             ->filters([
-                //
+                SelectFilter::make('category_id')
+                    ->label('Category')
+                    ->relationship('category', 'name')
+                    ->preload()
+                    ->searchable(),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -79,6 +77,7 @@ class ProductsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('id', 'desc');
     }
 }

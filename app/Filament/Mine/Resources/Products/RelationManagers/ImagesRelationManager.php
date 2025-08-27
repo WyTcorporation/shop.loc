@@ -3,6 +3,9 @@
 namespace App\Filament\Mine\Resources\Products\RelationManagers;
 
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
@@ -21,16 +24,19 @@ class ImagesRelationManager extends RelationManager
     public function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Forms\Components\FileUpload::make('path')
-                ->disk('s3')
+            FileUpload::make('path')
+                ->label('Image')
+                ->disk('public') // ← тільки public
                 ->directory(fn () => 'products/' . $this->getOwnerRecord()->id)
                 ->image()
                 ->imageEditor()
                 ->preserveFilenames()
                 ->maxSize(4 * 1024)
                 ->required(),
-            Forms\Components\TextInput::make('alt')->maxLength(255),
-            Forms\Components\TextInput::make('sort')->numeric()->default(0),
+
+            TextInput::make('alt')->maxLength(255),
+            Hidden::make('disk')->default('public'),
+            TextInput::make('sort')->numeric()->default(0),
         ]);
     }
 
@@ -40,13 +46,12 @@ class ImagesRelationManager extends RelationManager
             ->columns([
                 ImageColumn::make('path')
                     ->label('Preview')
-                    ->getStateUsing(
-                        fn ($record) => Storage::disk($record->disk)
-                            ->temporaryUrl($record->path, now()->addMinutes(10))
-                    )
+                    ->disk('public')
                     ->circular(),
+
                 TextColumn::make('alt')->limit(40),
                 TextColumn::make('sort')->sortable(),
+                TextColumn::make('disk')->sortable(),
                 TextColumn::make('created_at')->dateTime('Y-m-d H:i'),
             ])
             ->headerActions([CreateAction::make()])

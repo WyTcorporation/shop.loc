@@ -1,7 +1,7 @@
 <?php
 return [
     'temporary_file_upload' => [
-        'disk' => 'local',
+        'disk' => 'public',
         'directory' => 'livewire-tmp',
         'rules' => null,
     ],

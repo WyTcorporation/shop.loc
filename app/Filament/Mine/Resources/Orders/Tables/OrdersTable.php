@@ -2,10 +2,13 @@
 
 namespace App\Filament\Mine\Resources\Orders\Tables;
 
+use App\Enums\OrderStatus;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
@@ -34,66 +37,39 @@ class OrdersTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $s) => match ($s) {
-                        'new' => 'warning',
-                        'paid' => 'success',
-                        'shipped' => 'info',
-                        'cancelled' => 'danger',
+                    ->color(fn (string $state) => match ($state) {
+                        OrderStatus::New->value     => 'warning',
+                        OrderStatus::Paid->value    => 'success',
+                        OrderStatus::Shipped->value => 'info',
+                        OrderStatus::Cancelled->value=> 'danger',
                         default => 'gray',
-                    }) ->searchable(),
+                    })->searchable(),
                 TextColumn::make('shipping_address.city')->label('City')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->options(collect(OrderStatus::cases())->mapWithKeys(fn ($c) => [$c->value => ucfirst($c->value)])->all()),
             ])
             ->recordActions([
-                EditAction::make(),
-                Action::make('mark_paid')
-                    ->label('Mark paid')
-                    ->visible(fn($record) => !$record->isCancelled() && is_null($record->paid_at))
+                Action::make('markPaid')
+                    ->label('Mark paid')->icon('heroicon-o-banknotes')
+                    ->visible(fn ($record) => $record->status === OrderStatus::New)
                     ->requiresConfirmation()
-                    ->action(function ($record) {
-                        DB::transaction(function () use ($record) {
-                            if ($record->isCancelled() || $record->paid_at) return;
-                            $record->status = 'paid';
-                            $record->paid_at = now();
-                            $record->save();
-                        });
-                    }),
+                    ->action(fn ($record) => $record->transitionTo(OrderStatus::Paid)),
 
-                Action::make('mark_shipped')
-                    ->label('Mark shipped')
-                    ->visible(fn($r)=> !$r->isCancelled() && !$r->isShipped())
+                Action::make('markShipped')
+                    ->label('Mark shipped')->icon('heroicon-o-truck')
+                    ->visible(fn ($record) => $record->status === OrderStatus::Paid)
                     ->requiresConfirmation()
-                    ->action(function ($record) {
-                        DB::transaction(function () use ($record) {
-                            if ($record->isCancelled() || $record->isShipped()) return;
-                            $record->status = 'shipped';
-                            $record->shipped_at = now();
-                            $record->save();
-                        });
-                    }),
+                    ->action(fn ($record) => $record->transitionTo(OrderStatus::Shipped)),
 
                 Action::make('cancel')
-                    ->label('Cancel')
-                    ->color('danger')
-                    ->visible(fn($r)=> !$r->isCancelled() && !$r->isShipped())
+                    ->label('Cancel')->icon('heroicon-o-x-circle')->color('danger')
+                    ->visible(fn ($record) => in_array($record->status, [OrderStatus::New, OrderStatus::Paid], true))
                     ->requiresConfirmation()
-                    ->action(function ($record) {
-                        DB::transaction(function () use ($record) {
-                            if ($record->isCancelled() || $record->isShipped()) return;
-                            if ($record->inventoryCommitted()) {
-                                foreach ($record->items as $it) {
-                                    $it->product()->lockForUpdate()->first()?->increment('stock', (int)$it->qty);
-                                }
-                                $record->inventory_committed_at = null;
-                            }
-
-                            $record->status = 'cancelled';
-                            $record->cancelled_at = now();
-                            $record->save();
-                        });
-                    }),
+                    ->action(fn ($record) => $record->transitionTo(OrderStatus::Cancelled)),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

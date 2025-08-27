@@ -94,6 +94,9 @@ docker compose exec app php artisan make:filament-resource Category --generate -
 docker compose exec app php artisan make:filament-resource Order --generate --panel=mine
 
 docker compose exec app composer dump-autoload
+docker compose exec app php artisan config:clear
+docker compose exec app php artisan cache:clear
+docker compose exec app php artisan view:clear
 docker compose exec app php artisan optimize:clear
 docker compose exec app php artisan filament:clear
 docker compose exec app php artisan migrate --pretend
@@ -123,6 +126,7 @@ mc anonymous set-json local/media <<<'{"Version":"2012-10-17","Statement":[{"Eff
 mc admin config set local api cors allow-origin='http://localhost:8080' allow-headers='*' allow-methods='GET,PUT,POST,DELETE,HEAD,OPTIONS'
 mc admin service restart local
 
+mc anonymous set download local/media
 
 mc --disable-pager alias set local http://minio:9000 minioadmin minioadmin --api s3v4
 mc --disable-pager mb -p local/media || true
@@ -142,5 +146,8 @@ mc --disable-pager admin cors set local/media /tmp/cors.json
 mc --disable-pager admin cors info local/media
 !!!
 mc --disable-pager anonymous set download local/media
+mc anonymous set download local/media
+
+docker compose exec app php artisan tinker
 
 

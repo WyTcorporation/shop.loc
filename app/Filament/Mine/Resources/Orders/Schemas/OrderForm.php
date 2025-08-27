@@ -2,6 +2,8 @@
 
 namespace App\Filament\Mine\Resources\Orders\Schemas;
 
+use App\Enums\OrderStatus;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Fieldset;
@@ -17,9 +19,17 @@ class OrderForm
                     ->numeric(),
                 TextInput::make('number')
                     ->required(),
-                TextInput::make('status')
+                Select::make('status')
+                    ->label('Status')
+                    ->options([
+                        OrderStatus::New->value     => 'New',
+                        OrderStatus::Paid->value    => 'Paid',
+                        OrderStatus::Shipped->value => 'Shipped',
+                        OrderStatus::Cancelled->value=> 'Cancelled',
+                    ])
+                    ->default(OrderStatus::New->value)
                     ->required()
-                    ->default('new'),
+                    ->disabledOn('create'),
                 TextInput::make('total')
                     ->required()
                     ->numeric(),

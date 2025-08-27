@@ -61,6 +61,9 @@ services:
         image: minio/minio:latest
         container_name: shop-minio
         environment:
+            MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost:8080"
+            MINIO_API_CORS_ALLOW_METHODS: "GET,PUT,POST,DELETE,HEAD,OPTIONS"
+            MINIO_API_CORS_ALLOW_HEADERS: "*"
             MINIO_ROOT_USER: minioadmin
             MINIO_ROOT_PASSWORD: minioadmin
         command: server /data --console-address ":9001"

@@ -2,8 +2,11 @@
 
 namespace App\Filament\Mine\Resources\Categories\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rule;
 
 class CategoryForm
 {
@@ -15,8 +18,14 @@ class CategoryForm
                     ->required(),
                 TextInput::make('slug')
                     ->required(),
-                TextInput::make('parent_id')
-                    ->numeric(),
+                Select::make('parent_id')
+                    ->label('Parent category')
+                    ->relationship('parent', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->nullable()
+                    ->rule(fn (?Model $record) => Rule::notIn([$record?->id])),
             ]);
     }
 }

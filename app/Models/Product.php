@@ -13,7 +13,15 @@ class Product extends Model
     use HasFactory, Searchable;
 
     protected $fillable = [
-        'name','slug','sku','category_id','attributes','stock','price','price_old','is_active'
+        'name',
+        'slug',
+        'sku',
+        'category_id',
+        'attributes',
+        'stock',
+        'price',
+        'price_old',
+        'is_active'
     ];
 
     protected $casts = [
@@ -24,7 +32,7 @@ class Product extends Model
     ];
 
 
-    public function category():BelongsTo
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
@@ -32,6 +40,16 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function adjustStock(int $delta): void
+    {
+        $new = $this->stock + $delta;
+        if ($new < 0) {
+            throw new \DomainException("Not enough stock for product {$this->id}");
+        }
+
+        $this->forceFill(['stock' => $new])->save();
     }
 
     public function toSearchableArray(): array

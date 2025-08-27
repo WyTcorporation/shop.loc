@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Orders\RelationManagers;
 
+use App\Enums\OrderStatus;
 use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -10,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -24,9 +26,17 @@ class ItemsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make('OrderItem')
-                    ->required()
-                    ->maxLength(255),
+                Select::make('product_id')
+                    ->label('Product')
+                    ->relationship('product', 'name')
+                    ->searchable()->preload()->required()
+                    ->disabled(fn ($livewire) => $livewire->ownerRecord->status !== OrderStatus::New),
+
+                TextInput::make('qty')->numeric()->minValue(1)->required()
+                    ->disabled(fn ($livewire) => $livewire->ownerRecord->status !== OrderStatus::New),
+
+                TextInput::make('price')->numeric()->required()
+                    ->disabled(fn ($livewire) => $livewire->ownerRecord->status !== OrderStatus::New),
             ]);
     }
 
@@ -36,28 +46,24 @@ class ItemsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('OrderItem')
             ->columns([
-//                TextColumn::make('OrderItem')
-//                    ->searchable(),
-                TextColumn::make('product.name')->label('Product')->limit(40),
-                TextColumn::make('qty')->numeric()->label('Qty'),
-                TextColumn::make('price')->money('USD', true),
-                TextColumn::make('total')
-                    ->label('Total')
-                    ->state(fn($r)=> (float)$r->qty * (float)$r->price)
-                    ->money('USD', true),
-                TextColumn::make('created_at')->since(),
+                TextColumn::make('product.name')->label('Product'),
+                TextColumn::make('qty'),
+                TextColumn::make('price')->money('usd'),
+                TextColumn::make('subtotal')
+                    ->label('Subtotal')
+                    ->state(fn ($record) => number_format($record->qty * (float) $record->price, 2)),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-                CreateAction::make(),
+                CreateAction::make()->visible(fn ($livewire) => $livewire->ownerRecord->status === OrderStatus::New),
                 AttachAction::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()->visible(fn ($livewire) => $livewire->ownerRecord->status === OrderStatus::New),
                 DetachAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()->visible(fn ($livewire) => $livewire->ownerRecord->status === OrderStatus::New),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -65,6 +71,7 @@ class ItemsRelationManager extends RelationManager
                     DeleteBulkAction::make(),
                 ]),
             ])
+            ->defaultSort('id')
             ->paginated(false)
             ->emptyStateHeading('No items');
     }

@@ -16,7 +16,6 @@ class OrderStateService
         }
 
         DB::transaction(function () use ($order) {
-            // За потреби – тут можна робити резерв / списання
             $order->update(['status' => OrderStatus::Paid]);
         });
     }
@@ -39,7 +38,7 @@ class OrderStateService
         }
 
         DB::transaction(function () use ($order) {
-            // Якщо ви списуєте склад при створенні або при "paid", тут відкотити залишки:
+            // Якщо списуєте склад при створенні або при "paid", тут відкотити залишки:
             // foreach ($order->items as $item) {
             //     $item->product()->increment('stock', $item->qty);
             // }
