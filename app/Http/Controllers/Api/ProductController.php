@@ -12,7 +12,9 @@ class ProductController extends Controller
 
     public function index(Request $r): JsonResponse
     {
-        $perPage    = clamp((int) $r->integer('per_page', 12), 1, 100);
+
+        $perPage = (int) $r->integer('per_page', 12);
+        $perPage = max(1, min($perPage, 100));
         $search     = trim((string) $r->query('search', ''));
         $categoryId = $r->integer('category');
         $sort       = (string) $r->query('sort', 'new'); // new|price_asc|price_desc

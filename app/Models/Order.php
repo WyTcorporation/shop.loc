@@ -7,19 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Enums\OrderStatus;
 
 class Order extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'number', 'status', 'total', 'shipping_address', 'billing_address', 'email', 'note'
+        'user_id', 'email', 'status', 'total',
+        'shipping_address', 'billing_address', 'note', 'number',
     ];
 
     protected $casts = [
+        'status' => OrderStatus::class,
         'total' => 'decimal:2',
         'shipping_address' => 'array',
         'billing_address' => 'array',
+        'paid_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'inventory_committed_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -39,5 +46,20 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function isShipped(): bool
+    {
+        return !is_null($this->shipped_at);
+    }
+
+    public function isCancelled(): bool
+    {
+        return !is_null($this->cancelled_at);
+    }
+
+    public function inventoryCommitted(): bool
+    {
+        return !is_null($this->inventory_committed_at);
     }
 }

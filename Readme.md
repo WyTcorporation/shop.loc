@@ -109,5 +109,38 @@ docker compose exec app sh -lc "tail -n 100 storage/logs/laravel.log"
 php artisan make:mail OrderPlacedMail --markdown=emails.orders.placed
 php artisan make:job SendOrderConfirmation
 php artisan make:listener MergeGuestCart
+docker compose exec app php artisan make:test OrderFlowTest --pest
 
 docker compose exec app php artisan make:filament-relation-manager Products Images --panel=mine
+
+# run test
+docker compose exec app php artisan test -vvv
+
+docker compose exec app php artisan storage:link
+
+mc alias set local http://minio:9000 minioadmin minioadmin
+mc anonymous set-json local/media <<<'{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetBucketLocation","s3:ListBucket"],"Resource":["arn:aws:s3:::media"]},{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::media/*"]}]}'
+mc admin config set local api cors allow-origin='http://localhost:8080' allow-headers='*' allow-methods='GET,PUT,POST,DELETE,HEAD,OPTIONS'
+mc admin service restart local
+
+
+mc --disable-pager alias set local http://minio:9000 minioadmin minioadmin --api s3v4
+mc --disable-pager mb -p local/media || true
+cat >/tmp/cors.json <<'JSON'
+[
+{
+"AllowedOrigin": ["http://localhost:8080"],
+"AllowedMethod": ["GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS"],
+"AllowedHeader": ["*"],
+"ExposeHeader": ["ETag","x-amz-request-id","x-amz-version-id"],
+"MaxAgeSeconds": 3000
+}
+]
+JSON
+
+mc --disable-pager admin cors set local/media /tmp/cors.json
+mc --disable-pager admin cors info local/media
+!!!
+mc --disable-pager anonymous set download local/media
+
+

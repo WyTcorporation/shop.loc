@@ -21,9 +21,10 @@ class CategoryFactory extends Factory
         $name = $this->faker->unique()->words(mt_rand(1, 2), true);
 
         return [
-            'name'      => Str::title($name),
-            'slug'      => Str::slug($name.'-'.Str::random(6)),
+            'name' => $name,
+            'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
             'parent_id' => null,
+            'is_active' => true,
         ];
     }
 }

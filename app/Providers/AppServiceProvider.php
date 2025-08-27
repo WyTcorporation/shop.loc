@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use App\Listeners\MergeGuestCart;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Auth\Events\Login;
+use App\Models\Product;
+use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,5 +35,11 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(120)->by(optional($request->user())->id ?: 'guest'),
             ];
         });
+
+        if (Config::get('scout.driver') === 'meilisearch') {
+            Product::created(fn($p) => $p->searchable());
+            Product::updated(fn($p) => $p->searchable());
+            Product::deleted(fn($p) => $p->unsearchable());
+        }
     }
 }

@@ -9,9 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CartItem extends Model
 {
     use HasFactory;
-
     protected $fillable = ['cart_id', 'product_id', 'qty', 'price'];
-
 
     protected $casts = [
         'qty' => 'integer',

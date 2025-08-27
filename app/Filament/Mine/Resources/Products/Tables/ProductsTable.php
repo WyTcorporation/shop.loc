@@ -27,6 +27,19 @@ class ProductsTable
                 TextColumn::make('category_id')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('attributes')
+                    ->label('Attrs')
+                    ->formatStateUsing(function ($state) {
+                        if (blank($state)) return '—';
+                        if (is_array($state) && array_is_list($state)) {
+                            return collect($state)
+                                ->map(fn ($row) => ($row['name'] ?? '?').':'.($row['value'] ?? ''))
+                                ->take(3)->join(', ');
+                        }
+                        return collect($state)->map(fn ($v, $k) => "$k:$v")->take(3)->join(', ');
+                    })
+                    ->tooltip(fn ($state) => is_array($state) ? json_encode($state, JSON_UNESCAPED_UNICODE) : (string) $state)
+                    ->wrap(),
                 TextColumn::make('stock')
                     ->numeric()
                     ->sortable(),
