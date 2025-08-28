@@ -3,42 +3,108 @@
 namespace App\Listeners;
 
 use App\Models\Cart;
+use App\Models\CartItem;
+use App\Models\Product;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
 
 class MergeGuestCart
 {
-    public function __construct(private Request $request)
-    {
-    }
-
     public function handle(Login $event): void
     {
-        $cookieCartId = $this->request->cookie('cart_id');
-        if (!$cookieCartId) return;
+        // Акуратно дістаємо cart_id з доступних джерел (у т.ч. коли немає повного HTTP-запиту)
+        $req = app()->bound('request') ? app('request') : null;
 
-        $guest = Cart::query()->whereKey($cookieCartId)->first();
-        if (!$guest || $guest->user_id) return;
+        $guestCartId =
+            ($req?->cookie('cart_id'))
+            ?? ($req?->cookies?->get('cart_id'))
+            ?? Cookie::get('cart_id')
+            ?? session('cart_id');
 
-        $userCart = Cart::query()->firstOrCreate(['user_id' => $event->user->id]);
-        if ($guest->id === $userCart->id) return;
-
-        foreach ($guest->items as $it) {
-            $existing = $userCart->items()
-                ->where('product_id', $it->product_id)
-                ->first();
-
-            if ($existing) {
-                $existing->increment('qty', $it->qty);
-            } else {
-                $userCart->items()->create([
-                    'product_id' => $it->product_id,
-                    'qty' => $it->qty,
-                    'price' => $it->price,
-                ]);
-            }
+        if (!$guestCartId) {
+            return;
         }
 
-        $guest->delete();
+        $user = $event->user;
+
+        DB::transaction(function () use ($user, $guestCartId) {
+            /** @var Cart|null $guest */
+            $guest = Cart::query()
+                ->whereKey($guestCartId)
+                ->where('status', 'active')
+                ->with(['items' => fn ($q) => $q->orderBy('id')])
+                ->lockForUpdate()
+                ->first();
+
+            if (!$guest) {
+                Cookie::queue(Cookie::forget('cart_id'));
+                return;
+            }
+
+            /** @var Cart|null $userCart */
+            $userCart = Cart::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'active')
+                ->lockForUpdate()
+                ->first();
+
+// 1) Немає активного кошика у користувача — просто “прикріплюємо” guest.
+            if (! $userCart) {
+                $guest->forceFill([
+                    'status'  => 'merged',      // ← новий статус
+                    'user_id' => $user->id,     // для аудиту хто «власник» архівованого кошика
+                ])->saveQuietly();
+                Cookie::queue(Cookie::forget('cart_id'));
+                return; // критично, щоб не дійти до видалення guest
+            }
+
+// 2) Є активний, але ПУСТИЙ — віддаємо перевагу guest-кошикові.
+            if ($userCart->items()->doesntExist()) {
+                // можна видалити або “заархівувати” порожній, обери політику:
+                $userCart->delete(); // якщо SoftDeletes — це буде soft-delete
+
+                $guest->forceFill(['user_id' => $user->id])->saveQuietly();
+                Cookie::queue(Cookie::forget('cart_id'));
+                return;
+            }
+
+// 3) Інакше — це справжній мердж (користувач уже щось мав у кошику).
+            $userCartItems = $userCart->items()->get()->keyBy('product_id');
+
+            /** @var CartItem $gItem */
+            foreach ($guest->items as $gItem) {
+                /** @var Product|null $product */
+                $product = Product::query()->lockForUpdate()->find($gItem->product_id);
+                if (! $product) {
+                    continue;
+                }
+
+                $existing = $userCartItems->get($gItem->product_id);
+
+                $targetQty  = ($existing?->qty ?? 0) + $gItem->qty;
+                $clampedQty = min($targetQty, max(0, (int) $product->stock));
+
+                if ($existing) {
+                    $existing->update([
+                        'qty'   => $clampedQty,
+                        'price' => $product->price,
+                    ]);
+                } else {
+                    $userCart->items()->create([
+                        'product_id' => $gItem->product_id,
+                        'qty'        => $clampedQty,
+                        'price'      => $product->price,
+                    ]);
+                }
+            }
+
+
+            $guest->items()->delete();
+            $guest->delete();
+
+            Cookie::queue(Cookie::forget('cart_id'));
+
+        });
     }
 }

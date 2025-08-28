@@ -155,4 +155,3 @@ docker compose exec app php artisan optimize:clear
 docker compose exec app php artisan view:clear
 docker compose exec app php artisan route:clear
 
-

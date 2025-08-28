@@ -16,7 +16,7 @@ class CartItemFactory extends Factory
             'cart_id' => Cart::factory(),
             'product_id' => Product::factory(),
             'qty' => $this->faker->numberBetween(1, 3),
-            'price' => $this->faker->randomFloat(2, 10, 300),
+            'price' => $this->faker->randomFloat(2, 10, 500),
         ];
     }
 }
