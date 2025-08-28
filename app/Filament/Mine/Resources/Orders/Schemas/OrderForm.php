@@ -52,7 +52,7 @@ class OrderForm
                     TextInput::make('number')
                         ->label('Number')
                         ->disabled()
-                        ->dehydrated(false) // номер генерується у моделі
+                        ->dehydrated(false)
                         ->hint('Згенерується автоматично'),
 
                     TextInput::make('total')

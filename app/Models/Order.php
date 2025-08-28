@@ -115,32 +115,61 @@ class Order extends Model
         ], true);
     }
 
+    /** @throws \RuntimeException */
     public function markPaid(): void
     {
-        if (! $this->canMarkPaid()) return;
-        $this->forceFill(['status' => OrderStatus::Paid->value])->save();
-        // TODO: paid_at, payment_id, нотифікації
+        DB::transaction(function () {
+            if ($this->status !== OrderStatus::New) {
+                throw new \RuntimeException('Only NEW orders can be marked paid.');
+            }
+            $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
+                $product = $item->product;
+                if (! $product) {
+                    throw new \RuntimeException('Order item without product.');
+                }
+                if ($product->stock < $item->qty) {
+                    throw new \RuntimeException("Not enough stock for {$product->name}.");
+                }
+                $product->decrement('stock', $item->qty);
+            });
+
+            $this->update(['status' => OrderStatus::Paid]);
+        });
     }
 
+    /** @throws \RuntimeException */
     public function markShipped(): void
     {
-        if (! $this->canMarkShipped()) return;
-        $this->forceFill(['status' => OrderStatus::Shipped->value])->save();
-        // TODO: списання складу / трек-номер / нотифікації
+        if ($this->status !== OrderStatus::Paid) {
+            throw new \RuntimeException('Only PAID orders can be marked shipped.');
+        }
+        $this->update(['status' => OrderStatus::Shipped]);
     }
 
+    /** @throws \RuntimeException */
     public function cancel(): void
     {
-        if (! $this->canCancel()) return;
-        $this->forceFill(['status' => OrderStatus::Cancelled->value])->save();
-        // TODO: повернення на склад / рефанд / нотифікації
+        DB::transaction(function () {
+            if (in_array($this->status, [OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
+                throw new \RuntimeException('Cannot cancel shipped/canceled order.');
+            }
+            if ($this->status === OrderStatus::Paid) {
+                $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
+                    $item->product?->increment('stock', $item->qty);
+                });
+            }
+
+            $this->update(['status' => OrderStatus::Cancelled]);
+        });
     }
+
 
     public function recalculateTotal(): void
     {
-        $total = (float) $this->items()
-            ->selectRaw('COALESCE(SUM(qty * price), 0) as total')
-            ->value('total');
+        $total = (float) ($this->items()
+            ->selectRaw('COALESCE(SUM(qty * price), 0) AS t')
+            ->value('t') ?? 0);
+
         $this->forceFill(['total' => $total])->saveQuietly();
     }
 }

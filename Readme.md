@@ -118,6 +118,7 @@ docker compose exec app php artisan make:filament-relation-manager Products Imag
 
 # run test
 docker compose exec app php artisan test -vvv
+docker compose exec app ./vendor/bin/pest -q
 
 docker compose exec app php artisan storage:link
 
@@ -149,5 +150,9 @@ mc --disable-pager anonymous set download local/media
 mc anonymous set download local/media
 
 docker compose exec app php artisan tinker
+
+docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan view:clear
+docker compose exec app php artisan route:clear
 
 

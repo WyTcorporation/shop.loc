@@ -20,6 +20,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use App\Filament\Mine\Resources\Orders\Pages\EditOrder;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -40,7 +41,6 @@ class ItemsRelationManager extends RelationManager
                         $set('price', $price);
                     })
                     ->required(),
-
                 TextInput::make('qty')
                     ->numeric()
                     ->minValue(1)
@@ -75,22 +75,34 @@ class ItemsRelationManager extends RelationManager
                 CreateAction::make()
                     ->visible(fn ($livewire) => $livewire->ownerRecord->status === OrderStatus::New)
                     ->after(function (RelationManager $livewire) {
-                        $livewire->getOwnerRecord()->recalculateTotal();
-                        $livewire->dispatch('order-items-updated');
+                        $order = $livewire->getOwnerRecord();
+                        $order->recalculateTotal();
+                        $livewire->dispatch('order-items-updated')
+                            ->to(EditOrder::class);
                     }),
+                AttachAction::make()->after(function (RelationManager $livewire) {
+                    $order = $livewire->getOwnerRecord();
+                    $order->recalculateTotal();
+                    $livewire->dispatch('order-items-updated')
+                        ->to(EditOrder::class);
+                }),
             ])
             ->recordActions([
                 EditAction::make()
                     ->visible(fn ($livewire) => $livewire->ownerRecord->status === OrderStatus::New)
                     ->after(function (RelationManager $livewire) {
-                        $livewire->getOwnerRecord()->recalculateTotal();
-                        $livewire->dispatch('order-items-updated');
+                        $order = $livewire->getOwnerRecord();
+                        $order->recalculateTotal();
+                        $livewire->dispatch('order-items-updated')
+                            ->to(EditOrder::class);
                     }),
                 DeleteAction::make()
                     ->visible(fn ($livewire) => $livewire->ownerRecord->status === OrderStatus::New)
                     ->after(function (RelationManager $livewire) {
-                        $livewire->getOwnerRecord()->recalculateTotal();
-                        $livewire->dispatch('order-items-updated');
+                        $order = $livewire->getOwnerRecord();
+                        $order->recalculateTotal();
+                        $livewire->dispatch('order-items-updated')
+                            ->to(EditOrder::class);
                     }),
             ])
             ->toolbarActions([

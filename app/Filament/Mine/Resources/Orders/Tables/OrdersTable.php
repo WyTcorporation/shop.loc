@@ -56,32 +56,28 @@ class OrdersTable
             ])
             ->recordActions([
                 EditAction::make(),
-                Action::make('mark_paid')
+                Action::make('markPaid')
                     ->label('Mark paid')
-                    ->icon('heroicon-m-banknotes')
-                    ->color('success')
+                    ->icon('heroicon-o-banknotes')
                     ->visible(fn (Order $record) => $record->status === OrderStatus::New->value)
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->markPaid();
                         Notification::make()->title('Order marked as paid')->success()->send();
                     }),
-
-                Action::make('mark_shipped')
+                Action::make('markShipped')
                     ->label('Mark shipped')
-                    ->icon('heroicon-m-truck')
-                    ->color('info')
+                    ->icon('heroicon-o-truck')
                     ->visible(fn (Order $record) => $record->status === OrderStatus::Paid->value)
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->markShipped();
                         Notification::make()->title('Order marked as shipped')->success()->send();
                     }),
-
                 Action::make('cancel')
                     ->label('Cancel')
-                    ->icon('heroicon-m-x-circle')
                     ->color('danger')
+                    ->icon('heroicon-o-x-circle')
                     ->visible(fn (Order $record) => in_array($record->status, [OrderStatus::New->value, OrderStatus::Paid->value], true))
                     ->requiresConfirmation()
                     ->action(function (Order $record) {

@@ -21,10 +21,10 @@ class OrderItem extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn ($item) => $item->order?->recalculateTotal());
-        static::created(fn ($item) => $item->order?->recalculateTotal());
-        static::updated(fn ($item) => $item->order?->recalculateTotal());
-        static::deleted(fn ($item) => $item->order?->recalculateTotal());
+        $recalc = fn ($item) => $item->order?->recalculateTotal();
+        static::created($recalc);
+        static::updated($recalc);
+        static::deleted($recalc);
     }
 
     public function order(): BelongsTo
