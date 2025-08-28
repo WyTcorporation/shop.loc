@@ -16,4 +16,27 @@ class EditOrder extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    // На всяк випадок — після збереження самої форми теж перерахуємо total
+    protected function afterSave(): void
+    {
+        $this->record->recalculateTotal();
+        $this->dispatch('order-items-updated');
+    }
+
+    #[On('order-items-updated')]
+    public function refreshTotals(): void
+    {
+        // Підтягнути свіжі дані моделі
+        $this->record->refresh();
+
+        // Перезаповнити форму свіжим total
+        // Варіант A: заповнити тільки одне поле
+        $this->form->fill([
+            'total' => $this->record->total,
+        ]);
+
+        // Варіант B (більш «грубо», але просто): повністю перезібрати форму
+        // $this->fillForm(); // якщо цей метод доступний у вашій версії (у v4 зазвичай є)
+    }
 }

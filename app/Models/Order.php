@@ -32,11 +32,18 @@ class Order extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (self $m) {
-            if (!$m->number) {
-                $m->number = 'ORD-' . now()->format('Ymd') . '-' . Str::ulid();
+        static::creating(function (Order $order) {
+            $order->status ??= OrderStatus::New->value;
+            $order->number ??= 'ORD-'.now()->format('Ymd').'-'.Str::upper(Str::random(16));
+            if (empty($order->email) && $order->user_id && $order->user?->email) {
+                $order->email = $order->user->email;
             }
         });
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function canTransitionTo(OrderStatus $to): bool
@@ -75,11 +82,6 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function isShipped(): bool
     {
         return !is_null($this->shipped_at);
@@ -93,5 +95,52 @@ class Order extends Model
     public function inventoryCommitted(): bool
     {
         return !is_null($this->inventory_committed_at);
+    }
+
+    public function canMarkPaid(): bool
+    {
+        return $this->status === OrderStatus::New->value;
+    }
+
+    public function canMarkShipped(): bool
+    {
+        return $this->status === OrderStatus::Paid->value;
+    }
+
+    public function canCancel(): bool
+    {
+        return in_array($this->status, [
+            OrderStatus::New->value,
+            OrderStatus::Paid->value,
+        ], true);
+    }
+
+    public function markPaid(): void
+    {
+        if (! $this->canMarkPaid()) return;
+        $this->forceFill(['status' => OrderStatus::Paid->value])->save();
+        // TODO: paid_at, payment_id, нотифікації
+    }
+
+    public function markShipped(): void
+    {
+        if (! $this->canMarkShipped()) return;
+        $this->forceFill(['status' => OrderStatus::Shipped->value])->save();
+        // TODO: списання складу / трек-номер / нотифікації
+    }
+
+    public function cancel(): void
+    {
+        if (! $this->canCancel()) return;
+        $this->forceFill(['status' => OrderStatus::Cancelled->value])->save();
+        // TODO: повернення на склад / рефанд / нотифікації
+    }
+
+    public function recalculateTotal(): void
+    {
+        $total = (float) $this->items()
+            ->selectRaw('COALESCE(SUM(qty * price), 0) as total')
+            ->value('total');
+        $this->forceFill(['total' => $total])->saveQuietly();
     }
 }

@@ -3,10 +3,12 @@
 namespace App\Filament\Mine\Resources\Orders\Tables;
 
 use App\Enums\OrderStatus;
+use App\Models\Order;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -36,12 +38,14 @@ class OrdersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
-                    ->color(fn (string $state) => match ($state) {
-                        OrderStatus::New->value     => 'warning',
-                        OrderStatus::Paid->value    => 'success',
-                        OrderStatus::Shipped->value => 'info',
-                        OrderStatus::Cancelled->value=> 'danger',
+                    ->getStateUsing(fn (Order $record) => $record->status instanceof OrderStatus ? $record->status->value : (string) $record->status)
+                    ->color(fn (Order $record) => match($record->status instanceof OrderStatus ? $record->status->value : $record->status) {
+                        'new' => 'warning',
+                        'paid' => 'success',
+                        'shipped' => 'info',
+                        'canceled' => 'danger',
                         default => 'gray',
                     })->searchable(),
                 TextColumn::make('shipping_address.city')->label('City')->toggleable(isToggledHiddenByDefault: true),
@@ -51,24 +55,39 @@ class OrdersTable
                     ->options(collect(OrderStatus::cases())->mapWithKeys(fn ($c) => [$c->value => ucfirst($c->value)])->all()),
             ])
             ->recordActions([
-                Action::make('markPaid')
-                    ->label('Mark paid')->icon('heroicon-o-banknotes')
-                    ->visible(fn ($record) => $record->status === OrderStatus::New)
+                EditAction::make(),
+                Action::make('mark_paid')
+                    ->label('Mark paid')
+                    ->icon('heroicon-m-banknotes')
+                    ->color('success')
+                    ->visible(fn (Order $record) => $record->status === OrderStatus::New->value)
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->transitionTo(OrderStatus::Paid)),
+                    ->action(function (Order $record) {
+                        $record->markPaid();
+                        Notification::make()->title('Order marked as paid')->success()->send();
+                    }),
 
-                Action::make('markShipped')
-                    ->label('Mark shipped')->icon('heroicon-o-truck')
-                    ->visible(fn ($record) => $record->status === OrderStatus::Paid)
+                Action::make('mark_shipped')
+                    ->label('Mark shipped')
+                    ->icon('heroicon-m-truck')
+                    ->color('info')
+                    ->visible(fn (Order $record) => $record->status === OrderStatus::Paid->value)
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->transitionTo(OrderStatus::Shipped)),
+                    ->action(function (Order $record) {
+                        $record->markShipped();
+                        Notification::make()->title('Order marked as shipped')->success()->send();
+                    }),
 
                 Action::make('cancel')
-                    ->label('Cancel')->icon('heroicon-o-x-circle')->color('danger')
-                    ->visible(fn ($record) => in_array($record->status, [OrderStatus::New, OrderStatus::Paid], true))
+                    ->label('Cancel')
+                    ->icon('heroicon-m-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Order $record) => in_array($record->status, [OrderStatus::New->value, OrderStatus::Paid->value], true))
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->transitionTo(OrderStatus::Cancelled)),
-                EditAction::make(),
+                    ->action(function (Order $record) {
+                        $record->cancel();
+                        Notification::make()->title('Order canceled')->success()->send();
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

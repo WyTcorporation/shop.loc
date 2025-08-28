@@ -35,6 +35,9 @@ return new class extends Migration
             if (!Schema::hasColumn('orders', 'note')) {
                 $t->text('note')->nullable();
             }
+            if (!Schema::hasColumn('orders', 'paid_at')) $t->timestamp('paid_at')->nullable();
+            if (!Schema::hasColumn('orders', 'shipped_at')) $t->timestamp('shipped_at')->nullable();
+            if (!Schema::hasColumn('orders', 'canceled_at')) $t->timestamp('canceled_at')->nullable();
         });
     }
 

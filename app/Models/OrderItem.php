@@ -17,6 +17,16 @@ class OrderItem extends Model
         'price' => 'decimal:2',
     ];
 
+    protected $touches = ['order'];
+
+    protected static function booted(): void
+    {
+        static::saved(fn ($item) => $item->order?->recalculateTotal());
+        static::created(fn ($item) => $item->order?->recalculateTotal());
+        static::updated(fn ($item) => $item->order?->recalculateTotal());
+        static::deleted(fn ($item) => $item->order?->recalculateTotal());
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
