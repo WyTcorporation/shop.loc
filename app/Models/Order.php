@@ -30,15 +30,29 @@ class Order extends Model
         'inventory_committed_at' => 'datetime',
     ];
 
+    protected $attributes = [
+        'total' => 0,
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (Order $order) {
             $order->status ??= OrderStatus::New->value;
-            $order->number ??= 'ORD-'.now()->format('Ymd').'-'.Str::upper(Str::random(16));
             if (empty($order->email) && $order->user_id && $order->user?->email) {
                 $order->email = $order->user->email;
             }
+            if (blank($order->number)) {
+                $order->number = $order->makeOrderNumber();
+            }
+            if (is_null($order->total)) {
+                $order->total = 0;
+            }
         });
+    }
+
+    public function makeOrderNumber(): string
+    {
+        return 'ORD-' . now()->format('Ymd') . '-' . Str::upper(Str::random(16));
     }
 
     public function user(): BelongsTo
@@ -171,5 +185,10 @@ class Order extends Model
             ->value('t') ?? 0);
 
         $this->forceFill(['total' => $total])->saveQuietly();
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(OrderStatusLog::class)->latest('id');
     }
 }

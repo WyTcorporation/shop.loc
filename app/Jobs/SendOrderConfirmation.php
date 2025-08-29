@@ -23,6 +23,23 @@ class SendOrderConfirmation implements ShouldQueue
 
     public function handle(): void
     {
-        Mail::to($this->order->email)->send(new OrderPlacedMail($this->order));
+        if (! $this->order->email) {
+            return;
+        }
+
+        $mailable = new OrderPlacedMail($this->order);
+
+        $pending = Mail::to($this->order->email);
+
+        if ($admin = config('shop.admin_email')) {
+            $pending->bcc($admin);
+        }
+
+        $pending->send($mailable);
     }
+
+//    public function handle(): void
+//    {
+//        Mail::to($this->order->email)->send(new OrderPlacedMail($this->order));
+//    }
 }

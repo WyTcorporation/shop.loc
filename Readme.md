@@ -155,3 +155,11 @@ docker compose exec app php artisan optimize:clear
 docker compose exec app php artisan view:clear
 docker compose exec app php artisan route:clear
 
+Searchable
+docker compose exec app php artisan optimize:clear
+# опційно повна реіндексація:
+docker compose exec app php artisan scout:flush "App\Models\Product"
+docker compose exec app php artisan scout:import "App\Models\Product"
+
+
+docker compose exec app php artisan tinker --execute="use App\Models\Order; Order::factory()->count(2)->create(['status'=>'new']); Order::factory()->count(1)->create(['status'=>'paid']); Order::factory()->count(1)->create(['status'=>'shipped']);"

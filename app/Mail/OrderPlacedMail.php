@@ -17,23 +17,31 @@ class OrderPlacedMail extends Mailable
     {
     }
 
-    public function envelope(): Envelope
+    public function build(): self
     {
-        return new Envelope(
-            subject: 'Order ' . $this->order->number . ' confirmed',
-        );
+        return $this->subject("Ваше замовлення #{$this->order->number} прийнято")
+            ->markdown('emails.orders.placed', [
+                'order' => $this->order->loadMissing(['items.product']),
+            ]);
     }
 
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'emails.orders.placed',
-            with: ['order' => $this->order],
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [];
-    }
+//    public function envelope(): Envelope
+//    {
+//        return new Envelope(
+//            subject: 'Order ' . $this->order->number . ' confirmed',
+//        );
+//    }
+//
+//    public function content(): Content
+//    {
+//        return new Content(
+//            markdown: 'emails.orders.placed',
+//            with: ['order' => $this->order],
+//        );
+//    }
+//
+//    public function attachments(): array
+//    {
+//        return [];
+//    }
 }

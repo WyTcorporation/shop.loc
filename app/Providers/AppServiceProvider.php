@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
+use App\Observers\OrderObserver;
+use App\Observers\ProductObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Product::observe(ProductObserver::class);
+        Order::observe(OrderObserver::class);
         Event::listen(Login::class, MergeGuestCart::class);
 
         RateLimiter::for('api', function (Request $request) {

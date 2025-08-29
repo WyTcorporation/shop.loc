@@ -11,10 +11,12 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Support\Facades\Storage;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\Toggle;
 
 class ImagesRelationManager extends RelationManager
 {
@@ -26,7 +28,7 @@ class ImagesRelationManager extends RelationManager
         return $schema->schema([
             FileUpload::make('path')
                 ->label('Image')
-                ->disk('public') // ← тільки public
+                ->disk('public')
                 ->directory(fn () => 'products/' . $this->getOwnerRecord()->id)
                 ->image()
                 ->imageEditor()
@@ -37,6 +39,11 @@ class ImagesRelationManager extends RelationManager
             TextInput::make('alt')->maxLength(255),
             Hidden::make('disk')->default('public'),
             TextInput::make('sort')->numeric()->default(0),
+            Toggle::make('is_primary')
+                ->label('Primary')
+                ->inline(false)
+                ->default(fn ($livewire) => ! $livewire->getOwnerRecord()->images()->exists())
+                ->helperText('Використовується як превʼю товару')
         ]);
     }
 
@@ -48,7 +55,9 @@ class ImagesRelationManager extends RelationManager
                     ->label('Preview')
                     ->disk('public')
                     ->circular(),
-
+                ToggleColumn::make('is_primary')
+                    ->label('Primary')
+                    ->sortable(),
                 TextColumn::make('alt')->limit(40),
                 TextColumn::make('sort')->sortable(),
                 TextColumn::make('disk')->sortable(),

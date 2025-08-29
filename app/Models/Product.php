@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -52,14 +54,58 @@ class Product extends Model
         $this->forceFill(['stock' => $new])->save();
     }
 
+    public function primaryImage(): HasOne
+    { return $this->hasOne(ProductImage::class)->where('is_primary', true)->oldest('id'); }
+
+
+
+
+    public function getPreviewUrlAttribute(): ?string
+    {
+        $images = $this->relationLoaded('images') ? $this->images : $this->images()->get();
+
+        $img = $images
+            ->sortByDesc('is_primary')
+            ->sortBy('sort')
+            ->first();
+
+        if (!$img?->path) {
+            return null;
+        }
+
+        $disk = $img->disk ?: 'public';
+        return Storage::disk($disk)->url($img->path);
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->is_active && (int) $this->stock > 0;
+    }
+
+    public function coverImage(): ?ProductImage
+    {
+        return $this->images()->where('is_primary', true)->first()
+            ?? $this->images()->orderBy('sort')->first();
+    }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        $p = $this->coverImage()?->path;
+        return $p ? Storage::disk('public')->url($p) : null;
+    }
+
     public function toSearchableArray(): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'category' => optional($this->category)->name,
-            'price' => (float)$this->price,
-            'is_active' => $this->is_active,
+            'id'          => $this->id,
+            'name'        => $this->name,
+            'slug'        => $this->slug,
+            'sku'         => $this->sku,
+            'category_id' => $this->category_id,
+            'stock'       => (int) $this->stock,
+            'price'       => (float) $this->price,
+            'is_active'   => (bool) $this->is_active,
+            'attrs'       => $this->attributes ?? [],
         ];
     }
 }

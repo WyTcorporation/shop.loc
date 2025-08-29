@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
  */
 class ProductImageFactory extends Factory
 {
+    protected $model = ProductImage::class;
+
     /**
      * Define the model's default state.
      *
@@ -19,8 +21,16 @@ class ProductImageFactory extends Factory
     public function definition(): array
     {
         return [
-            'path' => 'placeholders/'.Str::uuid().'.jpg',
-            'sort' => $this->faker->numberBetween(0, 5),
+            'path'       => 'products/tmp/'.fake()->uuid().'.png', // справжній шлях виставимо в сідері
+            'alt'        => fake()->words(3, true),
+            'disk'       => 'public',
+            'sort'       => 0,
+            'is_primary' => false,
         ];
+    }
+
+    public function primary(): static
+    {
+        return $this->state(fn () => ['is_primary' => true, 'sort' => 0]);
     }
 }

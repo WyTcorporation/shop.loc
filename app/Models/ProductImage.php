@@ -15,7 +15,7 @@ class ProductImage extends Model
 
     protected $appends = ['url'];
 
-    protected $fillable = ['product_id', 'disk', 'path', 'alt', 'sort'];
+    protected $fillable = ['product_id', 'disk', 'path', 'alt','sort','is_primary'];
 
     protected $casts = [
         'sort' => 'integer',
@@ -23,6 +23,13 @@ class ProductImage extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (self $image) {
+            if ($image->is_primary) {
+                static::where('product_id', $image->product_id)
+                    ->when($image->exists, fn ($q) => $q->whereKeyNot($image->getKey()))
+                    ->update(['is_primary' => false]);
+            }
+        });
         static::deleting(function ($img) {
             if ($img->path) Storage::disk($img->disk)->delete($img->path);
         });
