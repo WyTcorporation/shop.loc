@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -78,6 +79,15 @@ class OrderForm
                 ])->columns(1),
 
                 TextInput::make('note')->label('Note')->columnSpanFull(),
+
+                Section::make('Summary')
+                    ->collapsible()
+                    ->schema([
+                        ViewField::make('orderSummary')
+                            ->view('filament.orders.summary')
+                            ->columnSpanFull(),
+                    ])
+                    ->columnSpanFull(),
             ])->columns(2);
     }
 }

@@ -18,7 +18,9 @@ Route::get('products/{slug}', [ProductController::class, 'show']);
 Route::get('cart', [CartController::class, 'getOrCreate']);
 Route::post('cart', [CartController::class, 'store']);
 Route::get('cart/{id}', [CartController::class, 'show']);
-Route::patch('cart/{cart}/items/{item}', [CartController::class, 'updateItem']);
+Route::post('cart/{id}/items', [CartController::class, 'addItem']);
+Route::patch('cart/{id}/items/{item}', [CartController::class, 'updateItem']);
+Route::delete('cart/{id}/items/{item}', [CartController::class, 'removeItem']);
 
 // Cart items
 Route::post('cart/{id}/items', [CartItemController::class, 'store']);

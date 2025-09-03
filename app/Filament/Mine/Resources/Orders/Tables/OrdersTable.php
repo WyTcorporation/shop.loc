@@ -38,17 +38,28 @@ class OrdersTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+//                TextColumn::make('status')
+//                    ->label('Status')
+//                    ->badge()
+//                    ->getStateUsing(fn (Order $record) => $record->status instanceof OrderStatus ? $record->status->value : (string) $record->status)
+//                    ->color(fn (Order $record) => match($record->status instanceof OrderStatus ? $record->status->value : $record->status) {
+//                        'new' => 'warning',
+//                        'paid' => 'success',
+//                        'shipped' => 'info',
+//                        'canceled' => 'danger',
+//                        default => 'gray',
+//                    })->searchable(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->getStateUsing(fn (Order $record) => $record->status instanceof OrderStatus ? $record->status->value : (string) $record->status)
-                    ->color(fn (Order $record) => match($record->status instanceof OrderStatus ? $record->status->value : $record->status) {
-                        'new' => 'warning',
-                        'paid' => 'success',
-                        'shipped' => 'info',
-                        'canceled' => 'danger',
-                        default => 'gray',
-                    })->searchable(),
+                    ->state(fn ($record) => $record->status instanceof OrderStatus
+                        ? $record->status->value
+                        : (string) $record->status)
+                    ->formatStateUsing(fn (string $state) => ucfirst($state))
+
+                    ->color(fn ($record) => $record->status instanceof OrderStatus
+                        ? $record->status->badgeColor()
+                        : OrderStatus::from((string) $record->status)->badgeColor()),
                 TextColumn::make('shipping_address.city')->label('City')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

@@ -23,14 +23,37 @@ class CartController extends Controller
             );
     }
 
-    public function show(string $id): JsonResponse
+//    public function show(string $id): JsonResponse
+//    {
+//        $cart = Cart::with(['items.product:id,name,slug,price'])
+//            ->where('status','active')
+//            ->findOrFail($id);
+//
+//        return response()->json($cart);
+//    }
+
+    public function show(string $id)
     {
-        $cart = Cart::with(['items.product:id,name,slug,price'])
-            ->where('status','active')
+        /** @var Cart|null $cart */
+        $cart = Cart::query()
+            ->with(['items.product' => fn($q) => $q->select('id','name','price')])
             ->findOrFail($id);
 
-        return response()->json($cart);
+        $total = $cart->items->sum(fn ($i) => (float)$i->price * (int)$i->qty);
+
+        return response()->json([
+            'id' => $cart->id,
+            'items' => $cart->items->map(fn (CartItem $i) => [
+                'id'         => $i->id,
+                'product_id' => $i->product_id,
+                'name'       => $i->product?->name,
+                'price'      => (float)$i->price,
+                'qty'        => (int)$i->qty,
+            ])->values(),
+            'total' => $total,
+        ]);
     }
+
     public function getOrCreate(Request $r): JsonResponse
     {
         $id = $r->cookie('cart_id');
@@ -41,21 +64,63 @@ class CartController extends Controller
             ->cookie('cart_id', $cart->id, 60*24*30, '/', null, false, false, 'Lax');
     }
 
-    public function updateItem(Request $r, Cart $cart, CartItem $item): JsonResponse
-    {
-        $data = $r->validate(['qty' => 'required|integer|min:0']);
-        if ($item->cart_id !== $cart->id) abort(404);
+//    public function updateItem(Request $r, Cart $cart, CartItem $item): JsonResponse
+//    {
+//        $data = $r->validate(['qty' => 'required|integer|min:0']);
+//        if ($item->cart_id !== $cart->id) abort(404);
+//
+//        if ($data['qty'] === 0) {
+//            $item->delete();
+//            return response()->json(['ok'=>true]);
+//        }
+//
+//        $product = $item->product()->lockForUpdate()->first();
+//        if (!$product) abort(422, 'Product not found');
+//        if ($data['qty'] > $product->stock) abort(422, 'Insufficient stock');
+//
+//        $item->update(['qty' => $data['qty']]);
+//        return response()->json($cart->fresh()->load('items.product'));
+//    }
 
-        if ($data['qty'] === 0) {
-            $item->delete();
-            return response()->json(['ok'=>true]);
+    public function updateItem(Request $request, string $id, CartItem $item)
+    {
+        $data = $request->validate([
+            'qty' => ['required','integer','min:0','max:100000'],
+        ]);
+
+        // валідація приналежності item до cart
+        if ($item->cart_id !== $id) {
+            abort(404);
         }
 
-        $product = $item->product()->lockForUpdate()->first();
-        if (!$product) abort(422, 'Product not found');
-        if ($data['qty'] > $product->stock) abort(422, 'Insufficient stock');
+        /** @var Product $product */
+        $product = Product::query()->findOrFail($item->product_id);
 
-        $item->update(['qty' => $data['qty']]);
-        return response()->json($cart->fresh()->load('items.product'));
+        // clamp по складу
+        $qty = min((int)$data['qty'], max(0, (int)$product->stock));
+
+        if ($qty === 0) {
+            $item->delete();
+
+            return response()->json([
+                'ok' => true,
+                'removed' => true,
+            ]);
+        }
+
+        $item->update([
+            'qty'   => $qty,
+            'price' => $product->price, // актуалізуємо ціну
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'item' => [
+                'id'         => $item->id,
+                'product_id' => $item->product_id,
+                'qty'        => (int)$item->qty,
+                'price'      => (float)$item->price,
+            ],
+        ]);
     }
 }

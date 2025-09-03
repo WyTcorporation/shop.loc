@@ -48,6 +48,10 @@ class Order extends Model
             if (is_null($order->total)) {
                 $order->total = 0;
             }
+            $order->loadCount('items');
+        });
+        static::updated(function (Order $order) {
+            $order->recalculateTotal();
         });
     }
 
@@ -64,16 +68,16 @@ class Order extends Model
     public function canTransitionTo(OrderStatus $to): bool
     {
         return match ($this->status) {
-            OrderStatus::New      => in_array($to, [OrderStatus::Paid, OrderStatus::Cancelled], true),
-            OrderStatus::Paid     => in_array($to, [OrderStatus::Shipped, OrderStatus::Cancelled], true),
-            OrderStatus::Shipped  => false,
+            OrderStatus::New => in_array($to, [OrderStatus::Paid, OrderStatus::Cancelled], true),
+            OrderStatus::Paid => in_array($to, [OrderStatus::Shipped, OrderStatus::Cancelled], true),
+            OrderStatus::Shipped => false,
             OrderStatus::Cancelled => false,
         };
     }
 
     public function transitionTo(OrderStatus $to): void
     {
-        if (! $this->canTransitionTo($to)) {
+        if (!$this->canTransitionTo($to)) {
             throw new \DomainException("Cannot transition from {$this->status->value} to {$to->value}");
         }
 
@@ -139,7 +143,7 @@ class Order extends Model
             }
             $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
                 $product = $item->product;
-                if (! $product) {
+                if (!$product) {
                     throw new \RuntimeException('Order item without product.');
                 }
                 if ($product->stock < $item->qty) {
@@ -181,7 +185,7 @@ class Order extends Model
 
     public function recalculateTotal(): void
     {
-        $total = (float) ($this->items()
+        $total = (float)($this->items()
             ->selectRaw('COALESCE(SUM(qty * price), 0) AS t')
             ->value('t') ?? 0);
 

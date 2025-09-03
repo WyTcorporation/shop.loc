@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Products\Tables;
 
+use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -13,13 +14,66 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\TernaryFilter;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->query(fn (): Builder => Product::query()->with(['images', 'category']))
             ->columns([
+                ImageColumn::make('preview')
+                    ->label('Preview')
+                    // важливо: саме getStateUsing для ImageColumn
+                    ->getStateUsing(fn (Product $record) => $record->preview_url)
+                    ->circular()
+                    ->defaultImageUrl(asset('images/no-image.svg')),
+
+                // (за бажанням) дебаг-колонка з URL
+                TextColumn::make('preview_url_debug')
+                    ->label('url?')
+                    ->getStateUsing(fn (Product $r) => $r->preview_url ?? '—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+//                \Filament\Tables\Columns\ImageColumn::make('preview')
+//                    ->label('Preview')
+//                    ->getStateUsing(fn ($record) => $record->preview_url) // ← важливо
+//                    ->circular()
+//                    ->defaultImageUrl(asset('images/placeholder.png')),
+//
+//                // якщо хочеш дебаг-колонку:
+//                \Filament\Tables\Columns\TextColumn::make('preview_url_debug')
+//                    ->label('url?')
+//                    ->formatStateUsing(fn ($state, $record) => $record->preview_url ?? '—')
+//                    ->toggleable(isToggledHiddenByDefault: true),
+//                ImageColumn::make('preview_path')
+//                    ->label('Preview')
+//                    ->getStateUsing(fn ($r) => $r->images
+//                        ->sortBy([['is_primary','desc'],['sort','asc'],['id','asc']])
+//                        ->first()?->path
+//                    )
+//                    ->disk('public')                 // тепер колонка сама складе URL
+//                    ->circular()
+//                    ->defaultImageUrl(asset('images/no-image.svg')),
+//                ImageColumn::make('preview')
+//                    ->label('Preview')
+//                    ->getStateUsing(function (Product $record) {
+//                        $img = $record->images->sortByDesc('is_primary')->sortBy('sort')->first();
+//                        return $img ? \Storage::disk($img->disk ?? 'public')->url($img->path) : null;
+//                    })
+//                    ->circular(),
+//                TextColumn::make('preview_url_debug')
+//                    ->label('url?')
+//                    ->state(fn ($record) => $record->preview_url ?? '—')
+//                    ->toggleable(isToggledHiddenByDefault: true),
+//                ImageColumn::make('preview_url')
+//                    ->label('Preview')
+//                    ->state(fn ($record) => $record->preview_url)
+//                    ->circular(),
+//                ImageColumn::make('preview')
+//                    ->label('Preview')
+//                    ->getStateUsing(fn ($record) => $record->preview_url ?: asset('images/no-image.svg'))
+//                    ->circular(),
                 TextColumn::make('name')
                     ->searchable(),
 

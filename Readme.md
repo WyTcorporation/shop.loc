@@ -163,3 +163,8 @@ docker compose exec app php artisan scout:import "App\Models\Product"
 
 
 docker compose exec app php artisan tinker --execute="use App\Models\Order; Order::factory()->count(2)->create(['status'=>'new']); Order::factory()->count(1)->create(['status'=>'paid']); Order::factory()->count(1)->create(['status'=>'shipped']);"
+
+docker compose exec app php artisan storage:link
+docker compose exec app ln -s ../storage/app/public public/storage
+
+
