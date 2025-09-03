@@ -6,6 +6,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\Mail;
+use App\Enums\OrderStatus;
+use App\Mail\OrderPaidMail;
+use App\Mail\OrderShippedMail;
 
 it('sends order placed email', function () {
     Mail::fake();
@@ -28,4 +31,22 @@ it('sends order placed email', function () {
     Mail::assertSent(OrderPlacedMail::class, function ($m) use ($order) {
         return $m->order->is($order);
     });
+});
+
+
+
+it('sends paid and shipped emails on status change', function () {
+    Mail::fake();
+
+    $p = Product::factory()->create(['price' => 10, 'stock' => 5]);
+    $o = Order::factory()->create(['email' => 'customer@example.com', 'status' => OrderStatus::New->value]);
+    OrderItem::factory()->for($o)->create(['product_id' => $p->id, 'qty' => 2, 'price' => 10]);
+
+    // mark paid
+    $o->update(['status' => OrderStatus::Paid->value]);
+    Mail::assertSent(OrderPaidMail::class);
+
+    // mark shipped
+    $o->update(['status' => OrderStatus::Shipped->value]);
+    Mail::assertSent(OrderShippedMail::class);
 });

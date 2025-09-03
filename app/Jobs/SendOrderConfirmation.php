@@ -23,13 +23,13 @@ class SendOrderConfirmation implements ShouldQueue
 
     public function handle(): void
     {
-        if (! $this->order->email) {
+        $order = $this->order instanceof Order ? $this->order : Order::findOrFail($this->order);
+        if (! $order->email) {
             return;
         }
+        $mailable = new OrderPlacedMail($order);
 
-        $mailable = new OrderPlacedMail($this->order);
-
-        $pending = Mail::to($this->order->email);
+        $pending = Mail::to($order->email);
 
         if ($admin = config('shop.admin_email')) {
             $pending->bcc($admin);

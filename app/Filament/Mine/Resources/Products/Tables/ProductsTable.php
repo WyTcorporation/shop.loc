@@ -46,15 +46,26 @@ class ProductsTable
 //                    ->tooltip(fn ($state) => is_array($state) ? json_encode($state, JSON_UNESCAPED_UNICODE) : (string) $state)
 //                    ->wrap(),
                 TextInputColumn::make('stock')
-                    ->rules(['integer', 'min:0'])
+                    ->label('Stock')
+                    ->rules(['required', 'integer', 'min:0'])
                     ->sortable()
+                    ->extraAttributes(['class' => 'text-right'])
                     ->width('100px'),
 
                 TextInputColumn::make('price')
-                    ->rules(['decimal:0,2', 'min:0'])
+                    ->label('Price')
+                    ->rules(['required', 'decimal:0,2', 'min:0'])
+                    ->type('number')
+                    ->step('0.01')
                     ->sortable()
-                    ->width('120px'),
-                ToggleColumn::make('is_active')->sortable(),
+                    ->width('120px')
+                    ->extraAttributes(['class' => 'text-right']),
+
+                ToggleColumn::make('is_active')
+                    ->label('Active')
+                    ->sortable(),
+
+
 
 //                TextColumn::make('price_old')
 //                    ->numeric()
@@ -81,10 +92,14 @@ class ProductsTable
                     ->preload()
                     ->searchable(),
                 TernaryFilter::make('is_active')
-                    ->label('Active?')
-                    ->placeholder('All')
+                    ->label('Active')
                     ->trueLabel('Active')
-                    ->falseLabel('Inactive'),
+                    ->falseLabel('Inactive')
+                    ->queries(
+                        true: fn ($q) => $q->where('is_active', true),
+                        false: fn ($q) => $q->where('is_active', false),
+                        blank: fn ($q) => $q,
+                    ),
             ])
             ->recordActions([
                 EditAction::make(),
