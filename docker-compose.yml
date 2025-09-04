@@ -80,9 +80,26 @@ services:
         ports: ["7700:7700"]
         networks: [shopnet]
 
+    node:
+        image: node:20-alpine
+        container_name: shop-node
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+        ports:
+            - "5173:5173"
+        environment:
+            CHOKIDAR_USEPOLLING: "true"
+            WAYFINDER: "off"
+        command: sh -lc "npm ci || npm i && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+        depends_on:
+            - app
+        networks: [shopnet]
+
 networks:
     shopnet:
 
 volumes:
     pgdata:
     minio:
+    node_modules:

@@ -17,14 +17,14 @@ Route::get('products/{slug}', [ProductController::class, 'show']);
 // Cart
 Route::get('cart', [CartController::class, 'getOrCreate']);
 Route::post('cart', [CartController::class, 'store']);
-Route::get('cart/{id}', [CartController::class, 'show']);
-Route::post('cart/{id}/items', [CartController::class, 'addItem']);
-Route::patch('cart/{id}/items/{item}', [CartController::class, 'updateItem']);
-Route::delete('cart/{id}/items/{item}', [CartController::class, 'removeItem']);
+Route::get('cart/{cart}', [CartController::class, 'show']);
+Route::post('cart/{cart}/items', [CartItemController::class, 'store']);
+Route::patch('cart/{cart}/items/{item}', [CartController::class, 'updateItem']);
 
 // Cart items
-Route::post('cart/{id}/items', [CartItemController::class, 'store']);
+Route::post('cart/{cart}/items', [CartItemController::class, 'store']);
 Route::delete('cart/{id}/items/{itemId}', [CartItemController::class, 'destroy']);
 
 // Checkout
 Route::post('orders', [OrderController::class, 'store']);
+Route::get('/orders/{number}', [OrderController::class, 'show']);

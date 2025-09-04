@@ -16,7 +16,7 @@ class ProductController extends Controller
         $perPage = (int) $r->integer('per_page', 12);
         $perPage = max(1, min($perPage, 100));
         $search     = trim((string) $r->query('search', ''));
-        $categoryId = $r->integer('category');
+        $categoryId = $r->integer('category_id');
         $sort       = (string) $r->query('sort', 'new'); // new|price_asc|price_desc
 
         $qb = Product::query()->where('is_active', true);

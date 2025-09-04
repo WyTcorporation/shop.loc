@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 class CartController extends Controller
@@ -32,12 +33,12 @@ class CartController extends Controller
 //        return response()->json($cart);
 //    }
 
-    public function show(string $id)
+    public function show(Cart $cart)
     {
         /** @var Cart|null $cart */
         $cart = Cart::query()
             ->with(['items.product' => fn($q) => $q->select('id','name','price')])
-            ->findOrFail($id);
+            ->findOrFail($cart->id);
 
         $total = $cart->items->sum(fn ($i) => (float)$i->price * (int)$i->qty);
 
@@ -64,37 +65,19 @@ class CartController extends Controller
             ->cookie('cart_id', $cart->id, 60*24*30, '/', null, false, false, 'Lax');
     }
 
-//    public function updateItem(Request $r, Cart $cart, CartItem $item): JsonResponse
-//    {
-//        $data = $r->validate(['qty' => 'required|integer|min:0']);
-//        if ($item->cart_id !== $cart->id) abort(404);
-//
-//        if ($data['qty'] === 0) {
-//            $item->delete();
-//            return response()->json(['ok'=>true]);
-//        }
-//
-//        $product = $item->product()->lockForUpdate()->first();
-//        if (!$product) abort(422, 'Product not found');
-//        if ($data['qty'] > $product->stock) abort(422, 'Insufficient stock');
-//
-//        $item->update(['qty' => $data['qty']]);
-//        return response()->json($cart->fresh()->load('items.product'));
-//    }
 
-    public function updateItem(Request $request, string $id, CartItem $item)
+    public function updateItem(Request $request, Cart $cart, CartItem $item)
     {
         $data = $request->validate([
             'qty' => ['required','integer','min:0','max:100000'],
         ]);
 
-        // валідація приналежності item до cart
-        if ($item->cart_id !== $id) {
+        if ($item->cart_id !== $cart->id) {
             abort(404);
         }
 
         /** @var Product $product */
-        $product = Product::query()->findOrFail($item->product_id);
+        $product = Product::findOrFail($item->product_id);
 
         // clamp по складу
         $qty = min((int)$data['qty'], max(0, (int)$product->stock));
@@ -110,17 +93,19 @@ class CartController extends Controller
 
         $item->update([
             'qty'   => $qty,
-            'price' => $product->price, // актуалізуємо ціну
+            'price' => $product->price,
         ]);
 
-        return response()->json([
-            'ok' => true,
-            'item' => [
-                'id'         => $item->id,
-                'product_id' => $item->product_id,
-                'qty'        => (int)$item->qty,
-                'price'      => (float)$item->price,
-            ],
-        ]);
+        return response()->json($cart->fresh('items'));
+
+//        return response()->json([
+//            'ok' => true,
+//            'item' => [
+//                'id'         => $item->id,
+//                'product_id' => $item->product_id,
+//                'qty'        => (int)$item->qty,
+//                'price'      => (float)$item->price,
+//            ],
+//        ]);
     }
 }

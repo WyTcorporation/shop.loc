@@ -48,7 +48,7 @@ class Order extends Model
             if (is_null($order->total)) {
                 $order->total = 0;
             }
-            $order->loadCount('items');
+           // $order->loadCount('items');
         });
         static::updated(function (Order $order) {
             $order->recalculateTotal();

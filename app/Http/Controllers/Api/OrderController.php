@@ -69,4 +69,31 @@ class OrderController extends Controller
         SendOrderConfirmation::dispatch($order);
         return response()->json($order->load('items'), 201);
     }
+
+    public function show(string $number)
+    {
+        $order = Order::with([
+            'items.product.images' => fn($q) => $q->orderBy('sort'),
+        ])->where('number', $number)->firstOrFail();
+
+        // підкласти preview_url для кожного item (якщо не збережений у таблиці)
+        $items = $order->items->map(function ($it) {
+            $preview = $it->preview_url
+                ?? optional($it->product?->images?->firstWhere('is_primary', true))->url
+                ?? optional($it->product?->images?->first())->url
+                ?? $it->product?->preview_url;
+
+            return array_merge($it->toArray(), [
+                'preview_url' => $preview,
+                'name'        => $it->name ?? $it->product?->name,
+                'price'       => (float)($it->price ?? $it->product?->price ?? 0),
+                'subtotal'    => (float)($it->subtotal ?? (($it->price ?? 0) * ($it->qty ?? 0))),
+            ]);
+        });
+
+        $payload = $order->toArray();
+        $payload['items'] = $items;
+
+        return response()->json($payload);
+    }
 }

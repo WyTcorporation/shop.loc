@@ -8,15 +8,14 @@ use Illuminate\Support\Facades\DB;
 
 class CartItemController extends Controller
 {
-    public function store(Request $r, string $id)
+    public function store(Request $r, Cart $cart)
     {
         $data = $r->validate([
             'product_id' => ['required','integer','exists:products,id'],
             'qty'        => ['required','integer','min:1'],
         ]);
 
-        return DB::transaction(function () use ($id, $data) {
-            $cart = Cart::where('status','active')->findOrFail($id);
+        return DB::transaction(function () use ($cart, $data) {
             $product = Product::lockForUpdate()->findOrFail($data['product_id']);
 
             if ($product->stock < $data['qty']) {
@@ -33,9 +32,8 @@ class CartItemController extends Controller
         });
     }
 
-    public function destroy(string $id, int $itemId)
+    public function destroy(Cart $cart, int $itemId)
     {
-        $cart = Cart::where('status','active')->findOrFail($id);
         $cart->items()->whereKey($itemId)->delete();
         return response()->json($cart->load('items.product:id,name,slug,price'));
     }
