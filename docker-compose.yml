@@ -85,13 +85,24 @@ services:
         container_name: shop-node
         working_dir: /var/www/html
         volumes:
-            - .:/var/www/html
+            # тільки фронтенд-код та статичні файли
+            - ./resources:/var/www/html/resources:cached
+            - ./public:/var/www/html/public:cached
+            # конфіги збірки окремо, read-only
+            - ./package.json:/var/www/html/package.json:ro
+            - ./package-lock.json:/var/www/html/package-lock.json:ro
+            - ./vite.config.ts:/var/www/html/vite.config.ts:ro
+            - ./tsconfig.json:/var/www/html/tsconfig.json:ro
+            # кеші у томах
+            - node_modules:/var/www/html/node_modules
         ports:
             - "5173:5173"
         environment:
+            APP_URL: "http://localhost:8080"
             CHOKIDAR_USEPOLLING: "true"
+            CHOKIDAR_INTERVAL: "350"
             WAYFINDER: "off"
-        command: sh -lc "npm ci || npm i && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+        command: sh -lc "test -x node_modules/.bin/vite || npm ci; npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
         depends_on:
             - app
         networks: [shopnet]

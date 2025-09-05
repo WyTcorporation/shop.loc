@@ -7,6 +7,7 @@ import CartPage from './pages/Cart';
 import CheckoutPage from './pages/Checkout';
 import OrderConfirmationPage from './pages/OrderConfirmation';
 import { NotifyProvider, useNotify } from './ui/notify';
+import { CartProvider } from './useCart';
 
 const el = document.getElementById('shop-root');
 
@@ -23,6 +24,7 @@ if (el) {
     createRoot(el).render(
         <React.StrictMode>
             <NotifyProvider  autoCloseMs={0}>
+                <CartProvider>
                 <BrowserRouter>
                     <RouteToastAutoClear />
                     <Routes>
@@ -33,6 +35,7 @@ if (el) {
                         <Route path="/order/:number" element={<OrderConfirmationPage/>}/>
                     </Routes>
                 </BrowserRouter>
+                </CartProvider>
             </NotifyProvider>
         </React.StrictMode>
     );

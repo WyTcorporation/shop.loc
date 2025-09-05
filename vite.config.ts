@@ -11,7 +11,19 @@ export default defineConfig({
         host: '0.0.0.0',
         port: 5173,
         strictPort: true,
-        hmr: { host: 'localhost', port: 5173, protocol: 'http' },
+        watch: {
+            usePolling: true,
+            interval: 350,
+            ignored: [
+                '**/node_modules/**',
+                '**/vendor/**',
+                '**/storage/**',
+                '**/.git/**',
+                '**/public/build/**',
+                '**/public/storage/**',
+            ],
+            awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 100 },
+        },
     },
     plugins: [
         laravel({
@@ -21,7 +33,8 @@ export default defineConfig({
                 'resources/js/shop/main.tsx',
             ],
             ssr: 'resources/js/ssr.tsx',
-            refresh: true,
+            // refresh: true,
+            refresh: ['resources/views/**/*.blade.php'],
         }),
         react(),
         tailwindcss(),

@@ -1,154 +1,195 @@
-import axios from 'axios';
+// resources/js/shop/api.ts
+import axios from 'axios'
+
+const API_BASE =
+    (import.meta as any).env?.VITE_API_URL ||
+    'http://localhost:8080/api'
 
 export const api = axios.create({
-    baseURL: '/api',
-    withCredentials: true,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-});
+    baseURL: API_BASE,
+    withCredentials: true, // потрібні cookie (cart_id)
+})
 
-
-export interface Category {
-    id: number;
-    name: string;
-    slug?: string;
-    parent_id?: number | null;
+/* ==================== TYPES ==================== */
+export type Image = {
+    id: number
+    url: string
+    alt?: string
+    is_primary?: boolean
 }
 
-export interface Product {
-    id: number;
-    name: string;
-    price: number;
-    slug?: string | null;
-    preview_url?: string | null;
-    description?: string | null;
-    images?: Array<{ url: string; is_primary?: boolean; alt?: string | null }>;
+export type Product = {
+    id: number
+    name: string
+    slug: string
+    category_id: number
+    price: number | string
+    price_old?: number | string | null
+    preview_url?: string | null
+    images?: Image[]
+    [k: string]: any
 }
 
-export interface Paginated<T> {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
+export type Category = {
+    id: number
+    name: string
+    slug?: string
 }
 
-export interface CartItem {
-    id: number;
-    product_id: number;
-    name?: string;
-    price: number;
-    qty: number;
-    subtotal: number;
-    preview_url?: string | null;
+export type Paginated<T> = {
+    data: T[]
+    current_page?: number
+    last_page?: number
+    per_page?: number | string
+    total?: number
+    next_page_url?: string | null
+    prev_page_url?: string | null
+    [k: string]: any
 }
 
-export interface Cart {
-    id?: number;
-    items: CartItem[];
-    total: number;
-    updated_at?: string;
+export type CartItem = {
+    id: number
+    product_id: number
+    name?: string
+    slug?: string
+    image?: string
+    price: number | string
+    qty: number
+    line_total?: number
+    product?: Product
 }
 
-export interface CreateOrderPayload {
-    email: string;
-    shipping_address?: Record<string, unknown>;
-    items?: Array<{ product_id: number; quantity: number }>;
+export type Cart = {
+    id: string
+    status: 'active' | 'ordered' | string
+    items: CartItem[]
+    total: number
 }
 
-export interface Order {
-    id: number;
-    number: string;
-    email: string;
-    total: number;
-    status: string;
-}
-
-
-export async function fetchCategories() {
-    const { data } = await api.get<Category[]>('/categories');
-    return data;
-}
-
-export async function fetchProducts(params?: {
-    page?: number;
-    per_page?: number;
-    category_id?: number;
-    search?: string;
-    sort?: 'price_asc' | 'price_desc' | 'new';
-}) {
-    const { data } = await api.get<Paginated<Product>>('/products', { params });
-    return data;
-}
-
+/* ==================== PRODUCTS / CATEGORIES ==================== */
 export const ProductsApi = {
-    list: (q?: string) =>
-        api.get<{ data: Product[] }>('/products', { params: { q } }).then(r => r.data.data),
-    show: (slug: string) =>
-        api.get<Product>(`/products/${slug}`).then(r => r.data), // без пробілів у шаблоні
-};
-
-
-type AnyCart = { id?: string|number; items?: any[]; total?: any };
-
-function normalizeCart(raw: AnyCart): Cart {
-    const byProduct = new Map<number, CartItem>();
-    for (const it of raw.items ?? []) {
-        const id  = Number(it.id ?? it.item_id ?? 0);
-        const pid = Number(it.product_id ?? it.product?.id ?? 0);
-        const price = Number(it.price ?? it.product?.price ?? 0);
-        const qty = Number(it.qty ?? it.quantity ?? 0) || 0;
-        const name = it.name ?? it.product?.name ?? '';
-        const preview = it.preview_url ?? it.product?.preview_url ?? null;
-
-        const prev = byProduct.get(pid);
-        if (prev) {
-            prev.qty += qty;
-            prev.subtotal = prev.qty * prev.price;
-        } else {
-            byProduct.set(pid, { id, product_id: pid, name, price, qty, subtotal: price*qty, preview_url: preview });
-        }
-    }
-
-    const items = [...byProduct.values()];
-    const total = Number(raw.total ?? items.reduce((s, i) => s + (Number(i.subtotal) || 0), 0));
-    return { id: raw.id as any, items, total, updated_at: (raw as any).updated_at ?? null };
+    list(params: {
+        page?: number
+        per_page?: number
+        category_id?: number
+        sort?: 'price_asc' | 'price_desc' | 'new' | string
+        search?: string
+    }) {
+        // бек спокійно проігнорує undefined-параметри
+        return api.get<Paginated<Product>>('/products', { params }).then(r => r.data)
+    },
+    show(slug: string) {
+        return api.get<Product>(`/products/${encodeURIComponent(slug)}`).then(r => r.data)
+    },
 }
 
-async function ensureCartId(): Promise<string|number> {
-    const { data } = await api.get('/cart');
-    return (data as any).id;
+export const CategoriesApi = {
+    list() {
+        return api.get<Category[]>('/categories').then(r => r.data)
+    },
+}
+
+/* Сумісні з існуючим кодом Catalog.tsx обгортки: */
+export async function fetchProducts(params: {
+    page?: number
+    per_page?: number
+    category_id?: number
+    sort?: 'price_asc' | 'price_desc' | 'new' | string
+    search?: string
+}): Promise<Paginated<Product>> {
+    return ProductsApi.list(params)
+}
+export async function fetchCategories(): Promise<Category[]> {
+    return CategoriesApi.list()
+}
+
+/* ==================== CART ==================== */
+let activeCartId: string | null = null
+const setActiveCartId = (id: string) => { activeCartId = id }
+
+export function resetCartCache() {
+    activeCartId = null;
+}
+
+
+export const CART_KEY = 'cart_id'
+export async function ensureCartId() { return requireCartId() }
+export async function fetchCartById(id: string) {
+    const { data } = await api.get<Cart>(`/cart/${id}`)
+    setActiveCartId(data.id)
+    return data
+}
+
+async function getCart(): Promise<Cart> {
+    const { data } = await api.get<Cart>('/cart')
+    setActiveCartId(data.id)
+    return data
+}
+async function showCart(id: string): Promise<Cart> {
+    const { data } = await api.get<Cart>(`/cart/${id}`)
+    setActiveCartId(data.id)
+    return data
+}
+async function requireCartId(): Promise<string> {
+    if (activeCartId) return activeCartId
+    const { data } = await api.get<Cart>('/cart') // створить активний кошик і поверне id
+    setActiveCartId(data.id)
+    return data.id
+}
+
+async function addToCart(product_id: number, qty = 1): Promise<Cart> {
+    const id = await requireCartId()
+    const { data } = await api.post<Cart>(`/cart/${id}/items`, { product_id, qty })
+    setActiveCartId(data.id)
+    return data
+}
+async function updateCartItem(item_id: number, qty: number): Promise<Cart> {
+    const id = await requireCartId()
+    const { data } = await api.patch<Cart>(`/cart/${id}/items/${item_id}`, { qty })
+    return data
+}
+async function removeCartItem(item_id: number): Promise<Cart> {
+    const id = await requireCartId()
+    const { data } = await api.delete<Cart>(`/cart/${id}/items/${item_id}`)
+    return data
+}
+async function refreshCart(): Promise<Cart> {
+    try {
+        if (!activeCartId) return getCart();
+        const c = await showCart(activeCartId);
+        if ((c as any)?.status && String(c.status) !== 'active') {
+            activeCartId = null;
+            return getCart();
+        }
+        return c;
+    } catch {
+        activeCartId = null;
+        return getCart();
+    }
 }
 
 export const CartApi = {
-    get: async (): Promise<Cart> => normalizeCart((await api.get('/cart')).data),
+    get: getCart,
+    show: showCart,
+    add: addToCart,
+    update: updateCartItem,
+    remove: removeCartItem,
+    refresh: refreshCart,
+}
 
-    add: async (product_id: number, qty = 1): Promise<Cart> => {
-        const id = await ensureCartId();
-        const { data } = await api.post(`/cart/${id}/items`, { product_id, qty });
-        return normalizeCart(data);
-    },
-
-    update: async (item_id: number, qty: number): Promise<Cart> => {
-        const id = await ensureCartId();
-        const { data } = await api.patch(`/cart/${id}/items/${item_id}`, { qty });
-        if (data?.removed) {
-            return CartApi.get();
-        }
-        return normalizeCart(data);
-    },
-
-    remove: async (item_id: number): Promise<Cart> => {
-        const id = await ensureCartId();
-        const { data } = await api.delete(`/cart/${id}/items/${item_id}`);
-        return normalizeCart(data);
-    },
-};
+/* ==================== ORDERS ==================== */
 
 export const OrdersApi = {
-    create: async (payload: { email: string; shipping_address: any }) => {
-        const { data: cart } = await api.get('/cart');
-        const cart_id = cart.id;
-        return (await api.post('/orders', { cart_id, ...payload })).data;
+    async create(payload: {
+        email: string
+        shipping_address: { name: string; city: string; addr: string }
+        note?: string
+    }) {
+        const cart_id = await requireCartId()
+        const { data } = await api.post('/orders', { cart_id, ...payload })
+        return data
     },
-    show: async (number: string) => (await api.get(`/orders/${number}`)).data,
-};
+    show(number: string) {
+        return api.get(`/orders/${encodeURIComponent(number)}`).then(r => r.data)
+    },
+}
