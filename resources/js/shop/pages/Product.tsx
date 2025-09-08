@@ -1,59 +1,104 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ProductsApi, Product } from '../api'
-import useCart from '../useCart'
-import { useNotify } from '../ui/notify'
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ProductsApi } from '../api';
+import useCart from '../useCart';
+import { useNotify } from '../ui/notify';
+import { formatPrice } from '../ui/format';
+
+type Product = {
+    id: number; slug?: string; name: string; price: number | string; stock?: number;
+    images?: { url: string; alt?: string; is_primary?: boolean }[];
+    preview_url?: string | null;
+};
 
 export default function ProductPage() {
-    const { slug } = useParams()
-    const [p, setP] = useState<Product | null>(null)
-    const [qty, setQty] = useState(1)
-    const { add } = useCart()
-    const { success, error } = useNotify()
-    const navigate = useNavigate()
+    const { slug } = useParams();
+    const [p, setP] = useState<Product | null>(null);
+    const [qty, setQty] = useState(1);
+    const { add } = useCart();
+    const { success, error } = useNotify();
+    const navigate = useNavigate();
 
-    const money = (v: unknown) =>
-        new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'EUR' })
-            .format(Number(v ?? 0));
+    useEffect(() => {
+        let on = true;
+        (async () => {
+            const prod = await ProductsApi.show(slug!);
+            if (!on) return;
+            setP(prod);
+            setQty(1);
+        })();
+        return () => { on = false; };
+    }, [slug]);
 
-    useEffect(() => { if (slug) ProductsApi.show(slug).then(setP) }, [slug])
+    if (!p) return <div className="max-w-6xl mx-auto p-6">Loading…</div>;
 
-    if (!p) return <div className="max-w-4xl mx-auto p-6">Loading…</div>
+    const stock = Number(p.stock ?? 0);
+    const canBuy = stock > 0;
+    const primary =
+        p.images?.find(i => i.is_primary) ?? (p.preview_url ? { url: p.preview_url } : undefined);
+
+    const clampQty = (raw: number) => {
+        const n = Math.max(1, Math.min(stock || 1, raw));
+        return Number.isFinite(n) ? n : 1;
+    };
 
     async function handleAdd() {
         try {
-            await add(p.id, qty)
-            success('Додано до кошика', {
+            await add(p.id, qty);
+            success({
+                title: 'Додано до кошика',
                 action: { label: 'Відкрити кошик', onClick: () => navigate('/cart') },
-                ttl: 0,
             });
         } catch (e: any) {
-            const msg = e?.response?.data?.message ?? 'Не вдалося додати товар'
-            error('Помилка', { description: msg })
+            const message = e?.response?.data?.message || 'Не вдалося додати';
+            error({ title: message });
         }
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
-            <Link to="/" className="text-sm text-gray-500">&larr; Back</Link>
-            <div className="grid md:grid-cols-2 gap-6">
-                {p.preview_url
-                    ? <img src={p.preview_url} alt={p.name} className="w-full h-80 object-cover rounded"/>
-                    : <div className="w-full h-80 bg-gray-100 rounded"/>}
-                <div className="space-y-4">
-                    <h1 className="text-2xl font-semibold">{p.name}</h1>
-                    <div className="text-lg">{money(p.price)}</div>
-                    <div className="flex items-center gap-2">
-                        <input type="number" min={1} value={qty}
-                               onChange={e=>setQty(parseInt(e.target.value || '1',10))}
-                               className="border rounded px-2 py-1 w-20"/>
-                        <button onClick={handleAdd} className="px-4 py-2 rounded bg-black text-white">
-                            Add to cart
-                        </button>
-                    </div>
-                    <Link to="/cart" className="inline-block text-sm underline">Go to cart</Link>
+        <div className="max-w-6xl mx-auto grid gap-6 p-4 md:grid-cols-2">
+            <div className="border rounded-xl overflow-hidden">
+                <div className="aspect-square bg-muted/40">
+                    {primary ? (
+                        <img src={primary.url} alt={primary.alt ?? p.name} className="h-full w-full object-cover" />
+                    ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <h1 className="text-2xl font-semibold">{p.name}</h1>
+                <div className="text-xl">{formatPrice(p.price)}</div>
+
+                {canBuy ? (
+                    <div className="text-sm text-green-700">В наявності: {stock} шт.</div>
+                ) : (
+                    <div className="text-sm text-red-600">Немає в наявності</div>
+                )}
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="number"
+                        min={1}
+                        max={Math.max(1, stock)}
+                        value={qty}
+                        onChange={(e) => setQty(clampQty(Number(e.target.value)))}
+                        className="h-9 w-24 rounded-md border px-3"
+                    />
+                    <button
+                        disabled={!canBuy}
+                        onClick={handleAdd}
+                        className="h-9 px-4 rounded-md bg-black text-white disabled:opacity-50"
+                    >
+                        Додати в кошик
+                    </button>
+                </div>
+
+                <div>
+                    <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>
                 </div>
             </div>
         </div>
-    )
+    );
 }

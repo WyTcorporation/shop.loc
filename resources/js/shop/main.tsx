@@ -8,6 +8,7 @@ import CheckoutPage from './pages/Checkout';
 import OrderConfirmationPage from './pages/OrderConfirmation';
 import { NotifyProvider, useNotify } from './ui/notify';
 import { CartProvider } from './useCart';
+import Header from './components/Header';
 
 const el = document.getElementById('shop-root');
 
@@ -27,6 +28,7 @@ if (el) {
                 <CartProvider>
                 <BrowserRouter>
                     <RouteToastAutoClear />
+                    <Header />
                     <Routes>
                         <Route path="/" element={<CatalogPage/>}/>
                         <Route path="/product/:slug" element={<ProductPage/>}/>

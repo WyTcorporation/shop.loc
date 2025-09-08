@@ -6,39 +6,47 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-
+import { useQueryParam } from '../hooks/useQueryParam';
+import { useQueryParamNumber } from '../hooks/useQueryParamNumber';
+import { useQueryParamEnum } from '../hooks/useQueryParamEnum';
+import { useDebounce } from '../hooks/useDebounce';
+import { formatPrice } from '../ui/format';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
 export default function Catalog() {
-    const [loading, setLoading] = useState(true);
     const [cats, setCats] = useState<Category[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
-    const [categoryId, setCategoryId] = useState<number | undefined>();
-    const [search, setSearch] = useState('');
-    const [sort, setSort] = useState<SortKey>('new');
+    const [loading, setLoading] = useState(true);
 
-    // initial fetch
+    // єдине поле пошуку: sync з URL
+    const [q, setQ] = useQueryParam('q', '');
+    const dq = useDebounce(q, 300);
+
+    // category_id & sort у URL
+    const [categoryIdParam, setCategoryParam] = useQueryParamNumber('category_id', undefined);
+    const [sortParam, setSortParam] = useQueryParamEnum<SortKey>('sort', ['new','price_asc','price_desc'] as const, 'new');
+
+    // локальні стейти підхоплюють значення з URL
+    const [categoryId, setCategoryId] = useState<number | undefined>(categoryIdParam);
+    const [sort, setSort] = useState<SortKey>(sortParam);
+
+    // категорії (без глобального loading)
     useEffect(() => {
+        setCategoryId(categoryIdParam);
         let ignore = false;
         (async () => {
-            setLoading(true);
-            try {
-                const [c] = await Promise.all([fetchCategories()]);
-                if (!ignore) setCats(c);
-            } finally {
-                setLoading(false);
-            }
+            const c = await fetchCategories();
+            if (!ignore) setCats(c);
         })();
-        return () => {
-            ignore = true;
-        };
-    }, []);
+        return () => { ignore = true; };
+    }, [categoryIdParam]);
 
-    // fetch products on filters change
+    // товари
     useEffect(() => {
+        setSort(sortParam);
         let ignore = false;
         (async () => {
             setLoading(true);
@@ -47,7 +55,7 @@ export default function Catalog() {
                     page,
                     per_page: 12,
                     category_id: categoryId,
-                    search: search || undefined,
+                    search: dq || undefined,
                     sort,
                 });
                 if (!ignore) {
@@ -55,13 +63,11 @@ export default function Catalog() {
                     setLastPage(res.last_page);
                 }
             } finally {
-                setLoading(false);
+                if (!ignore) setLoading(false);
             }
         })();
-        return () => {
-            ignore = true;
-        };
-    }, [page, categoryId, search, sort]);
+        return () => { ignore = true; };
+    }, [page, categoryId, sort, dq,sortParam]);
 
     const canPrev = page > 1;
     const canNext = page < lastPage;
@@ -70,13 +76,16 @@ export default function Catalog() {
         <div className="mx-auto w-full max-w-7xl px-4 py-6">
             <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold tracking-tight">Каталог</h1>
+
                 <div className="flex flex-col gap-3 sm:flex-row">
                     <div className="flex gap-2">
                         <Select
                             value={String(categoryId ?? 'all')}
                             onValueChange={(v) => {
                                 setPage(1);
-                                setCategoryId(v === 'all' ? undefined : Number(v));
+                                const next = v === 'all' ? undefined : Number(v);
+                                setCategoryId(next);
+                                setCategoryParam(next);
                             }}
                         >
                             <SelectTrigger className="w-48">
@@ -89,11 +98,14 @@ export default function Catalog() {
                                 ))}
                             </SelectContent>
                         </Select>
+
                         <Select
                             value={sort}
                             onValueChange={(v) => {
+                                const next = v as SortKey;
                                 setPage(1);
-                                setSort(v as SortKey);
+                                setSort(next);
+                                setSortParam(next);
                             }}
                         >
                             <SelectTrigger className="w-40">
@@ -106,16 +118,14 @@ export default function Catalog() {
                             </SelectContent>
                         </Select>
                     </div>
+
                     <div className="flex gap-2">
                         <Input
-                            value={search}
-                            onChange={(e) => {
-                                setPage(1);
-                                setSearch(e.target.value);
-                            }}
+                            value={q}
+                            onChange={(e) => { setPage(1); setQ(e.target.value); }}
                             placeholder="Пошук товарів…"
                         />
-                        <Button variant="secondary" onClick={() => { setSearch(''); setPage(1); }}>
+                        <Button variant="secondary" onClick={() => { setQ(''); setPage(1); }}>
                             Скинути
                         </Button>
                     </div>
@@ -146,7 +156,6 @@ export default function Catalog() {
                                 <Link to={`/product/${p.slug ?? p.id}`} className="block">
                                     <div className="aspect-square bg-muted/40">
                                         {primary ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
                                             <img
                                                 src={primary.url}
                                                 alt={primary.alt ?? p.name}
@@ -183,9 +192,4 @@ export default function Catalog() {
             </footer>
         </div>
     );
-}
-
-function formatPrice(v: number | string) {
-    const value = Number(v ?? 0);
-    return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(value);
 }
