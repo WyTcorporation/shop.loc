@@ -82,8 +82,10 @@ export const NotifyProvider: React.FC<{ children: React.ReactNode; autoCloseMs?:
                             {t.action ? (
                                 <div className="mt-2">
                                     <button
+                                        data-testid="open-cart"
                                         onClick={t.action.onClick}
-                                        className="text-sm underline underline-offset-2 hover:no-underline">
+                                        className="text-sm underline underline-offset-2 hover:no-underline"
+                                    >
                                         {t.action.label}
                                     </button>
                                 </div>

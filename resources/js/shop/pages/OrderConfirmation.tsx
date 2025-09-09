@@ -44,7 +44,9 @@ export default function OrderConfirmation() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6">
-            <h1 className="text-2xl font-semibold">Дякуємо! Замовлення {order.number} оформлено</h1>
+            <h1 className="text-2xl font-semibold" data-testid="order-confirmed">
+                Дякуємо! Замовлення {order.number} оформлено
+            </h1>
             <p className="text-gray-600">Підтвердження надіслано на {order.email}.</p>
 
             <div className="border rounded-xl overflow-hidden">
@@ -91,7 +93,7 @@ export default function OrderConfirmation() {
             </div>
 
             <div className="flex gap-3">
-                <Link to="/shop" className="px-4 py-2 rounded-lg border hover:bg-gray-50">Продовжити покупки</Link>
+                <Link to="/" className="px-4 py-2 rounded-lg border hover:bg-gray-50">Продовжити покупки</Link>
                 <Link to="/cart" className="px-4 py-2 rounded-lg border hover:bg-gray-50">Відкрити кошик</Link>
             </div>
         </div>

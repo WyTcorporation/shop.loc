@@ -182,6 +182,11 @@ docker compose up -d --build node
 docker compose logs -f node
 docker compose exec app sh -lc 'printf "%s" "http://localhost:5173" > public/hot'
 
+const URL = process.env.E2E_BASE_URL ?? 'http://localhost:8080';
+
+npx playwright test --reporter=html; npx playwright show-report
+
+
 http://localhost:8080
 — бек
 

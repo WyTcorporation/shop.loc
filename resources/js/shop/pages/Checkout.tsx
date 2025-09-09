@@ -60,11 +60,11 @@ export default function CheckoutPage() {
             <h1 className="text-2xl font-semibold">Checkout</h1>
             {error && <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700">{error}</div>}
             <form onSubmit={submit} className="space-y-3">
-                <input className="border rounded px-3 py-2 w-full" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-                <input className="border rounded px-3 py-2 w-full" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
-                <input className="border rounded px-3 py-2 w-full" placeholder="City" value={city} onChange={e=>setCity(e.target.value)} />
-                <input className="border rounded px-3 py-2 w-full" placeholder="Address" value={addr} onChange={e=>setAddr(e.target.value)} />
-                <button disabled={loading} className="px-4 py-2 rounded bg-black text-white">{loading ? 'Placing…' : 'Place order'}</button>
+                <input className="border rounded px-3 py-2 w-full" placeholder="Email" data-testid="email" value={email} onChange={e=>setEmail(e.target.value)} />
+                <input className="border rounded px-3 py-2 w-full" placeholder="Name" value={name} data-testid="shipping-name" onChange={e=>setName(e.target.value)} />
+                <input className="border rounded px-3 py-2 w-full" placeholder="City" value={city} data-testid="shipping-city" onChange={e=>setCity(e.target.value)} />
+                <input className="border rounded px-3 py-2 w-full" placeholder="Address" value={addr} data-testid="shipping-addr" onChange={e=>setAddr(e.target.value)} />
+                <button disabled={loading} className="px-4 py-2 rounded bg-black text-white" data-testid="place-order">{loading ? 'Placing…' : 'Place order'}</button>
             </form>
         </div>
     );

@@ -153,7 +153,7 @@ export default function Catalog() {
 
                         return (
                             <Card key={p.id} className="overflow-hidden">
-                                <Link to={`/product/${p.slug ?? p.id}`} className="block">
+                                <Link to={`/product/${p.slug ?? p.id}`} className="block" data-testid="catalog-card">
                                     <div className="aspect-square bg-muted/40">
                                         {primary ? (
                                             <img

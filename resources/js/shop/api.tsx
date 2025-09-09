@@ -25,7 +25,7 @@ export type Product = {
     price: number | string
     price_old?: number | string | null
     preview_url?: string | null
-    images?: Image[]
+    images?: { url: string; alt?: string; is_primary?: boolean }[];
     [k: string]: any
 }
 
@@ -80,6 +80,7 @@ export const ProductsApi = {
     show(slug: string) {
         return api.get<Product>(`/products/${encodeURIComponent(slug)}`).then(r => r.data)
     },
+    related: fetchRelatedProducts,
 }
 
 export const CategoriesApi = {
@@ -98,6 +99,19 @@ export async function fetchProducts(params: {
 }): Promise<Paginated<Product>> {
     return ProductsApi.list(params)
 }
+
+export async function fetchRelatedProducts(
+    category_id: number,
+    exclude_id?: number,
+    limit = 4
+): Promise<Product[]> {
+    const res = await fetchProducts({ page: 1, per_page: limit + 1, category_id, sort: 'new' });
+    const items = res.data ?? [];
+    const filtered = exclude_id ? items.filter(p => p.id !== exclude_id) : items;
+    return filtered.slice(0, limit);
+}
+
+
 export async function fetchCategories(): Promise<Category[]> {
     return CategoriesApi.list()
 }

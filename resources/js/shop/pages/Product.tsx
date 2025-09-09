@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ProductsApi } from '../api';
+import { ProductsApi, type Product } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
-
-type Product = {
-    id: number; slug?: string; name: string; price: number | string; stock?: number;
-    images?: { url: string; alt?: string; is_primary?: boolean }[];
-    preview_url?: string | null;
-};
+import { Card } from '@/components/ui/card'; // якщо використовуєш shadcn Card
+import SimilarProducts from '../components/SimilarProducts';
 
 export default function ProductPage() {
     const { slug } = useParams();
     const [p, setP] = useState<Product | null>(null);
+
+    // НОВЕ:
+    const [related, setRelated] = useState<Product[]>([]);
+    const [loadingRelated, setLoadingRelated] = useState(false);
+
     const [qty, setQty] = useState(1);
     const { add } = useCart();
     const { success, error } = useNotify();
@@ -30,6 +31,25 @@ export default function ProductPage() {
         return () => { on = false; };
     }, [slug]);
 
+    // НОВЕ: підвантаження схожих після завантаження продукту
+    useEffect(() => {
+        let on = true;
+        (async () => {
+            if (!p?.category_id) {
+                setRelated([]);
+                return;
+            }
+            setLoadingRelated(true);
+            try {
+                const items = await ProductsApi.related(p.category_id, p.id, 4);
+                if (on) setRelated(items);
+            } finally {
+                if (on) setLoadingRelated(false);
+            }
+        })();
+        return () => { on = false; };
+    }, [p?.id, p?.category_id]);
+
     if (!p) return <div className="max-w-6xl mx-auto p-6">Loading…</div>;
 
     const stock = Number(p.stock ?? 0);
@@ -37,10 +57,7 @@ export default function ProductPage() {
     const primary =
         p.images?.find(i => i.is_primary) ?? (p.preview_url ? { url: p.preview_url } : undefined);
 
-    const clampQty = (raw: number) => {
-        const n = Math.max(1, Math.min(stock || 1, raw));
-        return Number.isFinite(n) ? n : 1;
-    };
+    const clampQty = (raw: number) => Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
 
     async function handleAdd() {
         try {
@@ -57,6 +74,7 @@ export default function ProductPage() {
 
     return (
         <div className="max-w-6xl mx-auto grid gap-6 p-4 md:grid-cols-2">
+            {/* ліва колонка: зображення */}
             <div className="border rounded-xl overflow-hidden">
                 <div className="aspect-square bg-muted/40">
                     {primary ? (
@@ -67,6 +85,7 @@ export default function ProductPage() {
                 </div>
             </div>
 
+            {/* права колонка: деталі */}
             <div className="space-y-4">
                 <h1 className="text-2xl font-semibold">{p.name}</h1>
                 <div className="text-xl">{formatPrice(p.price)}</div>
@@ -85,11 +104,13 @@ export default function ProductPage() {
                         value={qty}
                         onChange={(e) => setQty(clampQty(Number(e.target.value)))}
                         className="h-9 w-24 rounded-md border px-3"
+                        data-testid="qty-input"
                     />
                     <button
                         disabled={!canBuy}
                         onClick={handleAdd}
                         className="h-9 px-4 rounded-md bg-black text-white disabled:opacity-50"
+                        data-testid="add-to-cart"
                     >
                         Додати в кошик
                     </button>
@@ -98,6 +119,8 @@ export default function ProductPage() {
                 <div>
                     <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>
                 </div>
+
+                <SimilarProducts categoryId={p.category_id} currentSlug={p.slug} />
             </div>
         </div>
     );
