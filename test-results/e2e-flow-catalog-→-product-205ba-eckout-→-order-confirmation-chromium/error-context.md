@@ -1,0 +1,59 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "3D-Print Shop" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Каталог" [ref=e7] [cursor=pointer]:
+          - /url: /shop
+        - link "Кошик" [ref=e8] [cursor=pointer]:
+          - /url: /cart
+        - link "Кошик373,72 EUR1" [ref=e9] [cursor=pointer]:
+          - /url: /cart
+          - generic [ref=e10] [cursor=pointer]: Кошик
+          - generic [ref=e11] [cursor=pointer]: 373,72 EUR
+          - generic [ref=e12] [cursor=pointer]: "1"
+        - generic [ref=e13]:
+          - button "Кошик1" [ref=e14]:
+            - text: Кошик
+            - generic [ref=e15]: "1"
+          - dialog "Міні-кошик" [ref=e16]:
+            - list [ref=e18]:
+              - listitem [ref=e19]:
+                - generic [ref=e21]: без фото
+                - generic [ref=e22]:
+                  - generic [ref=e23]: "#83"
+                  - generic [ref=e24]:
+                    - text: 1 × 373,72 EUR =
+                    - generic [ref=e25]: 373,72 EUR
+            - generic [ref=e26]:
+              - generic [ref=e27]:
+                - text: "Разом:"
+                - generic [ref=e28]: 373,72 EUR
+              - generic [ref=e29]:
+                - link "Кошик" [ref=e30] [cursor=pointer]:
+                  - /url: /cart
+                - link "Оформити" [ref=e31] [cursor=pointer]:
+                  - /url: /checkout
+        - link "Обране" [ref=e32] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e33] [cursor=pointer]
+          - generic [ref=e35] [cursor=pointer]: Обране
+  - generic [ref=e36]:
+    - heading "Cart" [level=1] [ref=e37]
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]: Vel laboriosam illum
+        - generic [ref=e42]: 373,72 EUR
+      - spinbutton [ref=e43]: "1"
+      - generic [ref=e44]: 373,72 EUR
+      - button "Remove" [ref=e45]
+    - generic [ref=e46]:
+      - generic [ref=e47]: "Total:"
+      - generic [ref=e48]: 373,72 EUR
+    - link "Checkout" [ref=e50] [cursor=pointer]:
+      - /url: /checkout
+```

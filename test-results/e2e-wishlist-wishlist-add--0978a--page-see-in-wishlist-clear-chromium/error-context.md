@@ -36,34 +36,6 @@
           - img [ref=e26] [cursor=pointer]
           - generic [ref=e28] [cursor=pointer]: Обране
   - generic [ref=e29]:
-    - banner [ref=e30]:
-      - heading "Каталог" [level=1] [ref=e31]
-      - generic [ref=e32]:
-        - generic [ref=e33]:
-          - combobox [ref=e34]:
-            - generic: Всі категорії
-            - img [ref=e35]
-          - combobox [ref=e37]:
-            - generic: Новинки
-            - img [ref=e38]
-        - generic [ref=e40]:
-          - textbox "Пошук товарів…" [ref=e41]
-          - spinbutton [ref=e42]
-          - spinbutton [ref=e43]
-          - button "Застосувати" [ref=e44]
-          - button "Скинути все" [ref=e45]
-    - generic [ref=e46]:
-      - generic [ref=e47]:
-        - generic [ref=e48]: Категорії
-        - generic [ref=e50]: нема даних
-      - generic [ref=e51]:
-        - generic [ref=e52]: Колір
-        - generic [ref=e54]: нема даних
-      - generic [ref=e55]:
-        - generic [ref=e56]: Розмір
-        - generic [ref=e58]: нема даних
-    - contentinfo [ref=e59]:
-      - button "Назад" [disabled] [ref=e60]
-      - generic [ref=e61]: Сторінка 1 із 1
-      - button "Далі" [disabled] [ref=e62]
+    - heading "Обране" [level=1] [ref=e31]
+    - generic [ref=e32]: Поки що порожньо.
 ```

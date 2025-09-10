@@ -4,24 +4,39 @@ import { ProductsApi, type Product } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
-import { Card } from '@/components/ui/card';
 import SimilarProducts from '../components/SimilarProducts';
 import { addRecentlyViewed } from '../ui/recentlyViewed';
 import RecentlyViewed from '../components/RecentlyViewed';
+import WishlistButton from '../components/WishlistButton';
 
 export default function ProductPage() {
     const { slug } = useParams();
     const [p, setP] = useState<Product | null>(null);
-
-    // НОВЕ:
-    const [related, setRelated] = useState<Product[]>([]);
-    const [loadingRelated, setLoadingRelated] = useState(false);
 
     const [qty, setQty] = useState(1);
     const { add } = useCart();
     const { success, error } = useNotify();
     const navigate = useNavigate();
 
+    // Завантаження продукту
+    useEffect(() => {
+        let on = true;
+        (async () => {
+            if (!slug) return;
+            try {
+                const prod = await ProductsApi.show(slug);
+                if (!on) return;
+                setP(prod);
+                setQty(1);
+            } catch {
+                // опційно: редирект на каталог
+                // navigate('/', { replace: true });
+            }
+        })();
+        return () => { on = false; };
+    }, [slug]);
+
+    // Додати у "нещодавно переглянуті"
     useEffect(() => {
         if (!p) return;
         addRecentlyViewed({
@@ -29,48 +44,24 @@ export default function ProductPage() {
             slug: p.slug,
             name: p.name,
             price: p.price,
-            preview_url: p.preview_url ?? p.images?.find(i => i.is_primary)?.url ?? p.images?.[0]?.url ?? null,
+            preview_url:
+                p.preview_url ??
+                p.images?.find(i => i.is_primary)?.url ??
+                p.images?.[0]?.url ??
+                null,
         });
     }, [p]);
 
-    useEffect(() => {
-        let on = true;
-        (async () => {
-            const prod = await ProductsApi.show(slug!);
-            if (!on) return;
-            setP(prod);
-            setQty(1);
-        })();
-        return () => { on = false; };
-    }, [slug]);
-
-    // НОВЕ: підвантаження схожих після завантаження продукту
-    useEffect(() => {
-        let on = true;
-        (async () => {
-            if (!p?.category_id) {
-                setRelated([]);
-                return;
-            }
-            setLoadingRelated(true);
-            try {
-                const items = await ProductsApi.related(p.category_id, p.id, 4);
-                if (on) setRelated(items);
-            } finally {
-                if (on) setLoadingRelated(false);
-            }
-        })();
-        return () => { on = false; };
-    }, [p?.id, p?.category_id]);
-
-    if (!p) return <div className="max-w-6xl mx-auto p-6">Loading…</div>;
+    if (!p) return <div className="max-w-6xl mx-auto p-6">Завантаження…</div>;
 
     const stock = Number(p.stock ?? 0);
     const canBuy = stock > 0;
     const primary =
-        p.images?.find(i => i.is_primary) ?? (p.preview_url ? { url: p.preview_url } : undefined);
+        p.images?.find(i => i.is_primary) ??
+        (p.preview_url ? { url: p.preview_url, alt: p.name } : undefined);
 
-    const clampQty = (raw: number) => Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
+    const clampQty = (raw: number) =>
+        Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
 
     async function handleAdd() {
         try {
@@ -91,16 +82,28 @@ export default function ProductPage() {
             <div className="border rounded-xl overflow-hidden">
                 <div className="aspect-square bg-muted/40">
                     {primary ? (
-                        <img src={primary.url} alt={primary.alt ?? p.name} className="h-full w-full object-cover" />
+                        <img
+                            src={primary.url}
+                            alt={primary.alt ?? p.name}
+                            className="h-full w-full object-cover"
+                        />
                     ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                            без фото
+                        </div>
                     )}
                 </div>
             </div>
 
             {/* права колонка: деталі */}
             <div className="space-y-4">
-                <h1 className="text-2xl font-semibold">{p.name}</h1>
+                <div className="flex items-start justify-between gap-3">
+                    <h1 className="text-2xl font-semibold" data-testid="product-title">
+                        {p.name}
+                    </h1>
+                    <WishlistButton product={p} />
+                </div>
+
                 <div className="text-xl">{formatPrice(p.price)}</div>
 
                 {canBuy ? (
@@ -118,6 +121,7 @@ export default function ProductPage() {
                         onChange={(e) => setQty(clampQty(Number(e.target.value)))}
                         className="h-9 w-24 rounded-md border px-3"
                         data-testid="qty-input"
+                        disabled={!canBuy}
                     />
                     <button
                         disabled={!canBuy}
@@ -130,13 +134,12 @@ export default function ProductPage() {
                 </div>
 
                 <div>
-                    <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>
+                    <Link to="/" className="text-sm text-gray-600 hover:underline">
+                        ← До каталогу
+                    </Link>
                 </div>
-                {related.length > 0 && (
-                    <div className="text-xs text-muted-foreground mb-2">
-                        Знайдено схожих: {related.length}
-                    </div>
-                )}
+
+                {/* Схожі товари + Нещодавно переглянуті */}
                 <SimilarProducts categoryId={p.category_id} currentSlug={p.slug} />
                 <RecentlyViewed excludeSlug={p.slug} />
             </div>

@@ -1,21 +1,25 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import {createRoot} from 'react-dom/client';
+import {BrowserRouter, Routes, Route, useLocation} from 'react-router-dom';
 import CatalogPage from './pages/Catalog';
 import ProductPage from './pages/Product';
 import CartPage from './pages/Cart';
 import CheckoutPage from './pages/Checkout';
 import OrderConfirmationPage from './pages/OrderConfirmation';
-import { NotifyProvider, useNotify } from './ui/notify';
-import { CartProvider } from './useCart';
+import {NotifyProvider, useNotify} from './ui/notify';
+import {CartProvider} from './useCart';
 import Header from './components/Header';
+import {WishlistProvider} from './hooks/useWishlist';
+import WishlistPage from './pages/Wishlist';
 
 const el = document.getElementById('shop-root');
 
 function RouteToastAutoClear() {
     const location = useLocation();
-    const { clearAll } = useNotify();
-    React.useEffect(() => { clearAll(); }, [location.pathname, location.search, clearAll]);
+    const {clearAll} = useNotify();
+    React.useEffect(() => {
+        clearAll();
+    }, [location.pathname, location.search, clearAll]);
     return null;
 }
 
@@ -24,17 +28,20 @@ if (el) {
         <React.StrictMode>
             <NotifyProvider autoCloseMs={0}>
                 <CartProvider>
-                    <BrowserRouter>
-                        <RouteToastAutoClear />
-                        <Header />
-                        <Routes>
-                            <Route path="/" element={<CatalogPage />} />
-                            <Route path="/product/:slug" element={<ProductPage />} />
-                            <Route path="/cart" element={<CartPage />} />
-                            <Route path="/checkout" element={<CheckoutPage />} />
-                            <Route path="/order/:number" element={<OrderConfirmationPage />} />
-                        </Routes>
-                    </BrowserRouter>
+                    <WishlistProvider>
+                        <BrowserRouter>
+                            <RouteToastAutoClear/>
+                            <Header/>
+                            <Routes>
+                                <Route path="/" element={<CatalogPage/>}/>
+                                <Route path="/product/:slug" element={<ProductPage/>}/>
+                                <Route path="/cart" element={<CartPage/>}/>
+                                <Route path="/checkout" element={<CheckoutPage/>}/>
+                                <Route path="/order/:number" element={<OrderConfirmationPage/>}/>
+                                <Route path="/wishlist" element={<WishlistPage />} />
+                            </Routes>
+                        </BrowserRouter>
+                    </WishlistProvider>
                 </CartProvider>
             </NotifyProvider>
         </React.StrictMode>

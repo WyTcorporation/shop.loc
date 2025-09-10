@@ -18,6 +18,7 @@ import { useQueryParamNumber } from '../hooks/useQueryParamNumber';
 import { useQueryParamEnum } from '../hooks/useQueryParamEnum';
 import { useDebounce } from '../hooks/useDebounce';
 import { formatPrice } from '../ui/format';
+import WishlistButton from '../components/WishlistButton';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
@@ -410,6 +411,10 @@ export default function Catalog() {
                                         <div className="mt-1 text-sm text-muted-foreground">{formatPrice(p.price)}</div>
                                     </div>
                                 </Link>
+                                <h1 className="text-2xl font-semibold flex items-center gap-3">
+                                    {p.name}
+                                    <WishlistButton product={p} />
+                                </h1>
                             </Card>
                         );
                     })}

@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import useCart from '../useCart';
 import { formatPrice } from '../ui/format';
 import MiniCart from './MiniCart';
+import WishlistBadge from '../components/WishlistBadge';
 
 export default function Header() {
     const { cart, total } = useCart();
@@ -26,6 +27,7 @@ export default function Header() {
             </span>
                     </Link>
                     <MiniCart />
+                    <WishlistBadge />
                 </nav>
             </div>
         </header>
