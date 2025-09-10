@@ -185,7 +185,7 @@ docker compose exec app sh -lc 'printf "%s" "http://localhost:5173" > public/hot
 const URL = process.env.E2E_BASE_URL ?? 'http://localhost:8080';
 
 npx playwright test --reporter=html; npx playwright show-report
-
+npx playwright test --config=playwright.config.tsx
 
 http://localhost:8080
 — бек

@@ -13,6 +13,7 @@ Route::get('categories', [CategoryController::class,'index']);
 
 // Products
 Route::get('products', [ProductController::class, 'index']);
+Route::get('products/facets', [ProductController::class, 'facets']);
 Route::get('products/{slug}', [ProductController::class, 'show']);
 
 // Cart

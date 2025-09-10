@@ -101,6 +101,8 @@ class Product extends Model
 
     public function toSearchableArray(): array
     {
+        $attrs = (array) $this->getAttribute('attributes');
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -110,7 +112,7 @@ class Product extends Model
             'stock' => (int)$this->stock,
             'price' => (float)$this->price,
             'is_active' => (bool)$this->is_active,
-            'attrs' => $this->attributes ?? [],
+            'attrs' => $attrs
         ];
     }
 }

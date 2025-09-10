@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchCategories, fetchProducts, Category, Product, Paginated } from '../api';
+import {
+    fetchCategories,
+    fetchProducts,
+    type Category,
+    type Product,
+    type PaginatedWithFacets,
+    type Facets,
+} from '../api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,19 +28,43 @@ export default function Catalog() {
     const [lastPage, setLastPage] = useState(1);
     const [loading, setLoading] = useState(true);
 
-    // єдине поле пошуку: sync з URL
+    // пошук у URL
     const [q, setQ] = useQueryParam('q', '');
     const dq = useDebounce(q, 300);
 
     // category_id & sort у URL
     const [categoryIdParam, setCategoryParam] = useQueryParamNumber('category_id', undefined);
-    const [sortParam, setSortParam] = useQueryParamEnum<SortKey>('sort', ['new','price_asc','price_desc'] as const, 'new');
+    const [sortParam, setSortParam] = useQueryParamEnum<SortKey>('sort', ['new', 'price_asc', 'price_desc'] as const, 'new');
 
-    // локальні стейти підхоплюють значення з URL
+    // локальні значення
     const [categoryId, setCategoryId] = useState<number | undefined>(categoryIdParam);
     const [sort, setSort] = useState<SortKey>(sortParam);
 
-    // категорії (без глобального loading)
+    // атрибути у URL (і СЕТЕРИ!)
+    const [colorsParam, setColorsParam] = useQueryParam('color', ''); // "?color=red,blue"
+    const [sizesParam,  setSizesParam]  = useQueryParam('size',  ''); // "?size=M,L"
+    const selectedColors = useMemo(() => colorsParam ? colorsParam.split(',').filter(Boolean) : [], [colorsParam]);
+    const selectedSizes  = useMemo(() => sizesParam  ? sizesParam.split(',').filter(Boolean)  : [], [sizesParam]);
+
+    // price range у URL
+    const [minPriceParam, setMinPriceParam] = useQueryParamNumber('min_price', undefined);
+    const [maxPriceParam, setMaxPriceParam] = useQueryParamNumber('max_price', undefined);
+    const [minPrice, setMinPrice] = useState<number | undefined>(minPriceParam);
+    const [maxPrice, setMaxPrice] = useState<number | undefined>(maxPriceParam);
+    useEffect(() => { setMinPrice(minPriceParam); }, [minPriceParam]);
+    useEffect(() => { setMaxPrice(maxPriceParam); }, [maxPriceParam]);
+
+    // фасети
+    const [facets, setFacets] = useState<Facets | null>(null);
+
+    function toggleListParam(value: string, list: string[], setParam: (v?: string)=>void) {
+        const has = list.includes(value);
+        const next = has ? list.filter(v => v !== value) : [...list, value];
+        setParam(next.length ? next.join(',') : undefined);
+        setPage(1);
+    }
+
+    // категорії
     useEffect(() => {
         setCategoryId(categoryIdParam);
         let ignore = false;
@@ -44,33 +75,89 @@ export default function Catalog() {
         return () => { ignore = true; };
     }, [categoryIdParam]);
 
-    // товари
+    // товари + фасети разом (щоб уникнути гонок)
     useEffect(() => {
         setSort(sortParam);
         let ignore = false;
         (async () => {
             setLoading(true);
             try {
-                const res: Paginated<Product> = await fetchProducts({
+                const res: PaginatedWithFacets<Product> = await fetchProducts({
                     page,
                     per_page: 12,
                     category_id: categoryId,
                     search: dq || undefined,
                     sort,
+                    color: selectedColors,
+                    size: selectedSizes,
+                    min_price: minPriceParam,
+                    max_price: maxPriceParam,
+                    with_facets: 1,
                 });
                 if (!ignore) {
                     setProducts(res.data);
                     setLastPage(res.last_page);
+                    setFacets(res.facets ?? {});
                 }
             } finally {
                 if (!ignore) setLoading(false);
             }
         })();
         return () => { ignore = true; };
-    }, [page, categoryId, sort, dq,sortParam]);
+    }, [
+        page, categoryId, sort, dq, sortParam,
+        colorsParam, sizesParam, minPriceParam, maxPriceParam
+    ]);
 
     const canPrev = page > 1;
     const canNext = page < lastPage;
+
+    // безпечне читання фасетів
+    const catById     = new Map(cats.map(c => [String(c.id), c]));
+    const catCounts   = facets?.['category_id'] ?? {};
+    const colorCounts = facets?.['attrs.color'] ?? {};
+    const sizeCounts  = facets?.['attrs.size'] ?? {};
+
+    function clearAll() {
+        setQ('');
+        setCategoryId(undefined);
+        setCategoryParam(undefined);
+        setColorsParam(undefined);
+        setSizesParam(undefined);
+        setMinPrice(undefined);
+        setMaxPrice(undefined);
+        setMinPriceParam(undefined);
+        setMaxPriceParam(undefined);
+        setPage(1);
+    }
+
+    const activeChips = [
+        ...(categoryId ? [{
+            key: 'cat',
+            label: cats.find(c => c.id === categoryId)?.name ?? `#${categoryId}`,
+            onClear: () => { setCategoryId(undefined); setCategoryParam(undefined); setPage(1); },
+        }] : []),
+        ...selectedColors.map((c) => ({
+            key: `color:${c}`,
+            label: `Колір: ${c}`,
+            onClear: () => toggleListParam(c, selectedColors, setColorsParam),
+        })),
+        ...selectedSizes.map((s) => ({
+            key: `size:${s}`,
+            label: `Розмір: ${s}`,
+            onClear: () => toggleListParam(s, selectedSizes, setSizesParam),
+        })),
+        ...(minPriceParam != null ? [{
+            key: 'min',
+            label: `Від: ${minPriceParam}`,
+            onClear: () => { setMinPrice(undefined); setMinPriceParam(undefined); setPage(1); },
+        }] : []),
+        ...(maxPriceParam != null ? [{
+            key: 'max',
+            label: `До: ${maxPriceParam}`,
+            onClear: () => { setMaxPrice(undefined); setMaxPriceParam(undefined); setPage(1); },
+        }] : []),
+    ];
 
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-6">
@@ -119,18 +206,168 @@ export default function Catalog() {
                         </Select>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                         <Input
                             value={q}
                             onChange={(e) => { setPage(1); setQ(e.target.value); }}
                             placeholder="Пошук товарів…"
                         />
-                        <Button variant="secondary" onClick={() => { setQ(''); setPage(1); }}>
-                            Скинути
+
+                        <Input
+                            data-testid="price-min"
+                            type="number"
+                            placeholder="Ціна від"
+                            value={minPrice ?? ''}
+                            onChange={(e) => setMinPrice(e.target.value === '' ? undefined : Number(e.target.value))}
+                            className="w-28"
+                        />
+                        <Input
+                            data-testid="price-max"
+                            type="number"
+                            placeholder="до"
+                            value={maxPrice ?? ''}
+                            onChange={(e) => setMaxPrice(e.target.value === '' ? undefined : Number(e.target.value))}
+                            className="w-24"
+                        />
+                        <Button
+                            data-testid="apply-price"
+                            onClick={() => {
+                                setMinPriceParam(minPrice);
+                                setMaxPriceParam(maxPrice);
+                                setPage(1);
+                            }}
+                        >
+                            Застосувати
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            data-testid="clear-filters"
+                            onClick={() => {
+                                setQ('');
+                                setCategoryId(undefined);
+                                setCategoryParam(undefined);
+                                setColorsParam(undefined);
+                                setSizesParam(undefined);
+                                setMinPrice(undefined);
+                                setMaxPrice(undefined);
+                                setMinPriceParam(undefined);
+                                setMaxPriceParam(undefined);
+                                setPage(1);
+                            }}
+                        >
+                            Скинути все
                         </Button>
                     </div>
                 </div>
             </header>
+
+            {activeChips.length > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-2" data-testid="active-filters">
+                    {activeChips.map(ch => (
+                        <button
+                            key={ch.key}
+                            type="button"
+                            onClick={ch.onClear}
+                            className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs hover:bg-gray-50"
+                            title="Скинути цей фільтр"
+                        >
+                            {ch.label}
+                            <span aria-hidden>×</span>
+                        </button>
+                    ))}
+                    <Button variant="ghost" size="sm" onClick={clearAll}>
+                        Скинути все
+                    </Button>
+                </div>
+            )}
+
+            {/* ФАСЕТИ (debug) */}
+            <div
+                data-testid="facets-panel"
+                className="mb-6 grid gap-3 rounded-xl border p-3 md:grid-cols-3"
+            >
+                {/* Категорії */}
+                <div>
+                    <div className="mb-2 text-sm font-medium">Категорії</div>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.entries(catCounts).filter(([id]) => id && id !== 'null').map(([id, cnt]) => {
+                            const c = catById.get(String(id));
+                            const active = Number(categoryId) === Number(id);
+                            return (
+                                <button
+                                    key={id}
+                                    type="button"
+                                    data-testid={`facet-cat-${id}`}
+                                    onClick={() => {
+                                        const next = active ? undefined : Number(id);
+                                        setCategoryId(next);
+                                        setCategoryParam(next);
+                                        setPage(1);
+                                    }}
+                                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
+                                    title={`category_id=${id}`}
+                                >
+                                    {c?.name ?? `#${id}`} <span className="opacity-70">({cnt})</span>
+                                </button>
+                            );
+                        })}
+                        {Object.keys(catCounts).length === 0 && (
+                            <span className="text-xs text-muted-foreground">нема даних</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Колір */}
+                <div>
+                    <div className="mb-2 text-sm font-medium">Колір</div>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.entries(colorCounts).filter(([v]) => v && v !== 'null').map(([v, cnt]) => {
+                            const active = selectedColors.includes(v);
+                            return (
+                                <button
+                                    key={v}
+                                    type="button"
+                                    data-testid={`facet-color-${v}`}
+                                    onClick={() => toggleListParam(v, selectedColors, setColorsParam)}
+                                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
+                                    title={`attrs.color=${v}`}
+                                >
+                                    {v} <span className="opacity-70">({cnt})</span>
+                                </button>
+                            );
+                        })}
+                        {Object.keys(colorCounts).length === 0 && (
+                            <span className="text-xs text-muted-foreground">нема даних</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Розмір */}
+                <div>
+                    <div className="mb-2 text-sm font-medium">Розмір</div>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.entries(sizeCounts).filter(([v]) => v && v !== 'null').map(([v, cnt]) => {
+                            const active = selectedSizes.includes(v);
+                            return (
+                                <button
+                                    key={v}
+                                    type="button"
+                                    data-testid={`facet-size-${v}`}
+                                    onClick={() => toggleListParam(v, selectedSizes, setSizesParam)}
+                                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
+                                    title={`attrs.size=${v}`}
+                                >
+                                    {v} <span className="opacity-70">({cnt})</span>
+                                </button>
+                            );
+                        })}
+                        {Object.keys(sizeCounts).length === 0 && (
+                            <span className="text-xs text-muted-foreground">нема даних</span>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             {loading ? (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

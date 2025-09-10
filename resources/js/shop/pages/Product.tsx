@@ -4,8 +4,10 @@ import { ProductsApi, type Product } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
-import { Card } from '@/components/ui/card'; // якщо використовуєш shadcn Card
+import { Card } from '@/components/ui/card';
 import SimilarProducts from '../components/SimilarProducts';
+import { addRecentlyViewed } from '../ui/recentlyViewed';
+import RecentlyViewed from '../components/RecentlyViewed';
 
 export default function ProductPage() {
     const { slug } = useParams();
@@ -19,6 +21,17 @@ export default function ProductPage() {
     const { add } = useCart();
     const { success, error } = useNotify();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!p) return;
+        addRecentlyViewed({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            price: p.price,
+            preview_url: p.preview_url ?? p.images?.find(i => i.is_primary)?.url ?? p.images?.[0]?.url ?? null,
+        });
+    }, [p]);
 
     useEffect(() => {
         let on = true;
@@ -119,8 +132,13 @@ export default function ProductPage() {
                 <div>
                     <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>
                 </div>
-
+                {related.length > 0 && (
+                    <div className="text-xs text-muted-foreground mb-2">
+                        Знайдено схожих: {related.length}
+                    </div>
+                )}
                 <SimilarProducts categoryId={p.category_id} currentSlug={p.slug} />
+                <RecentlyViewed excludeSlug={p.slug} />
             </div>
         </div>
     );

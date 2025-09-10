@@ -1,66 +1,145 @@
-import * as Dialog from '@radix-ui/react-dialog';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import useCart from '../useCart';
 import { formatPrice } from '../ui/format';
 
 export default function MiniCart() {
     const { cart, total } = useCart();
     const items = cart?.items ?? [];
+    const count = items.reduce((s: number, i: any) => s + Number(i?.qty ?? 0), 0);
+
+    const [open, setOpen] = React.useState(false);
+    const location = useLocation();
+
+    const btnRef = React.useRef<HTMLButtonElement | null>(null);
+    const panelRef = React.useRef<HTMLDivElement | null>(null);
+
+    // закриваємо при зміні маршруту
+    React.useEffect(() => setOpen(false), [location.pathname, location.search]);
+
+    // закриття по кліку поза поповером
+    React.useEffect(() => {
+        function onDocClick(e: MouseEvent) {
+            if (!open) return;
+            const t = e.target as Node;
+            if (panelRef.current?.contains(t)) return;
+            if (btnRef.current?.contains(t)) return;
+            setOpen(false);
+        }
+        function onKey(e: KeyboardEvent) {
+            if (e.key === 'Escape') setOpen(false);
+        }
+        document.addEventListener('mousedown', onDocClick);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onDocClick);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [open]);
 
     return (
-        <Dialog.Root>
-            <Dialog.Trigger asChild>
-                <button className="relative inline-flex items-center gap-2 border rounded-full px-3 py-1">
-                    <span>Кошик</span>
-                    <span className="text-gray-500">{formatPrice(total)}</span>
-                    <span className="absolute -right-2 -top-2 min-w-6 h-6 px-1 rounded-full bg-black text-white text-xs grid place-items-center">
-            {items.reduce((s, i) => s + Number(i.qty || 0), 0)}
-          </span>
-                </button>
-            </Dialog.Trigger>
+        <div className="relative">
+            <Button
+                ref={btnRef}
+                variant="outline"
+                size="sm"
+                data-testid="mini-cart-button"
+                className="relative"
+                title="Відкрити міні-кошик"
+                onClick={() => setOpen(v => !v)}
+            >
+                Кошик
+                <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full border px-1 text-xs">
+          {count}
+        </span>
+            </Button>
 
-            <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-                <Dialog.Content className="fixed right-4 top-16 w-[420px] max-h-[75vh] overflow-auto bg-white rounded-xl shadow-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <Dialog.Title className="text-lg font-semibold">Ваш кошик</Dialog.Title>
-                        <Dialog.Close className="text-sm text-gray-500 hover:text-black">Закрити</Dialog.Close>
-                    </div>
-
+            <div
+                ref={panelRef}
+                data-testid="mini-cart-popover"
+                role="dialog"
+                aria-label="Міні-кошик"
+                className={`absolute right-0 top-full mt-2 w-[360px] overflow-hidden rounded-lg border bg-white shadow-xl ${open ? '' : 'hidden'}`}
+            >
+                <div className="max-h-80 overflow-auto">
                     {items.length === 0 ? (
-                        <div className="text-gray-500">Кошик порожній</div>
+                        <div className="p-4 text-sm text-muted-foreground">Кошик порожній</div>
                     ) : (
-                        <ul className="space-y-3">
-                            {items.map(it => (
-                                <li key={it.id} className="flex gap-3">
-                                    {it.product?.preview_url && (
-                                        <img src={it.product.preview_url} className="w-12 h-12 rounded border object-cover" />
-                                    )}
-                                    <div className="flex-1">
-                                        <div className="text-sm font-medium line-clamp-2">{it.product?.name ?? `#${it.product_id}`}</div>
-                                        <div className="text-xs text-gray-500">×{it.qty}</div>
-                                    </div>
-                                    <div className="text-sm font-medium">{formatPrice(Number(it.price) * Number(it.qty))}</div>
-                                </li>
-                            ))}
+                        <ul className="divide-y">
+                            {items.map((it: any) => {
+                                const p = it.product ?? {};
+                                const img =
+                                    p.preview_url ||
+                                    p.images?.find((x: any) => x.is_primary)?.url ||
+                                    p.images?.[0]?.url ||
+                                    null;
+
+                                return (
+                                    <li key={it.id} className="flex gap-3 p-3" data-testid="mini-cart-item">
+                                        <div className="h-14 w-14 overflow-hidden rounded border bg-muted/40">
+                                            {img ? (
+                                                <img src={img} alt="" className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                                                    без фото
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-sm font-medium">
+                                                {p.name ?? `#${it.product_id}`}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-muted-foreground">
+                                                {it.qty} × {formatPrice(it.price)} ={' '}
+                                                <span className="font-medium">
+                          {formatPrice(Number(it.qty) * Number(it.price))}
+                        </span>
+                                            </div>
+                                        </div>
+                                        {p.slug ? (
+                                            <Link
+                                                to={`/product/${p.slug}`}
+                                                className="shrink-0 text-xs text-muted-foreground hover:underline"
+                                                onClick={() => setOpen(false)}
+                                            >
+                                                Відкрити
+                                            </Link>
+                                        ) : (
+                                            <span className="shrink-0 text-xs text-muted-foreground"> </span>
+                                        )}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
+                </div>
 
-                    <div className="mt-4 border-t pt-3 flex items-center justify-between">
-                        <div className="text-sm text-gray-600">Разом</div>
-                        <div className="text-base font-semibold">{formatPrice(total)}</div>
+                <div className="flex items-center justify-between gap-3 border-t p-3">
+                    <div className="text-sm">
+                        Разом:{' '}
+                        <span className="font-semibold">{formatPrice(total ?? 0)}</span>
                     </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                        <Dialog.Close asChild>
-                            <Link to="/cart" className="text-center border rounded-lg py-2 hover:bg-gray-50">Відкрити кошик</Link>
-                        </Dialog.Close>
-                        <Dialog.Close asChild>
-                            <Link to="/checkout" className="text-center rounded-lg py-2 bg-black text-white hover:bg-black/90">Оформити</Link>
-                        </Dialog.Close>
+                    <div className="flex gap-2">
+                        <Link
+                            to="/cart"
+                            data-testid="mini-cart-open-cart"
+                            className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                            onClick={() => setOpen(false)}
+                        >
+                            Кошик
+                        </Link>
+                        <Link
+                            to="/checkout"
+                            data-testid="mini-cart-checkout"
+                            className="rounded-md bg-black px-3 py-1.5 text-sm text-white hover:opacity-90"
+                            onClick={() => setOpen(false)}
+                        >
+                            Оформити
+                        </Link>
                     </div>
-                </Dialog.Content>
-            </Dialog.Portal>
-        </Dialog.Root>
+                </div>
+            </div>
+        </div>
     );
 }

@@ -29,6 +29,19 @@ export type Product = {
     [k: string]: any
 }
 
+export type ProductsQuery = {
+    page?: number;
+    per_page?: number;
+    category_id?: number;
+    search?: string;
+    sort?: 'new'|'price_asc'|'price_desc';
+    color?: string[];
+    size?: string[];
+    min_price?: number;
+    max_price?: number;
+    with_facets?: 0|1;
+};
+
 export type Category = {
     id: number
     name: string
@@ -64,18 +77,33 @@ export type Cart = {
     items: CartItem[]
     total: number
 }
+export type Facets = Record<string, Record<string, number>>;
+
+export type PaginatedWithFacets<T> = Paginated<T> & {
+    facets?: Facets;
+};
 
 /* ==================== PRODUCTS / CATEGORIES ==================== */
 export const ProductsApi = {
+    // list(params: {
+    //     page?: number
+    //     per_page?: number
+    //     category_id?: number
+    //     sort?: 'price_asc' | 'price_desc' | 'new' | string
+    //     search?: string
+    // }) {
+    //     // бек спокійно проігнорує undefined-параметри
+    //     return api.get<Paginated<Product>>('/products', { params }).then(r => r.data)
+    // },
     list(params: {
-        page?: number
-        per_page?: number
-        category_id?: number
-        sort?: 'price_asc' | 'price_desc' | 'new' | string
-        search?: string
+        page?: number;
+        per_page?: number;
+        search?: string;
+        category_id?: number;
+        sort?: 'new'|'price_asc'|'price_desc';
+        with_facets?: 0|1;
     }) {
-        // бек спокійно проігнорує undefined-параметри
-        return api.get<Paginated<Product>>('/products', { params }).then(r => r.data)
+        return api.get('/products', { params }).then(r => r.data);
     },
     show(slug: string) {
         return api.get<Product>(`/products/${encodeURIComponent(slug)}`).then(r => r.data)
@@ -90,14 +118,42 @@ export const CategoriesApi = {
 }
 
 /* Сумісні з існуючим кодом Catalog.tsx обгортки: */
-export async function fetchProducts(params: {
-    page?: number
-    per_page?: number
-    category_id?: number
-    sort?: 'price_asc' | 'price_desc' | 'new' | string
-    search?: string
-}): Promise<Paginated<Product>> {
-    return ProductsApi.list(params)
+export async function fetchProducts(params: ProductsQuery) {
+    const r = await api.get('/products', {
+        params: {
+            ...params,
+            color: params.color && params.color.length ? params.color : undefined,
+            size:  params.size  && params.size.length  ? params.size  : undefined,
+            min_price: params.min_price ?? undefined,
+            max_price: params.max_price ?? undefined,
+        }
+    });
+    return r.data as PaginatedWithFacets<Product>;
+}
+
+export async function fetchProductFacets(params: {
+    search?: string;
+    category_id?: number;
+    color?: string[];
+    size?: string[];
+}) {
+    const sp = new URLSearchParams();
+    if (params.search) sp.set('search', params.search);
+    if (params.category_id) sp.set('category_id', String(params.category_id));
+    (params.color ?? []).forEach(c => sp.append('filter[color][]', c));
+    (params.size  ?? []).forEach(s => sp.append('filter[size][]', s));
+
+    const { data } = await api.get(`/products/facets?${sp.toString()}`);
+    return data as {
+        facets: {
+            ['category_id']?: Record<string, number>;
+            ['attrs.color']?: Record<string, number>;
+            ['attrs.size']?:  Record<string, number>;
+        };
+        nbHits: number;
+        driver: string;
+        error?: string;
+    };
 }
 
 export async function fetchRelatedProducts(
