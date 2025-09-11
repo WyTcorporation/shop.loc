@@ -1,80 +1,91 @@
-import { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { ProductsApi } from '../api';
+import { Card } from '@/components/ui/card';
 import { formatPrice } from '../ui/format';
+import { fetchProducts, type Product, type Paginated } from '../api';
 
-type ListProduct = {
-    id: number;
-    name: string;
-    slug: string;
-    category_id: number;
-    preview_url?: string | null;
-    price: number | string;
+type Props = {
+    categoryId?: number;
+    currentSlug?: string;
+    limit?: number; // по замовчуванню 4
+    title?: string;
 };
 
-export default function SimilarProducts({
-                                            categoryId,
-                                            currentSlug,
-                                        }: { categoryId?: number; currentSlug: string }) {
-    const [items, setItems] = useState<ListProduct[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function SimilarProducts({ categoryId, currentSlug, limit = 4, title = 'Схожі товари' }: Props) {
+    const [items, setItems] = React.useState<Product[]>([]);
+    const [loading, setLoading] = React.useState(false);
 
-    useEffect(() => {
+    React.useEffect(() => {
         let on = true;
+        if (!categoryId) {
+            setItems([]);
+            return;
+        }
         (async () => {
+            setLoading(true);
             try {
-                if (!categoryId) return;
-                const res = await ProductsApi.list({
+                // Беремо звичайний список по категорії і фільтруємо поточний товар.
+                const res: Paginated<Product> = await fetchProducts({
                     page: 1,
-                    per_page: 12,          // небагато, вистачить щоб знайти 4 різні
-                    sort: 'new',
+                    per_page: limit + 1, // трошки з запасом
                     category_id: categoryId,
+                    sort: 'new',
                 });
-
-                const list: ListProduct[] = (res?.data ?? res ?? []).filter((p: any) => p?.slug !== currentSlug);
-                if (on) setItems(list.slice(0, 4));
+                if (!on) return;
+                const arr = (res.data ?? []).filter(p => (currentSlug ? p.slug !== currentSlug : true)).slice(0, limit);
+                setItems(arr);
             } finally {
                 if (on) setLoading(false);
             }
         })();
         return () => { on = false; };
-    }, [categoryId, currentSlug]);
-
-    if (!categoryId) return null;
-    if (loading && items.length === 0) return null;
-    if (items.length === 0) return null;
+    }, [categoryId, currentSlug, limit]);
 
     return (
-        <section className="mt-10">
-            <h2 className="text-xl font-semibold mb-4">Схожі товари</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {items.map(p => (
-                    <Link
-                        to={`/product/${p.slug}`}
-                        key={p.id}
-                        data-testid="similar-card"
-                        className="group border rounded-xl overflow-hidden hover:shadow-sm transition"
-                    >
-                        <div className="aspect-[4/3] bg-gray-50 overflow-hidden">
-                            {p.preview_url ? (
-                                <img
-                                    src={p.preview_url}
-                                    alt={p.name}
-                                    className="w-full h-full object-cover group-hover:scale-[1.02] transition"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    no image
-                                </div>
-                            )}
-                        </div>
-                        <div className="p-3">
-                            <div className="text-sm line-clamp-2">{p.name}</div>
-                            <div className="mt-1 font-semibold">{formatPrice(p.price)}</div>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+        <section className="mt-8" data-testid="similar-section">
+            <h2 className="mb-3 text-lg font-semibold">{title}</h2>
+
+            {loading ? (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="similar-skel">
+                    {Array.from({ length: limit }).map((_, i) => (
+                        <Card key={i} className="p-3">
+                            <div className="mb-3 h-32 w-full rounded bg-muted/40" />
+                            <div className="mb-2 h-4 w-3/4 rounded bg-muted/40" />
+                            <div className="h-4 w-1/2 rounded bg-muted/40" />
+                        </Card>
+                    ))}
+                </div>
+            ) : items.length === 0 ? (
+                <div className="text-sm text-muted-foreground" data-testid="similar-empty">
+                    Наразі немає схожих товарів.
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    {items.map((p) => {
+                        const primary =
+                            p.images?.find(img => img.is_primary) ??
+                            (p.preview_url ? { url: p.preview_url } as any : undefined);
+
+                        return (
+                            <Card key={p.id} className="overflow-hidden" data-testid="similar-card">
+                                <Link to={`/product/${p.slug ?? p.id}`} className="block">
+                                    <div className="aspect-square bg-muted/40">
+                                        {primary ? (
+                                            <img src={primary.url} alt={primary.alt ?? p.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                                        )}
+                                    </div>
+                                    <div className="p-3">
+                                        <div className="line-clamp-2 text-sm font-medium">{p.name}</div>
+                                        <div className="mt-1 text-sm text-muted-foreground">{formatPrice(p.price)}</div>
+                                    </div>
+                                </Link>
+                            </Card>
+                        );
+                    })}
+                </div>
+            )}
         </section>
     );
 }

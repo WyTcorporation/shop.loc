@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link } from 'react-router-dom';
+import { Link,useLocation  } from 'react-router-dom';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useQueryParam } from '../hooks/useQueryParam';
 import { useQueryParamNumber } from '../hooks/useQueryParamNumber';
@@ -19,6 +19,10 @@ import { useQueryParamEnum } from '../hooks/useQueryParamEnum';
 import { useDebounce } from '../hooks/useDebounce';
 import { formatPrice } from '../ui/format';
 import WishlistButton from '../components/WishlistButton';
+import Breadcrumbs from '../components/Breadcrumbs';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import SeoHead from '../components/SeoHead';
+import JsonLd from '../components/JsonLd';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
@@ -114,7 +118,7 @@ export default function Catalog() {
     const canNext = page < lastPage;
 
     // безпечне читання фасетів
-    const catById     = new Map(cats.map(c => [String(c.id), c]));
+    const catById = new Map(cats.map(c => [String(c.id), c]));
     const catCounts   = facets?.['category_id'] ?? {};
     const colorCounts = facets?.['attrs.color'] ?? {};
     const sizeCounts  = facets?.['attrs.size'] ?? {};
@@ -160,11 +164,79 @@ export default function Catalog() {
         }] : []),
     ];
 
+    const currentCatName = categoryId ? (catById.get(String(categoryId))?.name ?? `#${categoryId}`) : null;
+
+    useDocumentTitle(`Каталог${currentCatName ? ` — ${currentCatName}` : ''}${dq ? ` — ${dq}` : ''}`);
+
+
+    const location = useLocation();
+    const activeCatName = categoryId ? cats.find(c => c.id === categoryId)?.name : undefined;
+
+    const titleParts: string[] = ['Каталог'];
+    if (activeCatName) titleParts.push(activeCatName);
+    if (q) titleParts.push(`пошук “${q}”`);
+    const pageTitle = `${titleParts.join(' — ')} — Shop`;
+
+    const pageDescription = [
+        'Каталог інтернет-магазину. Фільтри: категорія, колір, розмір, ціна.',
+        activeCatName ? `Категорія: ${activeCatName}.` : '',
+        q ? `Пошук: ${q}.` : '',
+    ].filter(Boolean).join(' ');
+
+    const location = useLocation();
+
+    const activeCatName = categoryId ? cats.find(c => c.id === categoryId)?.name : undefined;
+    const titleParts: string[] = ['Каталог'];
+    if (activeCatName) titleParts.push(activeCatName);
+    if (q) titleParts.push(`пошук “${q}”`);
+    const pageTitle = `${titleParts.join(' — ')} — Shop`;
+
+    const pageDescription = [
+        'Каталог інтернет-магазину. Фільтри: категорія, колір, розмір, ціна.',
+        activeCatName ? `Категорія: ${activeCatName}.` : '',
+        q ? `Пошук: ${q}.` : '',
+    ].filter(Boolean).join(' ');
+
+// хелпер для побудови URL з поточними query
+    function buildUrlWith(kv: Record<string, string | number | undefined>) {
+        const href = typeof window !== 'undefined' ? window.location.href : '';
+        const u = new URL(href || 'http://localhost');
+        Object.entries(kv).forEach(([k,v]) => {
+            if (v === undefined || v === '' || v === null) u.searchParams.delete(k);
+            else u.searchParams.set(k, String(v));
+        });
+        return u.toString();
+    }
+
+    const prevUrl = page > 1 ? buildUrlWith({ page: page - 1 }) : undefined;
+    const nextUrl = page < lastPage ? buildUrlWith({ page: page + 1 }) : undefined;
+
+// BreadcrumbList JSON-LD
+    const catalogUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/`
+        : undefined;
+    const breadcrumbLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Головна', item: catalogUrl },
+            { '@type': 'ListItem', position: 2, name: 'Каталог', item: typeof window !== 'undefined' ? window.location.href : undefined }
+        ]
+    };
+
+
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-6">
+            <SeoHead
+                title={pageTitle}
+                description={pageDescription}
+                canonical
+                prevUrl={prevUrl}
+                nextUrl={nextUrl}
+            />
+            <JsonLd data={breadcrumbLd} />
             <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold tracking-tight">Каталог</h1>
-
                 <div className="flex flex-col gap-3 sm:flex-row">
                     <div className="flex gap-2">
                         <Select

@@ -11,6 +11,8 @@ import {CartProvider} from './useCart';
 import Header from './components/Header';
 import {WishlistProvider} from './hooks/useWishlist';
 import WishlistPage from './pages/Wishlist';
+import '../../css/app.css';
+import {AppErrorBoundary} from './ui/ErrorBoundary';
 
 const el = document.getElementById('shop-root');
 
@@ -30,16 +32,18 @@ if (el) {
                 <CartProvider>
                     <WishlistProvider>
                         <BrowserRouter>
-                            <RouteToastAutoClear/>
-                            <Header/>
-                            <Routes>
-                                <Route path="/" element={<CatalogPage/>}/>
-                                <Route path="/product/:slug" element={<ProductPage/>}/>
-                                <Route path="/cart" element={<CartPage/>}/>
-                                <Route path="/checkout" element={<CheckoutPage/>}/>
-                                <Route path="/order/:number" element={<OrderConfirmationPage/>}/>
-                                <Route path="/wishlist" element={<WishlistPage />} />
-                            </Routes>
+                            <AppErrorBoundary>
+                                <RouteToastAutoClear/>
+                                <Header/>
+                                <Routes>
+                                    <Route path="/" element={<CatalogPage/>}/>
+                                    <Route path="/product/:slug" element={<ProductPage/>}/>
+                                    <Route path="/cart" element={<CartPage/>}/>
+                                    <Route path="/checkout" element={<CheckoutPage/>}/>
+                                    <Route path="/order/:number" element={<OrderConfirmationPage/>}/>
+                                    <Route path="/wishlist" element={<WishlistPage/>}/>
+                                </Routes>
+                            </AppErrorBoundary>
                         </BrowserRouter>
                     </WishlistProvider>
                 </CartProvider>

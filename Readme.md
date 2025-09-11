@@ -186,9 +186,18 @@ const URL = process.env.E2E_BASE_URL ?? 'http://localhost:8080';
 
 npx playwright test --reporter=html; npx playwright show-report
 npx playwright test --config=playwright.config.tsx
+npx playwright test --config=playwright.config.tsx -g "similar & recently viewed"
 
 http://localhost:8080
 — бек
 
 http://localhost:5173
 — Vite
+
+Хочеш — далі можу:
+
+зробити таби «Опис / Характеристики / Доставка»;
+додати превью-галерею з мініатюрами;
+показувати бейдж «Новинка»/«Знижка»;
+або ввімкнути аналітику подій (view_item / add_to_cart)
+прокачати міні-кошик (кількість, віднімання/додавання по місцю, плавна анімація відкриття/закриття).
