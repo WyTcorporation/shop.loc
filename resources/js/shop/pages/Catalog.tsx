@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link,useLocation  } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useQueryParam } from '../hooks/useQueryParam';
 import { useQueryParamNumber } from '../hooks/useQueryParamNumber';
@@ -19,7 +19,6 @@ import { useQueryParamEnum } from '../hooks/useQueryParamEnum';
 import { useDebounce } from '../hooks/useDebounce';
 import { formatPrice } from '../ui/format';
 import WishlistButton from '../components/WishlistButton';
-import Breadcrumbs from '../components/Breadcrumbs';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import SeoHead from '../components/SeoHead';
 import JsonLd from '../components/JsonLd';
@@ -165,11 +164,9 @@ export default function Catalog() {
     ];
 
     const currentCatName = categoryId ? (catById.get(String(categoryId))?.name ?? `#${categoryId}`) : null;
-
     useDocumentTitle(`Каталог${currentCatName ? ` — ${currentCatName}` : ''}${dq ? ` — ${dq}` : ''}`);
 
-
-    const location = useLocation();
+    // ---------- SEO (OG/Twitter + prev/next + breadcrumbs) ----------
     const activeCatName = categoryId ? cats.find(c => c.id === categoryId)?.name : undefined;
 
     const titleParts: string[] = ['Каталог'];
@@ -183,21 +180,6 @@ export default function Catalog() {
         q ? `Пошук: ${q}.` : '',
     ].filter(Boolean).join(' ');
 
-    const location = useLocation();
-
-    const activeCatName = categoryId ? cats.find(c => c.id === categoryId)?.name : undefined;
-    const titleParts: string[] = ['Каталог'];
-    if (activeCatName) titleParts.push(activeCatName);
-    if (q) titleParts.push(`пошук “${q}”`);
-    const pageTitle = `${titleParts.join(' — ')} — Shop`;
-
-    const pageDescription = [
-        'Каталог інтернет-магазину. Фільтри: категорія, колір, розмір, ціна.',
-        activeCatName ? `Категорія: ${activeCatName}.` : '',
-        q ? `Пошук: ${q}.` : '',
-    ].filter(Boolean).join(' ');
-
-// хелпер для побудови URL з поточними query
     function buildUrlWith(kv: Record<string, string | number | undefined>) {
         const href = typeof window !== 'undefined' ? window.location.href : '';
         const u = new URL(href || 'http://localhost');
@@ -208,10 +190,9 @@ export default function Catalog() {
         return u.toString();
     }
 
-    const prevUrl = page > 1 ? buildUrlWith({ page: page - 1 }) : undefined;
-    const nextUrl = page < lastPage ? buildUrlWith({ page: page + 1 }) : undefined;
+    const prevUrl = canPrev ? buildUrlWith({ page: page - 1 }) : undefined;
+    const nextUrl = canNext ? buildUrlWith({ page: page + 1 }) : undefined;
 
-// BreadcrumbList JSON-LD
     const catalogUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/`
         : undefined;
@@ -223,7 +204,7 @@ export default function Catalog() {
             { '@type': 'ListItem', position: 2, name: 'Каталог', item: typeof window !== 'undefined' ? window.location.href : undefined }
         ]
     };
-
+    // ----------------------------------------------------------------
 
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-6">
@@ -235,6 +216,7 @@ export default function Catalog() {
                 nextUrl={nextUrl}
             />
             <JsonLd data={breadcrumbLd} />
+
             <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold tracking-tight">Каталог</h1>
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -316,18 +298,7 @@ export default function Catalog() {
                         <Button
                             variant="outline"
                             data-testid="clear-filters"
-                            onClick={() => {
-                                setQ('');
-                                setCategoryId(undefined);
-                                setCategoryParam(undefined);
-                                setColorsParam(undefined);
-                                setSizesParam(undefined);
-                                setMinPrice(undefined);
-                                setMaxPrice(undefined);
-                                setMinPriceParam(undefined);
-                                setMaxPriceParam(undefined);
-                                setPage(1);
-                            }}
+                            onClick={clearAll}
                         >
                             Скинути все
                         </Button>

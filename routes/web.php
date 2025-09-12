@@ -4,10 +4,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
+use App\Http\Controllers\SitemapController;
 
 //Route::get('/', function () {
 //    return Inertia::render('welcome');
 //})->name('home');
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+
+Route::get('/robots.txt', function () {
+    $lines = [
+        'User-agent: *',
+        'Allow: /',
+        'Sitemap: ' . url('/sitemap.xml'),
+    ];
+    return response(implode(PHP_EOL, $lines), 200)
+        ->header('Content-Type', 'text/plain');
+});
 
 Route::view('{any}', 'shop')->where('any', '^(?!mine|api).*$');
 

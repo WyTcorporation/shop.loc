@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import useCart from '../useCart'
+import SeoHead from '../components/SeoHead';
 
 function money(v: unknown) {
     return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })
@@ -14,6 +15,7 @@ export default function CartPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
+            <SeoHead title="Кошик — Shop" robots="noindex,nofollow" canonical />
             <h1 className="text-2xl font-semibold">Cart</h1>
 
             {cart.items.length === 0 && (

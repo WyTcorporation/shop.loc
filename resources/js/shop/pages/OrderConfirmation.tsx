@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { OrdersApi } from '../api';
 import { formatPrice } from '../ui/format';
+import SeoHead from '../components/SeoHead';
 
 type OrderItem = {
     id: number;
@@ -44,6 +45,7 @@ export default function OrderConfirmation() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6">
+            <SeoHead title={`Замовлення ${order.number} — Shop`} robots="noindex,nofollow" canonical />
             <h1 className="text-2xl font-semibold" data-testid="order-confirmed">
                 Дякуємо! Замовлення {order.number} оформлено
             </h1>

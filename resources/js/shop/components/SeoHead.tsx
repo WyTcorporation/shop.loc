@@ -3,16 +3,16 @@ import { useEffect } from 'react';
 type Props = {
     title?: string;
     description?: string;
-    image?: string;          // absolute URL бажано
-    url?: string;            // якщо не задати — візьмемо window.location.href
+    image?: string;          // бажано абсолютний URL
+    url?: string;            // якщо не вказати — поточний
     type?: 'website' | 'article' | string;
     twitterCard?: 'summary' | 'summary_large_image';
-    canonical?: boolean | string; // true → current URL; string → ваш URL; undefined → не ставити
-    siteName?: string;       // для og:site_name
-    prevUrl?: string;   // NEW
-    nextUrl?: string;   // NEW
+    canonical?: boolean | string; // true → current URL; string → ваш URL
+    siteName?: string;
+    prevUrl?: string;
+    nextUrl?: string;
+    robots?: string;         // NEW: напр. "noindex,nofollow"
 };
-
 
 function upsertMetaName(name: string, content: string | undefined) {
     if (!content) return () => {};
@@ -65,18 +65,18 @@ export default function SeoHead({
                                     twitterCard = 'summary_large_image',
                                     canonical,
                                     siteName = 'Shop',
+                                    prevUrl,
+                                    nextUrl,
+                                    robots, // NEW
                                 }: Props) {
     useEffect(() => {
         const currentUrl = url || (typeof window !== 'undefined' ? window.location.href : undefined);
-
         const cleanups: Array<() => void> = [];
 
-        // <title> і description
+        // <title> + description
         const prevTitle = document.title;
         if (title) document.title = title;
-        const cleanupTitle = () => { if (title) document.title = prevTitle; };
-        cleanups.push(cleanupTitle);
-
+        cleanups.push(() => { if (title) document.title = prevTitle; });
         cleanups.push(upsertMetaName('description', description));
 
         // OpenGraph
@@ -93,18 +93,19 @@ export default function SeoHead({
         cleanups.push(upsertMetaName('twitter:description', description));
         cleanups.push(upsertMetaName('twitter:image', image));
 
-        // canonical
-        const canonicalHref =
-            canonical === true ? currentUrl :
-                typeof canonical === 'string' ? canonical :
-                    undefined;
+        // canonical/prev/next
+        const canonicalHref = canonical === true ? currentUrl
+            : typeof canonical === 'string' ? canonical
+                : undefined;
         cleanups.push(upsertLink('canonical', canonicalHref));
-
         cleanups.push(upsertLink('prev', prevUrl));
         cleanups.push(upsertLink('next', nextUrl));
 
+        // robots (NEW)
+        cleanups.push(upsertMetaName('robots', robots));
+
         return () => cleanups.forEach(fn => fn());
-    }, [title, description, image, url, type, twitterCard, canonical, siteName]);
+    }, [title, description, image, url, type, twitterCard, canonical, siteName, prevUrl, nextUrl, robots]);
 
     return null;
 }

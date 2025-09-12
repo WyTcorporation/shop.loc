@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ProductsApi, type Product, fetchCategories, type Category } from '../api';
+import { ProductsApi, type Product } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
+import { Card } from '@/components/ui/card';
 import SimilarProducts from '../components/SimilarProducts';
 import { addRecentlyViewed } from '../ui/recentlyViewed';
 import RecentlyViewed from '../components/RecentlyViewed';
 import WishlistButton from '../components/WishlistButton';
-import Breadcrumbs from '../components/Breadcrumbs';
-import { Skeleton } from '@/components/ui/skeleton';
-import ImageLightbox, { type LightboxImage } from '../components/ImageLightbox'
 import SeoHead from '../components/SeoHead';
 import JsonLd from '../components/JsonLd';
 
@@ -26,33 +24,7 @@ export default function ProductPage() {
     const { success, error } = useNotify();
     const navigate = useNavigate();
 
-    const [lbOpen, setLbOpen] = useState(false);
-    const [lbIndex, setLbIndex] = useState(0);
-
-    // Категорії (щоб показати назву у breadcrumbs)
-    const [cats, setCats] = useState<Category[]>([]);
-    useEffect(() => {
-        let on = true;
-        (async () => {
-            try {
-                const c = await fetchCategories();
-                if (on) setCats(c);
-            } catch { /* no-op */ }
-        })();
-        return () => { on = false; };
-    }, []);
-
-    useEffect(() => {
-        if (!p) return;
-        addRecentlyViewed({
-            id: p.id,
-            slug: p.slug,
-            name: p.name,
-            price: p.price,
-            preview_url: p.preview_url ?? p.images?.find(i => i.is_primary)?.url ?? p.images?.[0]?.url ?? null,
-        });
-    }, [p]);
-
+    // fetch product
     useEffect(() => {
         let on = true;
         (async () => {
@@ -64,6 +36,19 @@ export default function ProductPage() {
         return () => { on = false; };
     }, [slug]);
 
+    // recently viewed
+    useEffect(() => {
+        if (!p) return;
+        addRecentlyViewed({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            price: p.price,
+            preview_url: p.preview_url ?? p.images?.find(i => i.is_primary)?.url ?? p.images?.[0]?.url ?? null,
+        });
+    }, [p]);
+
+    // related products
     useEffect(() => {
         let on = true;
         (async () => {
@@ -82,33 +67,62 @@ export default function ProductPage() {
         return () => { on = false; };
     }, [p?.id, p?.category_id]);
 
-    // ---------- SKELETON while loading ----------
-    if (!p) {
-        return (
-            <div className="max-w-6xl mx-auto grid gap-6 p-4 md:grid-cols-2">
-                <div>
-                    <Skeleton className="aspect-square w-full rounded-xl" />
-                </div>
-                <div className="space-y-4">
-                    <Skeleton className="h-6 w-2/3" />
-                    <Skeleton className="h-5 w-32" />
-                    <div className="flex items-center gap-2">
-                        <Skeleton className="h-9 w-24" />
-                        <Skeleton className="h-9 w-36" />
-                        <Skeleton className="h-9 w-40" />
-                    </div>
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-6 w-1/2" />
-                    <Skeleton className="h-6 w-2/3" />
-                </div>
-            </div>
-        );
-    }
-
-    const stock = Number(p.stock ?? 0);
+    // ---- SAFE DERIVED VALUES (hooks must run every render) ----
+    const stock = Number(p?.stock ?? 0);
     const canBuy = stock > 0;
-    const primary =
-        p.images?.find(i => i.is_primary) ?? (p.preview_url ? { url: p.preview_url } : undefined);
+
+    const primaryImg = useMemo(
+        () => p ? (p.images?.find(i => i.is_primary) ?? (p.preview_url ? { url: p.preview_url } : undefined)) : undefined,
+        [p]
+    );
+    const primaryImgUrl = primaryImg?.url ?? undefined;
+
+    const pageTitle = useMemo(
+        () => p ? `${p.name} — ${formatPrice(p.price)} — Shop` : 'Товар — Shop',
+        [p]
+    );
+    const pageDescription = useMemo(
+        () => p
+            ? `Купити ${p.name} за ${formatPrice(p.price)}. ${canBuy ? 'В наявності.' : 'Наразі немає в наявності.'} Замовити онлайн.`
+            : 'Картка товару в магазині.',
+        [p, canBuy]
+    );
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+
+    const productLd = useMemo(() => {
+        if (!p) return null;
+        return {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: p.name,
+            image: primaryImgUrl ? [primaryImgUrl] : undefined,
+            sku: (p as any).sku ?? undefined,
+            offers: {
+                '@type': 'Offer',
+                url: canonicalUrl,
+                priceCurrency: 'UAH',
+                price: Number(p.price) || 0,
+                availability: canBuy ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            }
+        };
+    }, [p, primaryImgUrl, canonicalUrl, canBuy]);
+
+    const breadcrumbLd = useMemo(() => {
+        if (!p) return null;
+        return {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Головна', item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
+                { '@type': 'ListItem', position: 2, name: 'Каталог', item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
+                { '@type': 'ListItem', position: 3, name: p.name, item: canonicalUrl }
+            ]
+        };
+    }, [p, canonicalUrl]);
+    // -----------------------------------------------------------
+
+    // early return is OK now (all hooks above already executed on every render)
+    if (!p) return <div className="max-w-6xl mx-auto p-6">Loading…</div>;
 
     const clampQty = (raw: number) => Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
 
@@ -125,102 +139,34 @@ export default function ProductPage() {
         }
     }
 
-    const catName = cats.find(c => Number(c.id) === Number(p.category_id))?.name;
-
-    const gallery: LightboxImage[] = [
-        ...(primary ? [{ url: primary.url, alt: primary.alt ?? p.name }] : []),
-        ...(p.images?.filter(i => !i.is_primary).map(i => ({ url: i.url, alt: i.alt ?? p.name })) ?? []),
-    ];
-
-// SEO для Product
-    const primaryImg = p.images?.find(i => i.is_primary)?.url
-        ?? p.preview_url
-        ?? p.images?.[0]?.url
-        ?? undefined;
-
-    const productTitle = `${p.name} — Купити — Shop`;
-    const productDesc  = `${p.name}. Ціна ${formatPrice(p.price)}. ${stock > 0 ? `В наявності ${stock} шт.` : 'Немає в наявності'}`;
-    const productUrl   = typeof window !== 'undefined' ? window.location.href : undefined;
-
-// JSON-LD Product
-    const productLd = {
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: p.name,
-        image: primaryImg ? [primaryImg] : undefined,
-        description: productDesc,
-        sku: p.sku,
-        offers: {
-            '@type': 'Offer',
-            url: productUrl,
-            priceCurrency: 'EUR',           // якщо інша валюта — підстав свій код
-            price: Number(p.price) || 0,
-            availability: stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-            itemCondition: 'https://schema.org/NewCondition'
-        }
-    };
-
-// JSON-LD Breadcrumbs (Головна → Каталог → Продукт)
-    const breadcrumbProductLd = {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Головна', item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
-            { '@type': 'ListItem', position: 2, name: 'Каталог', item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
-            { '@type': 'ListItem', position: 3, name: p.name, item: productUrl }
-        ]
-    };
-
-
     return (
         <div className="max-w-6xl mx-auto grid gap-6 p-4 md:grid-cols-2">
             <SeoHead
-                title={productTitle}
-                description={productDesc}
+                title={pageTitle}
+                description={pageDescription}
+                image={primaryImgUrl}
                 canonical
-                image={primaryImg}
             />
-            <JsonLd data={productLd} />
-            <JsonLd data={breadcrumbProductLd} />
+            {productLd && <JsonLd data={productLd} />}
+            {breadcrumbLd && <JsonLd data={breadcrumbLd} />}
 
-            {/* ліва колонка: зображення */}
+            {/* left: image */}
             <div className="border rounded-xl overflow-hidden">
                 <div className="aspect-square bg-muted/40">
-                    {primary ? (
-                        <img
-                            src={primary.url}
-                            alt={primary.alt ?? p.name}
-                            className="h-full w-full cursor-zoom-in object-cover"
-                            onClick={() => { setLbIndex(0); setLbOpen(true); }}
-                        />
+                    {primaryImg ? (
+                        <img src={primaryImg.url} alt={(primaryImg as any).alt ?? p.name} className="h-full w-full object-cover" />
                     ) : (
                         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
                     )}
                 </div>
-
-                {/* міні-галерея під основним фото (якщо є ще картинки) */}
-                {gallery.length > 1 && (
-                    <div className="grid grid-cols-6 gap-2 p-3">
-                        {gallery.map((g, i) => (
-                            <button
-                                key={i}
-                                className={`overflow-hidden rounded-md border ${i === lbIndex ? 'ring-2 ring-black' : ''}`}
-                                onClick={() => { setLbIndex(i); setLbOpen(true); }}
-                                aria-label={`Open image ${i + 1}`}
-                            >
-                                <img src={g.url} alt="" className="h-16 w-full object-cover" />
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
 
-            {/* права колонка: деталі */}
+            {/* right: details */}
             <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                    <h1 className="text-2xl font-semibold">{p.name}</h1>
+                <h1 className="text-2xl font-semibold flex items-center gap-3">
+                    {p.name}
                     <WishlistButton product={p} />
-                </div>
+                </h1>
 
                 <div className="text-xl">{formatPrice(p.price)}</div>
 
@@ -259,18 +205,9 @@ export default function ProductPage() {
                         Знайдено схожих: {related.length}
                     </div>
                 )}
-
                 <SimilarProducts categoryId={p.category_id} currentSlug={p.slug} />
                 <RecentlyViewed excludeSlug={p.slug} />
             </div>
-            {lbOpen && gallery.length > 0 && (
-                <ImageLightbox
-                    images={gallery}
-                    index={lbIndex}
-                    onClose={() => setLbOpen(false)}
-                    onIndexChange={setLbIndex}
-                />
-            )}
         </div>
     );
 }
