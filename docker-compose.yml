@@ -102,6 +102,8 @@ services:
             CHOKIDAR_USEPOLLING: "true"
             CHOKIDAR_INTERVAL: "350"
             WAYFINDER: "off"
+            VITE_GA_ID: ${VITE_GA_ID}
+            VITE_COOKIE_DEFAULT: ${VITE_COOKIE_DEFAULT}
         command: sh -lc "test -x node_modules/.bin/vite || npm ci; npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
         depends_on:
             - app

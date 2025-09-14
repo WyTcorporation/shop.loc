@@ -1,18 +1,22 @@
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import {useLocation, Link} from 'react-router-dom';
+import {reportError} from '../monitoring';
+
 
 type State = { error: Error | null };
+type Props = { children: React.ReactNode };
 
-class Boundary extends React.Component<React.PropsWithChildren, State> {
-    state: State = { error: null };
+
+class Boundary extends React.Component<React.PropsWithChildren, State, Props> {
+    state: State = {error: null};
 
     static getDerivedStateFromError(error: Error): State {
-        return { error };
+        return {error};
     }
 
-    componentDidCatch(error: Error, info: any) {
-        // можна залогувати кудись
-         console.error('ErrorBoundary caught:', error, info);
+    componentDidCatch(error: Error, info: React.ErrorInfo) {
+        reportError(error, { componentStack: info.componentStack });
+        console.error('ErrorBoundary caught:', error, info);
     }
 
     render() {
@@ -40,7 +44,7 @@ class Boundary extends React.Component<React.PropsWithChildren, State> {
     }
 }
 
-export function AppErrorBoundary({ children }: React.PropsWithChildren) {
+export function AppErrorBoundary({children}: React.PropsWithChildren) {
     const location = useLocation();
     // ключ змінюється при навігації → Boundary скидає state
     return <Boundary key={location.key}>{children}</Boundary>;

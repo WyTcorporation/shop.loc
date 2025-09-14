@@ -1,8 +1,8 @@
 import { Link, NavLink } from 'react-router-dom';
 import useCart from '../useCart';
-import { formatPrice } from '../ui/format';
 import MiniCart from './MiniCart';
 import WishlistBadge from '../components/WishlistBadge';
+import { openCookiePreferences } from '../ui/analytics';
 
 export default function Header() {
     const { cart, total } = useCart();
@@ -16,18 +16,11 @@ export default function Header() {
                     <NavLink to="/" className={({isActive}) => isActive ? 'font-medium' : 'text-gray-600 hover:text-black'}>
                         Каталог
                     </NavLink>
-            {/*        <NavLink to="/cart" className={({isActive}) => isActive ? 'font-medium' : 'text-gray-600 hover:text-black'}>*/}
-            {/*            Кошик*/}
-            {/*        </NavLink>*/}
-            {/*        <Link to="/cart" className="relative inline-flex items-center gap-2 border rounded-full px-3 py-1">*/}
-            {/*            <span>Кошик</span>*/}
-            {/*            <span className="text-gray-500">{formatPrice(total)}</span>*/}
-            {/*            <span className="absolute -right-2 -top-2 min-w-6 h-6 px-1 rounded-full bg-black text-white text-xs grid place-items-center">*/}
-            {/*  {itemsCount}*/}
-            {/*</span>*/}
-            {/*        </Link>*/}
                     <MiniCart />
                     <WishlistBadge />
+                    <button onClick={openCookiePreferences} className="text-xs underline">
+                        Налаштувати cookies
+                    </button>
                 </nav>
             </div>
         </header>

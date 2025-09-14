@@ -1,12 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\{
-    CategoryController,
+use App\Http\Controllers\Api\{CategoryController,
+    PaymentController,
     ProductController,
     CartController,
-    OrderController
-};
+    OrderController};
 
 //Categories
 Route::get('categories', [CategoryController::class,'index']);
@@ -26,3 +25,5 @@ Route::delete('cart/{id}/items/{item}', [CartController::class, 'removeItem']);
 // Checkout
 Route::post('orders', [OrderController::class, 'store']);
 Route::get('/orders/{number}', [OrderController::class, 'show']);
+
+Route::post('/payments/intent', [PaymentController::class, 'intent']);

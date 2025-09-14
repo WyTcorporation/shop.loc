@@ -188,16 +188,17 @@ npx playwright test --reporter=html; npx playwright show-report
 npx playwright test --config=playwright.config.tsx
 npx playwright test --config=playwright.config.tsx -g "similar & recently viewed"
 
+docker compose up -d --force-recreate --no-deps node
+
 http://localhost:8080
 — бек
 
 http://localhost:5173
 — Vite
 
-Хочеш — далі можу:
+stripe listen --forward-to localhost:8080/stripe/webhook
+stripe listen --forward-to http://localhost:8080/stripe/webhook
 
-зробити таби «Опис / Характеристики / Доставка»;
-додати превью-галерею з мініатюрами;
-показувати бейдж «Новинка»/«Знижка»;
-або ввімкнути аналітику подій (view_item / add_to_cart)
-прокачати міні-кошик (кількість, віднімання/додавання по місцю, плавна анімація відкриття/закриття).
+Хочеш — далі можу:
+I18n каркас (switcher, URL стратегія, lang у <html>, hreflang).
+CI/CD (build, тест, deploy), prod Dockerfile.

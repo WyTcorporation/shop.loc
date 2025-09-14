@@ -1,7 +1,8 @@
-import React from 'react'
+import React, {useEffect} from 'react'
 import { Link } from 'react-router-dom'
 import useCart from '../useCart'
 import SeoHead from '../components/SeoHead';
+import { GA } from '../ui/ga';
 
 function money(v: unknown) {
     return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })
@@ -12,6 +13,10 @@ export default function CartPage() {
     const { cart, total, update, remove } = useCart()
 
     if (!cart) return <div className="max-w-4xl mx-auto p-6">Loading…</div>
+
+    useEffect(() => {
+        GA.view_cart(cart);
+    }, [cart]);
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">

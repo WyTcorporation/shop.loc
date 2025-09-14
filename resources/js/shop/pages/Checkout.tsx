@@ -4,6 +4,8 @@ import { OrdersApi, CartApi } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import SeoHead from '../components/SeoHead';
+import { GA } from '../ui/ga';
+
 
 export default function CheckoutPage() {
     const nav = useNavigate();
@@ -34,6 +36,11 @@ export default function CheckoutPage() {
             }
         })();
     }, [nav, notify]);
+
+    const { cart } = useCart();
+    useEffect(() => {
+        GA.begin_checkout(cart);
+    }, [cart]);
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();

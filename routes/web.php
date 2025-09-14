@@ -1,16 +1,21 @@
 <?php
 
+use App\Http\Controllers\OgImageController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Http\Controllers\SitemapController;
 
-//Route::get('/', function () {
-//    return Inertia::render('welcome');
-//})->name('home');
+Route::get('/og/product/{slug}.png', [OgImageController::class, 'product'])->where('slug', '.*');
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+Route::get('/sitemaps/categories.xml', [SitemapController::class, 'categories']);
+Route::get('/sitemaps/products-{page}.xml', [SitemapController::class, 'products'])
+    ->whereNumber('page');
 
 Route::get('/robots.txt', function () {
     $lines = [
@@ -23,19 +28,6 @@ Route::get('/robots.txt', function () {
 });
 
 Route::view('{any}', 'shop')->where('any', '^(?!mine|api).*$');
-
-//Route::middleware(['auth', 'verified'])->group(function () {
-//    Route::get('dashboard', function () {
-//        return Inertia::render('dashboard');
-//    })->name('dashboard');
-//});
-
-//Route::get('/dev/login-admin', function () {
-//    $u = User::where('email','admin@admin.com')->firstOrFail();
-//    Auth::login($u);
-//    session()->put('probe', 'ok');
-//    return redirect('/mine');
-//});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

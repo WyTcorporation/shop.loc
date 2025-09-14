@@ -4,25 +4,29 @@ import { ProductsApi, type Product } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
-import { Card } from '@/components/ui/card';
 import SimilarProducts from '../components/SimilarProducts';
 import { addRecentlyViewed } from '../ui/recentlyViewed';
 import RecentlyViewed from '../components/RecentlyViewed';
 import WishlistButton from '../components/WishlistButton';
 import SeoHead from '../components/SeoHead';
 import JsonLd from '../components/JsonLd';
+import { useHreflangs } from '../hooks/useHreflangs';
+import ImageLightbox from '../components/ImageLightbox';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
+import { GA } from '../ui/ga';
 
 export default function ProductPage() {
     const { slug } = useParams();
     const [p, setP] = useState<Product | null>(null);
-
     const [related, setRelated] = useState<Product[]>([]);
     const [loadingRelated, setLoadingRelated] = useState(false);
-
     const [qty, setQty] = useState(1);
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
     const { add } = useCart();
     const { success, error } = useNotify();
     const navigate = useNavigate();
+    const hreflangs = useHreflangs('uk');
 
     // fetch product
     useEffect(() => {
@@ -48,7 +52,7 @@ export default function ProductPage() {
         });
     }, [p]);
 
-    // related products
+    // related
     useEffect(() => {
         let on = true;
         (async () => {
@@ -67,35 +71,73 @@ export default function ProductPage() {
         return () => { on = false; };
     }, [p?.id, p?.category_id]);
 
-    // ---- SAFE DERIVED VALUES (hooks must run every render) ----
+    useEffect(() => {
+        if (p) GA.view_item(p);
+    }, [p]);
+
+    // ---------- derived (hooks стабільні) ----------
     const stock = Number(p?.stock ?? 0);
     const canBuy = stock > 0;
 
-    const primaryImg = useMemo(
-        () => p ? (p.images?.find(i => i.is_primary) ?? (p.preview_url ? { url: p.preview_url } : undefined)) : undefined,
-        [p]
-    );
-    const primaryImgUrl = primaryImg?.url ?? undefined;
+    // повна галерея для лайтбоксу
+    const gallery = useMemo(() => {
+        if (!p) return [] as { url: string; alt?: string }[];
+        const imgs = (p.images ?? [])
+            .map(i => ({ url: i.url, alt: i.alt }))
+            .filter(i => !!i.url);
+        if (!imgs.length && p.preview_url) imgs.push({ url: p.preview_url });
+        return imgs;
+    }, [p]);
+
+    // головне зображення
+    const primaryImg = useMemo(() => {
+        if (!p) return undefined as { url: string; alt?: string } | undefined;
+        const specific = p.images?.find(i => i.is_primary);
+        if (specific) return { url: specific.url, alt: specific.alt };
+        if (p.preview_url) return { url: p.preview_url };
+        return p.images?.[0] ? { url: p.images[0].url, alt: p.images[0].alt } : undefined;
+    }, [p]);
 
     const pageTitle = useMemo(
-        () => p ? `${p.name} — ${formatPrice(p.price)} — Shop` : 'Товар — Shop',
+        () => (p ? `${p.name} — ${formatPrice(p.price)} — Shop` : 'Товар — Shop'),
         [p]
     );
+
     const pageDescription = useMemo(
-        () => p
-            ? `Купити ${p.name} за ${formatPrice(p.price)}. ${canBuy ? 'В наявності.' : 'Наразі немає в наявності.'} Замовити онлайн.`
-            : 'Картка товару в магазині.',
+        () => (p
+                ? `Купити ${p.name} за ${formatPrice(p.price)}. ${canBuy ? 'В наявності.' : 'Немає в наявності.'} Замовити онлайн.`
+                : 'Картка товару в магазині.'
+        ),
         [p, canBuy]
     );
+
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+
+    // характеристики (під різні формати бекенда)
+    const specs = useMemo(() => {
+        if (!p) return [] as Array<{ name: string; value: string }>;
+        const raw: any = (p as any).attributes ?? (p as any).attrs ?? {};
+        if (Array.isArray(raw)) {
+            // масив типу [{name,value}] або [{key,value}]
+            return raw.map((x: any) => ({
+                name: String(x.name ?? x.key ?? ''),
+                value: String(x.value ?? ''),
+            })).filter(x => x.name);
+        }
+        if (raw && typeof raw === 'object') {
+            return Object.entries(raw).map(([k,v]) => ({ name: String(k), value: String(v as any) }));
+        }
+        return [];
+    }, [p]);
 
     const productLd = useMemo(() => {
         if (!p) return null;
+        const main = primaryImg?.url ?? undefined;
         return {
             '@context': 'https://schema.org',
             '@type': 'Product',
             name: p.name,
-            image: primaryImgUrl ? [primaryImgUrl] : undefined,
+            image: main ? [main] : undefined,
             sku: (p as any).sku ?? undefined,
             offers: {
                 '@type': 'Offer',
@@ -105,7 +147,7 @@ export default function ProductPage() {
                 availability: canBuy ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
             }
         };
-    }, [p, primaryImgUrl, canonicalUrl, canBuy]);
+    }, [p, primaryImg?.url, canonicalUrl, canBuy]);
 
     const breadcrumbLd = useMemo(() => {
         if (!p) return null;
@@ -119,16 +161,17 @@ export default function ProductPage() {
             ]
         };
     }, [p, canonicalUrl]);
-    // -----------------------------------------------------------
+    // -----------------------------------------------
 
-    // early return is OK now (all hooks above already executed on every render)
     if (!p) return <div className="max-w-6xl mx-auto p-6">Loading…</div>;
 
-    const clampQty = (raw: number) => Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
+    const clampQty = (raw: number) =>
+        Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
 
     async function handleAdd() {
         try {
             await add(p.id, qty);
+            GA.add_to_cart(p, qty);
             success({
                 title: 'Додано до кошика',
                 action: { label: 'Відкрити кошик', onClick: () => navigate('/cart') },
@@ -139,26 +182,57 @@ export default function ProductPage() {
         }
     }
 
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const ogImage = origin ? `${origin}/og/product/${p.slug}.png` : primaryImg?.url;
+
+    const onPrev = () => {
+        if (lightboxIndex == null || gallery.length === 0) return;
+        setLightboxIndex((lightboxIndex - 1 + gallery.length) % gallery.length);
+    };
+    const onNext = () => {
+        if (lightboxIndex == null || gallery.length === 0) return;
+        setLightboxIndex((lightboxIndex + 1) % gallery.length);
+    };
+
     return (
         <div className="max-w-6xl mx-auto grid gap-6 p-4 md:grid-cols-2">
             <SeoHead
                 title={pageTitle}
                 description={pageDescription}
-                image={primaryImgUrl}
+                image={ogImage}
+                hreflangs={hreflangs}
                 canonical
             />
             {productLd && <JsonLd data={productLd} />}
             {breadcrumbLd && <JsonLd data={breadcrumbLd} />}
 
-            {/* left: image */}
-            <div className="border rounded-xl overflow-hidden">
-                <div className="aspect-square bg-muted/40">
-                    {primaryImg ? (
-                        <img src={primaryImg.url} alt={(primaryImg as any).alt ?? p.name} className="h-full w-full object-cover" />
-                    ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
-                    )}
+            {/* left: image + thumbnails */}
+            <div className="space-y-3">
+                <div className="border rounded-xl overflow-hidden cursor-zoom-in" onClick={() => gallery.length && setLightboxIndex(0)}>
+                    <div className="aspect-square bg-muted/40">
+                        {primaryImg ? (
+                            <img src={primaryImg.url} alt={primaryImg.alt ?? p.name} className="h-full w-full object-cover" />
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                        )}
+                    </div>
                 </div>
+
+                {gallery.length > 1 && (
+                    <div className="grid grid-cols-5 gap-2">
+                        {gallery.map((g, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                className="aspect-square overflow-hidden rounded border hover:opacity-90"
+                                onClick={() => setLightboxIndex(i)}
+                                aria-label={`Відкрити зображення ${i + 1}`}
+                            >
+                                <img src={g.url} alt={g.alt ?? ''} className="h-full w-full object-cover" />
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* right: details */}
@@ -196,6 +270,45 @@ export default function ProductPage() {
                     </button>
                 </div>
 
+                {/* TABS: Опис / Характеристики / Доставка */}
+                <Tabs defaultValue="desc" className="mt-6">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="desc">Опис</TabsTrigger>
+                        <TabsTrigger value="specs">Характеристики</TabsTrigger>
+                        <TabsTrigger value="delivery">Доставка</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="desc" className="mt-3 text-sm leading-relaxed">
+                        {((p as any).description && String((p as any).description).trim().length)
+                            ? <div dangerouslySetInnerHTML={{ __html: String((p as any).description) }} />
+                            : <div className="text-muted-foreground">Опис поки відсутній.</div>}
+                    </TabsContent>
+
+                    <TabsContent value="specs" className="mt-3">
+                        {specs.length === 0 ? (
+                            <div className="text-sm text-muted-foreground">Характеристики ще не додані.</div>
+                        ) : (
+                            <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                                {specs.map((s, i) => (
+                                    <div key={`${s.name}-${i}`} className="border-b py-2">
+                                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">{s.name}</dt>
+                                        <dd className="text-sm">{s.value}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="delivery" className="mt-3 text-sm">
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Нова Пошта по Україні — 1–3 дні.</li>
+                            <li>Курʼєр у великих містах — 1–2 дні.</li>
+                            <li>Оплата: карткою онлайн або накладений платіж.</li>
+                            <li>Повернення/обмін — 14 днів (згідно ЗУ «Про захист прав споживачів»).</li>
+                        </ul>
+                    </TabsContent>
+                </Tabs>
+
                 <div>
                     <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>
                 </div>
@@ -208,6 +321,15 @@ export default function ProductPage() {
                 <SimilarProducts categoryId={p.category_id} currentSlug={p.slug} />
                 <RecentlyViewed excludeSlug={p.slug} />
             </div>
+
+            {/* Lightbox overlay */}
+            <ImageLightbox
+                images={gallery}
+                openIndex={lightboxIndex}
+                onClose={() => setLightboxIndex(null)}
+                onPrev={onPrev}
+                onNext={onNext}
+            />
         </div>
     );
 }

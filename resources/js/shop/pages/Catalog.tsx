@@ -22,6 +22,8 @@ import WishlistButton from '../components/WishlistButton';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import SeoHead from '../components/SeoHead';
 import JsonLd from '../components/JsonLd';
+import { useHreflangs } from '../hooks/useHreflangs';
+import { GA } from '../ui/ga';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
@@ -102,6 +104,10 @@ export default function Catalog() {
                     setProducts(res.data);
                     setLastPage(res.last_page);
                     setFacets(res.facets ?? {});
+                    const listName = categoryId
+                        ? `Каталог — ${cats.find(c => c.id === categoryId)?.name ?? `#${categoryId}`}`
+                        : 'Каталог';
+                    GA.view_item_list(res.data, listName);
                 }
             } finally {
                 if (!ignore) setLoading(false);
@@ -206,6 +212,19 @@ export default function Catalog() {
     };
     // ----------------------------------------------------------------
 
+    const hasFilters =
+        !!q ||
+        !!categoryId ||
+        (selectedColors.length > 0) ||
+        (selectedSizes.length > 0) ||
+        (minPriceParam != null) ||
+        (maxPriceParam != null) ||
+        (sort !== 'new');
+
+    const robotsMeta = hasFilters ? 'noindex,follow' : undefined;
+
+    const hreflangs = useHreflangs('uk');
+
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-6">
             <SeoHead
@@ -214,6 +233,8 @@ export default function Catalog() {
                 canonical
                 prevUrl={prevUrl}
                 nextUrl={nextUrl}
+                robots={robotsMeta}
+                hreflangs={hreflangs}
             />
             <JsonLd data={breadcrumbLd} />
 
