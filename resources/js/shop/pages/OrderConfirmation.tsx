@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { OrdersApi } from '../api';
+import {useParams, Link, useSearchParams} from 'react-router-dom';
+import { OrdersApi, refreshOrderStatus } from '../api';
 import { formatPrice } from '../ui/format';
 import SeoHead from '../components/SeoHead';
 import { GA } from '../ui/ga';
@@ -18,6 +18,7 @@ type Order = {
     number: string;
     total: number | string;
     email: string;
+    status: string;
     items: OrderItem[];
 };
 
@@ -26,19 +27,33 @@ export default function OrderConfirmation() {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const [sp] = useSearchParams();
+    const payment_intent = sp.get('payment_intent') ?? undefined;
+    const redirect_status = sp.get('redirect_status') ?? undefined;
+
     useEffect(() => {
         let on = true;
         (async () => {
             try {
-                const o = await OrdersApi.show(number!);
-                if (on) setOrder(o);
-                GA.purchase(o);
+                // 1) якщо є дані від Stripe у query — оновимо статус на бекенді
+                if (number && (payment_intent || redirect_status)) {
+                    try {
+                        await refreshOrderStatus(number, payment_intent);
+                    } catch {}
+                }
+                // 2) забираємо свіже замовлення
+                if (number) {
+                    const o = await OrdersApi.show(number);
+                    if (!on) return;
+                    setOrder(o);
+                    GA.purchase(o);
+                }
             } finally {
                 if (on) setLoading(false);
             }
         })();
         return () => { on = false; };
-    }, [number]);
+    }, [number, payment_intent, redirect_status]);
 
     if (loading) return <div className="max-w-6xl mx-auto p-4">Завантаження…</div>;
     if (!order) return <div className="max-w-6xl mx-auto p-4">Замовлення не знайдено.</div>;
@@ -46,7 +61,9 @@ export default function OrderConfirmation() {
     const items = order.items ?? [];
     const itemsTotal = items.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
 
-    const isPaid = (order as any).payment_status === 'succeeded';
+    const isPaid =
+        (order as any).payment_status === 'succeeded' ||
+        (order as any).status === 'paid';
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6">

@@ -27,3 +27,4 @@ Route::post('orders', [OrderController::class, 'store']);
 Route::get('/orders/{number}', [OrderController::class, 'show']);
 
 Route::post('/payments/intent', [PaymentController::class, 'intent']);
+Route::post('/payment/refresh/{number}', [PaymentController::class, 'refreshStatus']);

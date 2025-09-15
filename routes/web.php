@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -10,7 +11,9 @@ use App\Http\Controllers\SitemapController;
 
 Route::get('/og/product/{slug}.png', [OgImageController::class, 'product'])->where('slug', '.*');
 
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook')
+    ->withoutMiddleware([VerifyCsrfToken::class]);
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemaps/categories.xml', [SitemapController::class, 'categories']);

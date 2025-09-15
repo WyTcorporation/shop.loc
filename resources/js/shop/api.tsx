@@ -262,3 +262,13 @@ export const OrdersApi = {
         return api.get(`/orders/${encodeURIComponent(number)}`).then(r => r.data)
     },
 }
+
+export async function refreshOrderStatus(number: string, payment_intent?: string) {
+    const res = await fetch(`/api/payment/refresh/${encodeURIComponent(number)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_intent }),
+    });
+    if (!res.ok) throw new Error('refresh failed');
+    return res.json();
+}

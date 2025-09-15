@@ -1,64 +1,78 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
 {
-    public function handle(Request $request): Response
+    public function handle(Request $request)
     {
-        $payload = $request->getContent();
-        $signature = $request->header('Stripe-Signature');
-        $secret = config('services.stripe.webhook_secret');
+        $payload    = $request->getContent();
+        $sigHeader  = $request->header('Stripe-Signature');
+        $secret     = config('services.stripe.webhook_secret');
 
         try {
-            $event = Webhook::constructEvent($payload, $signature, $secret);
+            $event = Webhook::constructEvent($payload, $sigHeader, $secret);
         } catch (\Throwable $e) {
-            return response('Invalid', 400);
+            Log::warning('Stripe webhook signature error: '.$e->getMessage());
+            return response()->json(['error' => 'invalid signature'], 400);
         }
 
-        $object = $event->data->object ?? null;
+        try {
+            switch ($event->type) {
+                case 'payment_intent.succeeded':
+                case 'payment_intent.processing':
+                case 'payment_intent.payment_failed':
+                case 'payment_intent.canceled':
+                    $pi = $event->data->object;
 
-        switch ($event->type) {
-            case 'payment_intent.succeeded':
-                $piId = $object->id ?? null;
-                if ($piId) {
-                    $order = Order::where('payment_intent_id', $piId)->first()
-                        ?: Order::where('number', $object->metadata->order_number ?? '')->first();
-                    if ($order) {
-                        $order->payment_status = 'succeeded';
-                        $order->paid_at = now();
-                        $order->save();
+                    $order = Order::where('payment_intent_id', $pi->id)->first();
+                    if (!$order) {
+                        $orderNumber = $pi->metadata->order_number ?? null;
+                        if ($orderNumber) {
+                            $order = Order::where('number', $orderNumber)->first();
+                        }
                     }
-                }
-                break;
+                    if (!$order) break;
 
-            case 'payment_intent.payment_failed':
-                if (!empty($object->id)) {
-                    $order = Order::where('payment_intent_id', $object->id)->first();
-                    if ($order) {
-                        $order->payment_status = 'failed';
-                        $order->save();
-                    }
-                }
-                break;
+                    $stripeStatus = (string) $pi->status;
+                    $map = [
+                        'succeeded'               => OrderStatus::Paid,
+                        'processing'              => OrderStatus::New,
+                        'requires_payment_method' => OrderStatus::New,
+                        'canceled'                => OrderStatus::Cancelled,
+                    ];
+                    $next = $map[$stripeStatus] ?? null;
 
-            case 'payment_intent.canceled':
-                if (!empty($object->id)) {
-                    $order = Order::where('payment_intent_id', $object->id)->first();
-                    if ($order) {
-                        $order->payment_status = 'canceled';
-                        $order->save();
+                    $order->payment_status    = $stripeStatus;
+                    $order->payment_intent_id = $pi->id;
+
+                    if ($next instanceof OrderStatus) {
+                        if ($order->status !== OrderStatus::Paid && $order->status !== OrderStatus::Shipped) {
+                            if ($order->status !== $next) {
+                                $order->status = $next;
+                                if ($next === OrderStatus::Paid) {
+                                    $order->paid_at = now();
+                                }
+                            }
+                        }
                     }
-                }
-                break;
+
+                    $order->save();
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (\Throwable $e) {
+            Log::error('Stripe webhook handling error: '.$e->getMessage(), ['event' => $event->type ?? 'unknown']);
         }
 
-        return response('ok', 200);
+        return response()->json(['ok' => true]);
     }
 }

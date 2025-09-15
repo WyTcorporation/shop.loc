@@ -202,3 +202,7 @@ stripe listen --forward-to http://localhost:8080/stripe/webhook
 Хочеш — далі можу:
 I18n каркас (switcher, URL стратегія, lang у <html>, hreflang).
 CI/CD (build, тест, deploy), prod Dockerfile.
+
+4242 4242 4242 4242 - good
+
+4000 0000 0000 0002 - bad
