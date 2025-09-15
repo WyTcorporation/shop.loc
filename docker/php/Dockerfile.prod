@@ -1,0 +1,38 @@
+# --- Stage 1: Node build (assets) ---
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY package*.json vite.config.ts tsconfig.json ./
+COPY resources ./resources
+RUN npm ci
+RUN npm run build
+
+# --- Stage 2: PHP build ---
+FROM php:8.3-fpm-alpine AS phpbuild
+WORKDIR /var/www/html
+
+# system deps
+RUN apk add --no-cache git libpq-dev oniguruma-dev icu-dev zip unzip libzip-dev
+
+# php extensions
+RUN docker-php-ext-install pdo pdo_pgsql intl mbstring zip opcache
+
+# composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+COPY . .
+
+# copy built assets
+COPY --from=assets /app/resources/js/shop /var/www/html/resources/js/shop
+COPY --from=assets /app/public/build /var/www/html/public/build
+
+# optimize laravel
+RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+
+# php-fpm config (optional opcache tuning)
+# ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0 PHP_OPCACHE_MAX_ACCELERATED_FILES=60000 PHP_OPCACHE_MEM_SIZE=192
+
+EXPOSE 9000
+CMD ["php-fpm", "-F"]

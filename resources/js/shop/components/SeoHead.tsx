@@ -47,6 +47,22 @@ function upsertLink(rel: string, href?: string) {
     return () => { if (el) el.href = prev ?? ''; if (created && el) el.remove(); };
 }
 
+function upsertLinkRelHreflang(lang: string, href: string | undefined) {
+    if (!href || !lang) return () => {};
+    const sel = `link[rel="alternate"][hreflang="${lang}"]`;
+    let el = document.querySelector(sel) as HTMLLinkElement | null;
+    const created = !el;
+    if (!el) {
+        el = document.createElement('link');
+        el.rel = 'alternate';
+        el.setAttribute('hreflang', lang);
+        document.head.appendChild(el);
+    }
+    const prev = el.href;
+    el.href = href;
+    return () => { if (el) el.href = prev ?? ''; if (created && el) el.remove(); };
+}
+
 export default function SeoHead({
                                     title,
                                     description,
@@ -73,6 +89,12 @@ export default function SeoHead({
 
         // robots
         cleanups.push(upsertMetaName('robots', robots));
+
+
+        // hreflang
+        (hreflangs || []).forEach(h => {
+            cleanups.push(upsertLinkRelHreflang(h.lang, h.href));
+        });
 
         // OpenGraph
         cleanups.push(upsertMetaProp('og:title', title));

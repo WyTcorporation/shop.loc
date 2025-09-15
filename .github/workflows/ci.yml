@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: shop
+          POSTGRES_USER: shop
+          POSTGRES_PASSWORD: shop
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd="pg_isready -U shop" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_pgsql, intl, mbstring, zip
+      - name: Copy env
+        run: cp .env.example .env || true
+      - name: Install composer deps
+        run: composer install --no-interaction --prefer-dist
+      - name: Generate key & migrate
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: shop
+          DB_USERNAME: shop
+          DB_PASSWORD: shop
+        run: |
+          php artisan key:generate
+          php artisan migrate --force
+      - name: PHPUnit
+        run: php artisan test --testsuite=Unit
+
+  frontend-build-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install deps
+        run: npm ci
+      - name: Build
+        env:
+          VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+        run: npm run build
+      - name: Playwright install
+        run: npx playwright install --with-deps
+      - name: E2E tests
+        env:
+          # якщо потрібні бек-API — піднімайте docker-compose в GH actions або мокуйте
+          CI: "true"
+        run: npx playwright test --reporter=dot
+
+  docker-build-push:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile.prod
+          push: true
+          tags: ghcr.io/${{ github.repository }}/shop-php:latest

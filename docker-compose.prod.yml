@@ -1,0 +1,18 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    env_file: .env
+    networks: [prodnet]
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on: [php]
+    ports: ["80:80"]
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [prodnet]
+
+networks: { prodnet: {} }
