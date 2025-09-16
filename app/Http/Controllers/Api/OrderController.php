@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendOrderConfirmation;
-use App\Models\{Cart, Order, OrderItem};
+use App\Models\{Address, Cart, Order, OrderItem};
+use App\Enums\ShipmentStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,11 @@ class OrderController extends Controller
             'cart_id' => ['required', 'uuid', 'exists:carts,id'],
             'email' => ['required', 'email'],
             'shipping_address' => ['required', 'array'],
+            'shipping_address.name' => ['required', 'string', 'max:255'],
+            'shipping_address.city' => ['required', 'string', 'max:255'],
+            'shipping_address.addr' => ['required', 'string', 'max:500'],
+            'shipping_address.postal_code' => ['nullable', 'string', 'max:32'],
+            'shipping_address.phone' => ['nullable', 'string', 'max:32'],
             'billing_address' => ['nullable', 'array'],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -44,12 +50,29 @@ class OrderController extends Controller
 
             $total = $cart->items->sum(fn($it) => $it->qty * (float)$it->price);
 
+            $addressPayload = [
+                'name' => $data['shipping_address']['name'],
+                'city' => $data['shipping_address']['city'],
+                'addr' => $data['shipping_address']['addr'],
+                'postal_code' => $data['shipping_address']['postal_code'] ?? null,
+                'phone' => $data['shipping_address']['phone'] ?? null,
+            ];
+
+            $addressAttributes = array_merge([
+                'user_id' => $cart->user_id,
+            ], $addressPayload);
+
+            $shippingAddress = $cart->user_id
+                ? Address::firstOrCreate($addressAttributes)
+                : Address::create($addressAttributes);
+
             $order = Order::create([
                 'user_id' => $cart->user_id,
                 'email' => $data['email'],
                 'status' => 'new',
                 'total' => $total,
-                'shipping_address' => $data['shipping_address'],
+                'shipping_address' => $addressPayload,
+                'shipping_address_id' => $shippingAddress->id,
                 'billing_address' => $data['billing_address'] ?? null,
                 'note' => $data['note'] ?? null,
                 'inventory_committed_at' => now()
@@ -64,16 +87,22 @@ class OrderController extends Controller
             $order->items()->saveMany($items);
 
             $cart->update(['status' => 'ordered']);
+
+            $order->shipment()->create([
+                'address_id' => $shippingAddress->id,
+                'status' => ShipmentStatus::Pending,
+            ]);
         });
 
         SendOrderConfirmation::dispatch($order);
-        return response()->json($order->load('items'), 201);
+        return response()->json($order->load('items', 'shipment'), 201);
     }
 
     public function show(string $number)
     {
         $order = Order::with([
             'items.product.images' => fn($q) => $q->orderBy('sort'),
+            'shipment',
         ])->where('number', $number)->firstOrFail();
 
         // підкласти preview_url для кожного item (якщо не збережений у таблиці)

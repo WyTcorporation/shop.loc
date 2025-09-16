@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\{CategoryController,
+use App\Http\Controllers\Api\{AddressController,
+    CategoryController,
     PaymentController,
     ProductController,
     CartController,
@@ -34,6 +35,7 @@ Route::post('/payments/intent', [PaymentController::class, 'intent']);
 Route::post('/payment/refresh/{number}', [PaymentController::class, 'refreshStatus']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('profile/addresses', AddressController::class);
     Route::get('profile/wishlist', [WishlistController::class, 'index']);
     Route::post('profile/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('profile/wishlist/{product}', [WishlistController::class, 'destroy']);
