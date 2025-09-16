@@ -1,10 +1,11 @@
 import React from 'react';
-import {Navigate, useLocation} from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import ProfileNavigation from '../components/ProfileNavigation';
 import useAuth from '../hooks/useAuth';
-import {resolveErrorMessage} from '../lib/errors';
+import { resolveErrorMessage } from '../lib/errors';
 
 export default function ProfilePage() {
-    const {user, isAuthenticated, isReady, isLoading, logout} = useAuth();
+    const { user, isAuthenticated, isReady, isLoading, logout } = useAuth();
     const location = useLocation();
     const [error, setError] = React.useState<string | null>(null);
     const [pending, setPending] = React.useState(false);
@@ -23,7 +24,7 @@ export default function ProfilePage() {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" state={{from: redirectTo}} replace/>;
+        return <Navigate to="/login" state={{ from: redirectTo }} replace />;
     }
 
     const handleLogout = async () => {
@@ -39,18 +40,18 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-16">
-            <div className="w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
-                <h1 className="mb-6 text-2xl font-semibold">Профіль</h1>
+        <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col px-4 py-16">
+            <div className="w-full lg:w-3/4 xl:w-2/3">
+                <h1 className="mb-4 text-2xl font-semibold">Профіль</h1>
                 <p className="mb-6 text-sm text-gray-600">
-                    Ласкаво просимо,{' '}
-                    <span className="font-medium text-gray-900">{user?.name ?? 'користувачу'}</span>.
+                    Ласкаво просимо, <span className="font-medium text-gray-900">{user?.name ?? 'користувачу'}</span>. Керуйте своїми даними та
+                    перейдіть до інших розділів профілю.
                 </p>
-                {error && (
-                    <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {error}
-                    </div>
-                )}
+                <ProfileNavigation />
+            </div>
+            <div className="mt-4 w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
+                <h2 className="mb-6 text-xl font-semibold">Особисті дані</h2>
+                {error && <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
                 <dl className="space-y-4 text-sm text-gray-700">
                     <div>
                         <dt className="font-medium text-gray-900">ID</dt>
@@ -70,9 +71,7 @@ export default function ProfilePage() {
                     </div>
                 </dl>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-xs text-gray-500">
-                        Токен Sanctum збережено локально для авторизованих запитів до API.
-                    </p>
+                    <p className="text-xs text-gray-500">Токен Sanctum збережено локально для авторизованих запитів до API.</p>
                     <button
                         type="button"
                         onClick={handleLogout}
