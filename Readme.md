@@ -84,249 +84,231 @@ VITE_COOKIE_DEFAULT=granted|denied
 
 3) База даних та доменна модель
 
-3.1 Основні таблиці (скорочено)
+3.1 Каталог і постачальники
+- `products` — id, name, slug, sku, `category_id` (FK на `categories`), `vendor_id` (`nullable` FK на `vendors`, `nullOnDelete`), JSONB `attributes`, `stock`, прайс у двох форматах (`price` decimal(12,2) + `price_cents` для точних розрахунків), `price_old`, `is_active`, агрегації відгуків (`reviews_count`, `rating`), soft deletes/timestamps. Схема охоплює міграції `database/migrations/2025_08_26_131752_create_products_table.php`, `2025_10_01_121000_add_rating_columns_to_products_table.php`, `2025_10_06_000100_add_price_cents_to_products_table.php` та `2025_10_07_000200_add_vendor_id_to_products_table.php`. Рейтинг перебудовується через `App\Models\Product::refreshRating()`.
+- `product_images` — медіа-галерея з `product_id`, `url`, `alt`, `is_primary`, `sort`, timestamps (`database/migrations/2025_08_26_131834_create_product_images_table.php`, `2025_08_29_082612_add_is_primary_to_product_images_table.php`).
+- `categories` — дерево категорій з `parent_id` (`database/migrations/2025_08_26_131721_create_categories_table.php`).
+- `vendors` — відображення продавця на користувача (`user_id` unique, `name`, `slug`, контакти, опис; `database/migrations/2025_10_07_000000_create_vendors_table.php`). Продукти підтягують `vendor` для сторінки продавця (`App\Http\Controllers\Api\ProductController::sellerProducts`).
+- `warehouses` — реєстр складів з базовим записом `MAIN` (`database/migrations/2025_10_05_000000_create_warehouses_table.php`), який використовується методами `App\Models\Product` для резервування/звільнення залишків.
+- `product_stocks` — залишки по складах (`product_id`, `warehouse_id`, `qty`, `reserved`, `unique` пара) з ініціалізацією зі старого поля `stock` (`database/migrations/2025_10_05_000100_create_product_stock_table.php`).
+- `currencies` — курси валют, база береться з `config('shop.currency.base')` і використовується сервісом `App\Services\Currency\CurrencyConverter` (`database/migrations/2025_10_06_000000_create_currencies_table.php`).
+- `reviews` — оцінки/коментарі з `status=pending|approved|rejected`, `rating` 1–5 та індексом за `product_id` (`database/migrations/2025_10_01_120000_create_reviews_table.php`, модель `App\Models\Review`).
 
-products
-- id, slug, name, price (decimal(10,2)), stock (int), category_id (FK), preview_url (nullable), attrs (json?) — залежно від вашої реалізації атрибутів.
-- Індекс у Meilisearch (див. §7).
+3.2 Профілі користувачів, бажання та безпека
+- `users` — стандартна таблиця Laravel 12 з полями профілю (`database/migrations/0001_01_01_000000_create_users_table.php`).
+- `wishlists` — зв'язок `user_id` ↔ `product_id` з унікальним ключем та каскадним видаленням (`database/migrations/2025_09_20_000000_create_wishlists_table.php`).
+- `addresses` — збережені адреси доставки/платника (`user_id` nullable, `name`, `city`, `addr`, `postal_code`, `phone`; `database/migrations/2025_09_16_070141_create_addresses_table.php`).
+- `two_factor_secrets` — секрети TOTP з `confirmed_at`, 1:1 до користувача (`database/migrations/2025_10_08_000100_create_two_factor_secrets_table.php`, сервіс `App\Services\Auth\TwoFactorService`).
 
-product_images
-- id, product_id, url, alt, is_primary (bool).
+3.3 Кошик, купони та програма лояльності
+- `carts` — UUID-ідентифікатор, `user_id`, `status=active|ordered` (`database/migrations/2025_08_26_131903_create_carts_table.php`).
+- `cart_items` — позиції кошика з копією ціни на момент додавання (`database/migrations/2025_08_26_131918_create_cart_items_table.php`).
+- `coupons` — маркетингові купони (`code`, `type=fixed|percent`, `value`, мін/макс обмеження, usage/per-user ліміти, вікно активності, `meta`; `database/migrations/2025_10_02_000000_create_coupons_table.php`).
+- `loyalty_point_transactions` — історія нарахувань/списань балів (`type=earn|redeem|adjustment`, `points`, `amount`, `order_id`, `meta`; `database/migrations/2025_10_02_000100_create_loyalty_point_transactions_table.php`, модель `App\Models\LoyaltyPointTransaction`).
+- `carts` мають колонки `coupon_id`, `coupon_code`, `loyalty_points_used` (`database/migrations/2025_10_02_000200_add_discounts_to_carts_table.php`), які синхронізує `App\Services\Carts\CartPricingService`.
 
-categories
-- id, name, slug, parent_id (nullable).
-
-orders
-- id, number (унікальний), user_id (nullable), email,
-- status (enum App\Enums\OrderStatus: new|paid|shipped|cancelled),
-- total (decimal(10,2)), currency (string, напр. EUR|UAH),
-- shipping_address (json), billing_address (json),
-- Stripe: payment_intent_id (string nullable), payment_status (string nullable), paid_at (datetime nullable),
-shipped_at, cancelled_at (datetime nullable), inventory_committed_at (datetime nullable),
-timestamps.
-
-Важливо: у фінальному варіанті немає колонки payment_provider. Ми її не використовуємо.
-
-order_items
-- id, order_id, product_id, qty (int), price (decimal(10,2)).
-
-order_status_logs
-- id, order_id, from (string), to (string), note (nullable), created_at.
-
-3.2 Enum статусів
-
-App\Enums\OrderStatus:
-- New, Paid, Shipped, Cancelled
-- Перехідні правила у Order::canTransitionTo()/transitionTo().
-
-3.3 Модель Order (важливі моменти)
-- $fillable: email, status, total, shipping_address, billing_address, note, number, currency, payment_intent_id, payment_status, paid_at
-- $casts: status як enum, total decimal:2, всі *_at як datetime, адреси як array.
-- Генерація номера замовлення: ORD-YYYYMMDD-<RANDOM16>.
-- Логіка переходів (paid/shipped/cancelled) коректно віднімає/повертає stock.
-- recalculateTotal() підсумовує qty*price із order_items.
+3.4 Замовлення і післяпродажний супровід
+- `orders` — крім базових полів містить `subtotal`, `discount_total`, `coupon_id`, `coupon_code`, `coupon_discount`, `loyalty_points_used`, `loyalty_points_value`, `loyalty_points_earned` (`database/migrations/2025_10_02_000300_add_discounts_to_orders_table.php`), `shipping_address_id` (`2025_09_16_070146_add_shipping_address_id_to_orders_table.php`), валюту та Stripe-колонки (`currency`, `payment_intent_id`, `payment_status`, `paid_at`; `2025_09_14_155640_stripe_to_orders.php`). Додатково — таймстемпи життєвого циклу (`paid_at`, `shipped_at`, `cancelled_at`, `inventory_committed_at`; `2025_08_27_070140_alter_orders_lifecycle_columns.php`). Статуси описані enum `App\Enums\OrderStatus`.
+- `order_items` — `product_id`, `warehouse_id` (`nullable` FK на `warehouses`), `qty`, `price` (`database/migrations/2025_10_05_000200_add_warehouse_id_to_order_items_table.php`).
+- `shipments` — відправлення з `status`, `tracking_number`, `shipped_at`, `delivered_at`, `address_id` (`database/migrations/2025_09_16_070144_create_shipments_table.php`).
+- `order_status_logs` — журнал переходів статусів (`database/migrations/2025_08_29_144935_create_order_status_logs_table.php`).
+- `messages` — чат користувача з менеджерами по замовленню (`order_id`, `user_id`, `body`, `meta`; `database/migrations/2025_10_07_000100_create_messages_table.php`, модель `App\Models\Message`).
 
 4) API (контракти, що використовує фронт)
 
-4.1 Категорії
-```bash
-    GET /api/categories
-    → 200: Category[]
-```
+Маршрути описані в `routes/api.php`. Захищені ендпоінти використовують `auth:sanctum` (`App\Http\Controllers\Api\AuthController`).
 
-4.2 Товари (каталог)
+4.1 Категорії, пошук та каталог
+```bash
+GET /api/categories
+→ 200: Category[]
+```
+```bash
+GET /api/search/suggestions?q=iphone&limit=8
+→ 200: { data: SearchSuggestion[], query, driver }
+```
 ```typescript
-    GET /api/products?page=1&per_page=12
-      &category_id=NUMBER?
-      &search=STRING?
-      &sort=new|price_asc|price_desc?
-      &color[]=red&color[]=blue?  (або color=red,blue — залежить від вашої реалізації)
-      &size[]=M&size[]=L?
-      &min_price=NUMBER?&max_price=NUMBER?
-      &with_facets=1?
-    → 200: {
-      data: Product[],
-      current_page, last_page, total, ...
-      facets?: {
-        "category_id"?: { [id: string]: number },
-        "attrs.color"?: { [val: string]: number },
-        "attrs.size"?:  { [val: string]: number },
-      }
-    }
+GET /api/products?page=1&per_page=12
+  &category_id=NUMBER?
+  &search=STRING?
+  &sort=new|price_asc|price_desc?
+  &color[]=red&color[]=blue?
+  &size[]=M&size[]=L?
+  &min_price=NUMBER?&max_price=NUMBER?
+  &with_facets=1?
+→ 200: {
+  data: Product[],
+  current_page, last_page, total,
+  facets?: {
+    "category_id"?: { [id: string]: number },
+    "attrs.color"?: { [val: string]: number },
+    "attrs.size"?:  { [val: string]: number },
+  }
+}
 ```
+- `GET /api/products/facets?...` повертає лише розподіли фасетів (`nbHits`, `driver`, `error?`).
+- `GET /api/products/{slug}` — детальна картка товару з вендором/зображеннями.
+- `GET /api/products/{id}/reviews` — `{ data, average_rating, reviews_count }`.
+- `POST /api/products/{id}/reviews` (auth) — `{ rating: 1..5, text? }` → 201, статус `pending` (`App\Http\Controllers\Api\ReviewController`).
+- `GET /api/seller/{vendor}/products` — товари конкретного продавця.
+- Для мультивалютності доступний префікс `/api/{currency}/products/...` (див. `Route::group` із `Route::pattern('currency')`).
 
-- Сортування: new (за датою створення/ідентифікатором у зворотньому порядку), price_asc/desc.
-- Фільтри: взаємопоєднувані.
-- Фасети: формуються в Meilisearch (див. §7).
+4.2 Кошик (`App\Http\Controllers\Api\CartController`)
+- `GET /api/cart` — повертає або створює активний кошик (сетить cookie `cart_id`).
+- `GET /api/cart/{id}` — отримання кошика за UUID.
+- `POST /api/cart/{id}/items` — `{ product_id, qty? }` додає/збільшує позицію.
+- `PATCH /api/cart/{id}/items/{item}` — `{ qty }` оновлює кількість або видаляє позицію при `qty=0`.
+- `DELETE /api/cart/{id}/items/{item}` — видаляє позицію.
+- `POST /api/cart/apply-coupon` — `{ cart_id, code? }` застосовує/скидає купон, розрахунок робить `App\Services\Carts\CartPricingService`.
+- `POST /api/cart/apply-points` — `{ cart_id, points }`, доступно лише авторизованим; у відповіді приходять блоки `loyalty_points`, `available_points`, `max_redeemable_points`.
 
-4.3 Фасет-тільки endpoint (якщо використовується окремо)
-```pgsql
-    GET /api/products/facets?search=&category_id=&color=red,blue&size=M,L
-    → 200: { facets, nbHits, driver, error? }
+4.3 Вішліст (`App\Http\Controllers\Api\WishlistController`, `auth:sanctum`)
+- `GET /api/profile/wishlist` — масив обраних товарів (`id`, `slug`, `name`, `price`, `preview_url`).
+- `POST /api/profile/wishlist/{product}` — додає товар у вішліст.
+- `DELETE /api/profile/wishlist/{product}` — видаляє товар.
+
+4.4 Адреси профілю (`App\Http\Controllers\Api\AddressController`, `auth:sanctum`)
+- `GET /api/profile/addresses` — список адрес користувача.
+- `POST /api/profile/addresses` — створити адресу.
+- `GET /api/profile/addresses/{id}` — переглянути адресу.
+- `PATCH /api/profile/addresses/{id}` — часткове оновлення.
+- `DELETE /api/profile/addresses/{id}` — видалення.
+
+4.5 Замовлення і повідомлення
+- `POST /api/orders` — створює замовлення за `cart_id`, email і адресою доставки; враховує купони, бали, склади (контролер `App\Http\Controllers\Api\OrderController`).
+- `GET /api/orders/{number}` — деталі замовлення, також доступно з префіксом `/api/{currency}/orders/{number}`.
+- `GET /api/orders/{order}/messages` (auth) — повертає `{ data: Message[] }` (контролер `App\Http\Controllers\Api\OrderMessageController`).
+- `POST /api/orders/{order}/messages` (auth) — `{ body }` створює повідомлення, 201 + payload з автором.
+
+4.6 Оплата Stripe (`App\Http\Controllers\Api\PaymentController`)
+```yaml
+POST /api/payments/intent { number: "ORD-..." }
+→ 200: {
+  clientSecret: "pi_..._secret_...",
+  publishableKey: "pk_test_...",
+  order: { number, payment_status, total, currency }
+}
+
+POST /api/payment/refresh/{number} { payment_intent?: "pi_..." }
+→ 200: { ok: true, status: "paid|new|cancelled", payment_status: "succeeded|..." }
+
+POST /stripe/webhook
+→ 200: { ok: true }
 ```
+Вебхук реалізований у `app/Http/Controllers/StripeWebhookController.php`.
 
-4.4 Кошик   
-(у нас hook useCart() — бекенд має мати типові REST-ендпоїнти: /api/cart GET/POST/PUT/DELETE).
-Фактичні назви/схема залежать від вашої реалізації (ми інтегрували «як було»).
-
-4.5 Замовлення  
-```bash
-    GET /api/orders/{number}
-    → 200: Order + items + product (name, slug, preview_url)
-    
-    POST /api/orders         
-    → 201: { number, ... }
-```
-
-4.6 Оплата Stripe
-```yaml 
-    POST /api/payment/intent
-      { number: "ORD-..." }
-    → 200: {
-      clientSecret: "pi_..._secret_...",
-      publishableKey: "pk_test_...",
-      order: { number, payment_status, total, currency }
-    }
-    
-    POST /api/payment/refresh/{number}
-      { payment_intent?: "pi_..." }    # опціонально, якщо є у query після редіректу
-    → 200: { ok: true, status: "paid|new|cancelled", payment_status: "succeeded|..." }
-    
-    POST /stripe/webhook         # Stripe webhooks (без CSRF)
-    → 200: { ok: true }
-```
+4.7 Двофакторна автентифікація (`App\Http\Controllers\Api\TwoFactorController`, `auth:sanctum`)
+- `GET /api/profile/two-factor` — статус (`enabled`, `pending`, `confirmed_at`).
+- `POST /api/profile/two-factor` — генерує секрет і `otpauth_url`.
+- `POST /api/profile/two-factor/confirm` — `{ code }`, підтверджує секрет.
+- `DELETE /api/profile/two-factor` — вимикає 2FA.
 
 5) Frontend (структура та ключові елементи)
 
 5.1 Сторінки
-
-- pages/Catalog.tsx
-- - Синхронізація фільтрів/пошуку з URL (useQueryParam*).
-- - Фасети: category_id, attrs.color, attrs.size, ціновий діапазон.
-- - Сортування: new|price_asc|price_desc.
-- - OG/Twitter/Canonical/Prev/Next через <SeoHead />.
-- - Breadcrumb JSON-LD <JsonLd />.
-
-- pages/Product.tsx (ProductPage)
-- - SEO: <SeoHead> з OG зображенням (pre-rendered og/product/:slug.png), Product + Breadcrumb JSON-LD.
-- - Recently viewed (localStorage).
-- - «Схожі товари» (за category_id, без поточного).
-- - «Вішліст» (localStorage).
-- - Безпечний порядок hooks (все деривується через useMemo, early return нижче hooks).
-
-- pages/OrderConfirmation.tsx
-- - Завантажує замовлення, рендерить таблицю, GA purchase, якщо не сплачено — <PayOrder number=... />.
-- - Після успіху onPaid={() => window.location.reload()}.
+- `resources/js/shop/pages/Catalog.tsx` — синхронізує фільтри/пошук з URL (`useQueryParam*`), показує фасети з Meilisearch, оновлює SEO через `<SeoHead />` і `<JsonLd />`.
+- `resources/js/shop/pages/Product.tsx` — SEO (OG, Twitter, JSON-LD), "схожі" та "переглянуті" товари, кнопки вішліста/кошика.
+- `resources/js/shop/pages/Wishlist.tsx` — відмальовує обране, використовує `useWishlist()` для синхронізації локального стану з `/api/profile/wishlist` та показує помилки (`resources/js/shop/hooks/useWishlist.tsx`).
+- `resources/js/shop/pages/OrderConfirmation.tsx` — завантажує замовлення, показує `PayOrder` та чат з продавцем через `OrderChat`.
+- `resources/js/shop/pages/Profile.tsx` — головна сторінка профілю з налаштуванням 2FA (`TwoFactorApi`) та навігацією (`ProfileNavigation`).
+- `resources/js/shop/pages/ProfileAddresses.tsx` — CRUD адрес через `AddressesApi`.
+- `resources/js/shop/pages/ProfileOrders.tsx` — історія замовлень із `OrdersApi.listMine()` (очікує бекенд `/api/profile/orders`).
+- `resources/js/shop/pages/ProfilePoints.tsx` — відображає баланс і історію балів через `ProfileApi.fetchPoints()` (очікує `/api/profile/points`).
 
 5.2 Компоненти
+- `resources/js/shop/components/MiniCart.tsx` — поповер кошика в хедері.
+- `resources/js/shop/components/WishlistButton.tsx`, `WishlistBadge.tsx` — UI для вішліста.
+- `resources/js/shop/components/SimilarProducts.tsx`, `RecentlyViewed.tsx` — маркетингові блоки з лоадерами.
+- `resources/js/shop/components/SeoHead.tsx` — upsert метатеги/лінки у `<head>`; `resources/js/shop/components/JsonLd.tsx` — інжектує JSON-LD.
+- `resources/js/shop/components/PayOrder.tsx` — Stripe Elements (див. §6).
+- `resources/js/shop/components/OrderChat.tsx` — фронтовий чат для `/api/orders/{order}/messages`.
+- `resources/js/shop/components/ProfileNavigation.tsx` — таби профілю.
 
-- components/MiniCart.tsx — поповер у хедері з коротким підсумком.
-- components/WishlistButton.tsx, components/WishlistBadge.tsx.
-- components/SimilarProducts.tsx, components/RecentlyViewed.tsx (з loading / empty states).
-- components/SeoHead.tsx — upsert метатеги/лінки у <head> (title, description, OG/Twitter, canonical, prev/next, hreflang, robots).
-- components/JsonLd.tsx — інжектує <script type="application/ld+json">.
-
-5.3 Хуки
-
-- useQueryParam, useQueryParamNumber, useQueryParamEnum — двосторонній зв’язок із URL.
-- useDebounce — debounce пошуку.
-- useDocumentTitle — синх title.
-- useHreflangs — build alternate-посилання для поточної сторінки.
+5.3 Хуки та клієнти
+- `resources/js/shop/hooks/useWishlist.tsx` — керує локальним/віддаленим вішлістом (Sync з `WishlistApi`).
+- `resources/js/shop/hooks/useQueryParam*.tsx`, `useDebounce.tsx`, `useDocumentTitle.tsx`, `useHreflangs.tsx` — утиліти для каталогу та SEO.
+- `resources/js/shop/api.tsx` — axios-клієнт із `CartApi`, `OrdersApi`, `WishlistApi`, `ProfileApi`, `TwoFactorApi`.
 
 5.4 i18n (каркас)
-
-- Роутер: /:lang(uk|en)?/* — опційний префікс.
-- i18n/LocaleProvider — ставить <html lang>, cookie lang, expose useLocale().
-- components/LanguageSwitcher — перемикає префікс у URL.
-- Axios interceptor (в api.tsx) додає Accept-Language до всіх API запитів.
-- Серверний middleware встановлює app()->setLocale() за префіксом/кукою/Accept-Language.
-
+- Роутер: `/:lang(uk|en)?/*` — опційний префікс.
+- `resources/js/shop/i18n/LocaleProvider.tsx` ставить `<html lang>`, cookie та експортує `useLocale()`.
+- `resources/js/shop/components/LanguageSwitcher.tsx` — перемикає префікс у URL.
+- `resources/js/shop/api.tsx` додає `Accept-Language` до всіх API запитів.
+- Серверний middleware `app/Http/Middleware/SetLocaleFromRequest.php` вибирає локаль за префіксом/кукою/Accept-Language.
 6) Оплата (Stripe)
 
 6.1 Потік (Payment Intents, Elements)
 
-1) На сторінці замовлення (OrderConfirmation) рендеримо <PayOrder number=... />.
-2) PayOrder викликає POST /api/payment/intent { number }, отримує clientSecret і pk.
-3) Stripe Elements/confirm → редірект (якщо 3DS) → повернення на /order/{number}?payment_intent=pi_...&...&redirect_status=succeeded.
-4) Фронт викликає POST /api/payment/refresh/{number} (ми додали метод refreshStatus).
-5) Бекенд тягне PI і мапить Stripe(status) → OrderStatus:
-
-- succeeded → Paid (+ paid_at),
-- processing|requires_payment_method → New,
-- canceled → Cancelled.
-
-    Також зберігає payment_status (= raw stripe status) та payment_intent_id.
+1) На сторінці замовлення (`resources/js/shop/pages/OrderConfirmation.tsx`) рендеримо `<PayOrder number=... />` (`resources/js/shop/components/PayOrder.tsx`).
+2) `PayOrder` викликає `POST /api/payments/intent { number }` (`App\Http\Controllers\Api\PaymentController::intent`), отримує `clientSecret` і `publishableKey`.
+3) Stripe Elements/confirm → редірект (якщо 3DS) → повернення на `/order/{number}?payment_intent=pi_...&redirect_status=...`.
+4) Фронт викликає `POST /api/payment/refresh/{number}` (`PaymentController::refreshStatus`), щоб підтягнути актуальний статус.
+5) Контролер мапить Stripe статус на `App\Enums\OrderStatus`, оновлює `payment_status`, `payment_intent_id`, виставляє `paid_at` і не даунгрейдить вже оплачені/відправлені замовлення.
 
 6.2 Webhook
 
-- POST /stripe/webhook (без CSRF; роут під web або окремий) — перевірка підпису STRIPE_WEBHOOK_SECRET.
-- Обробляємо події payment_intent.* і ідемпотентно оновлюємо ті самі поля, що й у refreshStatus.
-- Важливо: ми не знижуємо статус із Paid назад.
+- `POST /stripe/webhook` обробляє `app/Http/Controllers/StripeWebhookController.php`: перевірка підпису `STRIPE_WEBHOOK_SECRET`, події `payment_intent.*`, ідемпотентне оновлення тих самих полів, що й у `refreshStatus`.
 
 6.3 Email-и
 
-- Після статусів (на стороні Observer / Jobs) шлемо листи:
-- - OrderPlacedMail (після формування),
-- - OrderPaidMail (після оплати),
-- - інші статусні (OrderShippedMail, OrderStatusUpdatedMail).
+- Черги (`app/Jobs/SendOrderConfirmation.php`, `SendOrderStatusMail.php`, `SendOrderStatusUpdate.php`) шлють `OrderPlacedMail`, `OrderPaidMail`, `OrderShippedMail`, `OrderStatusUpdatedMail`.
 - Dev: перегляд у Mailpit (http://localhost:8025).
 
 7) Пошук/Фасети (Meilisearch 1.8)
 
 7.1 Індекс
 
-- Документи: продукти (id, name, price, category_id, attrs.color, attrs.size, slug, preview_url, інше).
-- Facets: category_id, attrs.color, attrs.size.
-- Пошук: q = назва; додаткові filter за category_id, attrs.color, attrs.size, price range.
+- Документи формуються через `App\Models\Product::toSearchableArray()` (id, name, price, category_id, attrs.color, attrs.size, slug, preview_url, тощо).
+- Facets: `category_id`, `attrs.color`, `attrs.size` — конфігуруються в `App\Http\Controllers\Api\ProductController::index` / `facets`.
+- Пошук: `q` = назва; додаткові `filter` за category_id, attrs.color, attrs.size, price range. Каталог на фронті (`resources/js/shop/pages/Catalog.tsx`) очікує такі ж поля.
+- Пошукові підказки реалізовані в `App\Http\Controllers\Api\SearchController` (`GET /api/search/suggestions`).
 
 7.2 Важливо (оновлення API Meili 1.8)
 
-- Поле facetsDistribution замінене новим синтаксисом (facets у запиті).
-- Ми переробили бек (/api/products/facets) і фронт, щоб уникнути «гонок»: або отримуємо фасети разом з каталогом (with_facets=1), або окремим запитом.
+- Поле `facetsDistribution` замінене новим синтаксисом (`facets` у запиті).
+- `/api/products/facets` повертає лише фасети, щоб уникнути гонок — фронт або запитує каталог з `with_facets=1`, або підтягує фасети окремо.
 
 8) SEO
 
 8.1 Динамічні метатеги
 
-- Компонент SeoHead upsert-ить:
-- - <title>, <meta name="description">
-- - og:* (title, description, type, url, image, site_name)
-- - twitter:* (card, title, description, image)
-- - <link rel="canonical">
-- - <link rel="prev/next"> для пагінації
-- - <link rel="alternate" hreflang="..."> (через hreflangs проп)
-- - <meta name="robots"> (за потреби)
+- Компонент `resources/js/shop/components/SeoHead.tsx` upsert-ить:
+  - `<title>`, `<meta name="description">`
+  - `og:*` (title, description, type, url, image, site_name)
+  - `twitter:*` (card, title, description, image)
+  - `<link rel="canonical">`
+  - `<link rel="prev/next">` для пагінації
+  - `<link rel="alternate" hreflang="...">` (через `useHreflangs`)
+  - `<meta name="robots">` (за потреби)
 
 8.2 JSON-LD
 
-- Product + BreadcrumbList на картці товару.
-- У каталозі — BreadcrumbList.
+- `resources/js/shop/components/JsonLd.tsx` інжектує Product + BreadcrumbList на картці товару.
+- У каталозі (`Catalog.tsx`) додаємо BreadcrumbList для списків.
 
 8.3 Sitemap/Robots
 
-- GET /sitemap.xml — динамічний (головна, категорії ?category_id=..., продукти).
-
-    Параметри: changefreq, priority, lastmod.
-
-- public/robots.txt — мінімальний allow, sitemap посилання.
+- `GET /sitemap.xml` генерує `app/Http/Controllers/SitemapController.php` (розділяє index/categories/products, параметри: changefreq, priority, lastmod).
+- `public/robots.txt` — мінімальний allow + лінк на sitemap.
 
 9) Аналітика (GA4 + consent)
 
-- ui/analytics.ts (або подібний модуль):
-- getAnalyticsId() читає VITE_GA_ID.
-- initAnalyticsOnLoad() — підключає gtag скрипт при consent=granted.
-- setConsent('granted'|'denied'), updateConsent() — шле в GA4 consent update.
-- openCookiePreferences() — кидає кастомну подію (ми її слухаємо десь у UI).
+- `resources/js/shop/ui/analytics.tsx`:
+  - `getAnalyticsId()` читає `VITE_GA_ID`.
+  - `initAnalyticsOnLoad()` — підключає gtag-скрипт при `consent=granted`.
+  - `setConsent('granted'|'denied')`, `updateConsent()` — шлють в GA4 оновлення consent.
+  - `openCookiePreferences()` — тригер для UI.
+- UI використовує модуль у `resources/js/shop/components/CookieConsent.tsx` та `resources/js/shop/components/Header.tsx`.
 
     За замовчуванням поведінка керується VITE_COOKIE_DEFAULT (granted або denied). Для ЄС можна ставити denied і показувати банер/кнопку керування.
 
 10) i18n (детально)
 
-- URL-стратегія: /:lang(uk|en)?/* — опційний префікс (без префіксу = uk).
-- Вибір локалі на бекенді: middleware SetLocaleFromRequest (префікс → cookie → Accept-Language).
-- Вибір локалі на фронті: LocaleProvider зберігає <html lang>, cookie lang; LanguageSwitcher міняє префікс і перезавантажує URL.
-- API: interceptor додає Accept-Language: uk|en.
-- Переклади PHP: resources/lang/{uk,en}/*.php (поки мінімум).
+- URL-стратегія: `/:lang(uk|en)?/*` — опційний префікс (без префіксу = uk).
+- Вибір локалі на бекенді: middleware `app/Http/Middleware/SetLocaleFromRequest.php` (префікс → cookie → Accept-Language).
+- Вибір локалі на фронті: `resources/js/shop/i18n/LocaleProvider.tsx` зберігає `<html lang>` та cookie; `resources/js/shop/components/LanguageSwitcher.tsx` міняє префікс і перезавантажує URL.
+- API: `resources/js/shop/api.tsx` через axios interceptor додає `Accept-Language: uk|en`.
+- Переклади PHP: `resources/lang/{uk,en}/*.php` (поки мінімум).
 - Для контенту з БД — наступний етап (JSON-поля або translation-таблиці).
 
 11) Тестування
@@ -365,8 +347,9 @@ App\Enums\OrderStatus:
 
 - Всі відправки листів — через Jobs (Horizon). При зміні статусу (Observer/Service) штовхаємо:
 
-- - SendOrderConfirmation після створення,
-- - SendOrderStatusUpdate для Paid/Shipped/Cancelled,
+- - `app/Jobs/SendOrderConfirmation.php` після створення,
+- - `app/Jobs/SendOrderStatusMail.php` для Paid/Shipped,
+- - `app/Jobs/SendOrderStatusUpdate.php` для інших переходів (email-нотифікації).
 - - відновлення кошика — окремий етап (поки не робили).
 
 - Dev: Mailpit UI.
@@ -419,8 +402,8 @@ App\Enums\OrderStatus:
 - Детальні unit/feature тести бекенду (оплата, стани).
 - Кешування/ETag на GET /api/products (HTTP кеш, conditional GET), оптимізація Meili (synonyms/typo tolerance/configurable filters).
 - Платіжний sandbox альтернатив (Mollie/Adyen) для ЄС — робиться на базі того ж контракту.
-- Профіль користувача / історія замовлень.
-- Wishlist серверний (авторизовані акаунти).
+- Завершити бекенд для `/api/profile/orders` та `/api/profile/points` (фронт уже викликає ці ендпоінти).
+- Поліпшити синхронізацію вішліста: мердж гостьових списків з акаунтом без дублювання.
 
 19) Дерево ключового коду 
 
