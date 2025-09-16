@@ -14,12 +14,25 @@ export type AuthUser = {
     name: string;
     email: string;
     email_verified_at?: string | null;
+    two_factor_enabled?: boolean;
+    two_factor_confirmed_at?: string | null;
     [key: string]: unknown;
 };
 
 type AuthTokenResponse = {
     token: string;
     user: AuthUser;
+};
+
+export type TwoFactorStatus = {
+    enabled: boolean;
+    pending: boolean;
+    confirmed_at?: string | null;
+};
+
+export type TwoFactorSetup = {
+    secret: string;
+    otpauth_url: string;
 };
 
 export type Image = {
@@ -252,7 +265,7 @@ export type LoyaltyPointsResponse = {
 
 /* ==================== AUTH ==================== */
 export const AuthApi = {
-    async login(payload: { email: string; password: string; remember?: boolean }) {
+    async login(payload: { email: string; password: string; remember?: boolean; otp?: string }) {
         const { data } = await api.post<AuthTokenResponse>('/auth/login', payload);
         return data;
     },
@@ -266,6 +279,24 @@ export const AuthApi = {
     },
     async logout() {
         await api.post('/auth/logout');
+    },
+};
+
+export const TwoFactorApi = {
+    async status() {
+        const { data } = await api.get<TwoFactorStatus>('/profile/two-factor');
+        return data;
+    },
+    async enable() {
+        const { data } = await api.post<TwoFactorSetup>('/profile/two-factor');
+        return data;
+    },
+    async confirm(payload: { code: string }) {
+        const { data } = await api.post<{ message?: string; confirmed_at?: string | null }>('/profile/two-factor/confirm', payload);
+        return data;
+    },
+    async disable() {
+        await api.delete('/profile/two-factor');
     },
 };
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\{AddressController,
+    AuthController,
     CategoryController,
     PaymentController,
     ProductController,
@@ -10,7 +11,18 @@ use App\Http\Controllers\Api\{AddressController,
     OrderMessageController,
     ReviewController,
     SearchController,
+    TwoFactorController,
     WishlistController};
+
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post('logout', [AuthController::class, 'logout']);
+    });
+});
 
 //Categories
 Route::get('categories', [CategoryController::class,'index']);
@@ -61,4 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('profile/wishlist/{product}', [WishlistController::class, 'destroy']);
     Route::get('orders/{order}/messages', [OrderMessageController::class, 'index']);
     Route::post('orders/{order}/messages', [OrderMessageController::class, 'store']);
+    Route::get('profile/two-factor', [TwoFactorController::class, 'show']);
+    Route::post('profile/two-factor', [TwoFactorController::class, 'store']);
+    Route::post('profile/two-factor/confirm', [TwoFactorController::class, 'confirm']);
+    Route::delete('profile/two-factor', [TwoFactorController::class, 'destroy']);
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link, Navigate, useLocation} from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import useAuth, {type LoginPayload} from '../hooks/useAuth';
 import {resolveErrorMessage} from '../lib/errors';
 
 export default function LoginPage() {
@@ -8,8 +8,11 @@ export default function LoginPage() {
     const location = useLocation();
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
+    const [otp, setOtp] = React.useState('');
     const [error, setError] = React.useState<string | null>(null);
     const [submitting, setSubmitting] = React.useState(false);
+    const [needsOtp, setNeedsOtp] = React.useState(false);
+    const otpInputRef = React.useRef<HTMLInputElement | null>(null);
 
     const from = React.useMemo(() => {
         const state = location.state as { from?: string } | null;
@@ -22,13 +25,35 @@ export default function LoginPage() {
         setError(null);
         setSubmitting(true);
         try {
-            await login({email, password});
+            const payload: LoginPayload = {email, password};
+            const trimmedOtp = otp.trim();
+            if (trimmedOtp) {
+                payload.otp = trimmedOtp;
+            }
+
+            await login(payload);
+            setNeedsOtp(false);
+            setOtp('');
         } catch (err) {
-            setError(resolveErrorMessage(err, 'Не вдалося увійти. Спробуйте ще раз.'));
+            const response = (err as { response?: { data?: { two_factor_required?: boolean } } })?.response?.data;
+
+            if (response?.two_factor_required) {
+                setNeedsOtp(true);
+                setOtp('');
+                setError('Потрібен одноразовий код. Введіть код з застосунку автентифікації.');
+            } else {
+                setError(resolveErrorMessage(err, 'Не вдалося увійти. Спробуйте ще раз.'));
+            }
         } finally {
             setSubmitting(false);
         }
     };
+
+    React.useEffect(() => {
+        if (needsOtp) {
+            otpInputRef.current?.focus();
+        }
+    }, [needsOtp]);
 
     if (!isReady && isLoading) {
         return (
@@ -80,6 +105,25 @@ export default function LoginPage() {
                             className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
                         />
                     </div>
+                    {needsOtp && (
+                        <div className="space-y-1">
+                            <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+                                Код підтвердження
+                            </label>
+                            <input
+                                id="otp"
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                value={otp}
+                                onChange={event => setOtp(event.target.value)}
+                                ref={otpInputRef}
+                                className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                                placeholder="Наприклад, 123456"
+                            />
+                            <p className="text-xs text-gray-500">Використайте застосунок автентифікації, щоб отримати шестизначний код.</p>
+                        </div>
+                    )}
                     <button
                         type="submit"
                         disabled={submitting || isLoading}

@@ -5,6 +5,7 @@ export type LoginPayload = {
     email: string;
     password: string;
     remember?: boolean;
+    otp?: string;
 };
 
 export type RegisterPayload = {
