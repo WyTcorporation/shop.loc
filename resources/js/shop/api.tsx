@@ -1,15 +1,12 @@
-import axios from 'axios'
-import { normalizeLang } from './i18n/config';
+import axios from 'axios';
 import type { WishItem } from './ui/wishlist';
 
-const API_BASE =
-    (import.meta as any).env?.VITE_API_URL ||
-    'http://localhost:8080/api'
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080/api';
 
 export const api = axios.create({
     baseURL: API_BASE,
     withCredentials: true, // потрібні cookie (cart_id)
-})
+});
 
 /* ==================== TYPES ==================== */
 export type AuthUser = {
@@ -26,80 +23,80 @@ type AuthTokenResponse = {
 };
 
 export type Image = {
-    id: number
-    url: string
-    alt?: string
-    is_primary?: boolean
-}
+    id: number;
+    url: string;
+    alt?: string;
+    is_primary?: boolean;
+};
 
 export type Product = {
-    id: number
-    name: string
-    slug: string
-    category_id: number
-    price: number | string
-    price_old?: number | string | null
-    preview_url?: string | null
+    id: number;
+    name: string;
+    slug: string;
+    category_id: number;
+    price: number | string;
+    price_old?: number | string | null;
+    preview_url?: string | null;
     images?: { url: string; alt?: string; is_primary?: boolean }[];
-    [k: string]: any
-}
+    [k: string]: any;
+};
 
 export type ProductsQuery = {
     page?: number;
     per_page?: number;
     category_id?: number;
     search?: string;
-    sort?: 'new'|'price_asc'|'price_desc';
+    sort?: 'new' | 'price_asc' | 'price_desc';
     color?: string[];
     size?: string[];
     min_price?: number;
     max_price?: number;
-    with_facets?: 0|1;
+    with_facets?: 0 | 1;
 };
 
 export type Category = {
-    id: number
-    name: string
-    slug?: string
-}
+    id: number;
+    name: string;
+    slug?: string;
+};
 
 export type Paginated<T> = {
-    data: T[]
-    current_page?: number
-    last_page?: number
-    per_page?: number | string
-    total?: number
-    next_page_url?: string | null
-    prev_page_url?: string | null
-    [k: string]: any
-}
+    data: T[];
+    current_page?: number;
+    last_page?: number;
+    per_page?: number | string;
+    total?: number;
+    next_page_url?: string | null;
+    prev_page_url?: string | null;
+    [k: string]: any;
+};
 
 export type CartItem = {
-    id: number
-    product_id: number
-    name?: string
-    slug?: string
-    image?: string
-    price: number | string
-    qty: number
-    line_total?: number
-    product?: Product
-}
+    id: number;
+    product_id: number;
+    name?: string;
+    slug?: string;
+    image?: string;
+    price: number | string;
+    qty: number;
+    line_total?: number;
+    product?: Product;
+};
 
 export type Cart = {
-    id: string
-    status: 'active' | 'ordered' | string
-    items: CartItem[]
-    total: number | string
-    subtotal?: number | string
+    id: string;
+    status: 'active' | 'ordered' | string;
+    items: CartItem[];
+    total: number | string;
+    subtotal?: number | string;
     discounts?: {
-        coupon?: { code?: string | null; amount?: number | string | null }
-        loyalty_points?: { used?: number | string | null; value?: number | string | null }
-        total?: number | string | null
-    }
-    available_points?: number
-    max_redeemable_points?: number
-}
+        coupon?: { code?: string | null; amount?: number | string | null };
+        loyalty_points?: { used?: number | string | null; value?: number | string | null };
+        total?: number | string | null;
+    };
+    available_points?: number;
+    max_redeemable_points?: number;
+};
 export type Facets = Record<string, Record<string, number>>;
 
 export type PaginatedWithFacets<T> = Paginated<T> & {
@@ -107,90 +104,110 @@ export type PaginatedWithFacets<T> = Paginated<T> & {
 };
 
 export type ReviewUser = {
-    id: number
-    name: string
-}
+    id: number;
+    name: string;
+};
 
 export type Review = {
-    id: number
-    product_id: number
-    user_id: number
-    rating: number
-    text?: string | null
-    status?: string | null
-    created_at?: string | null
-    updated_at?: string | null
-    user?: ReviewUser | null
-}
+    id: number;
+    product_id: number;
+    user_id: number;
+    rating: number;
+    text?: string | null;
+    status?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    user?: ReviewUser | null;
+};
 
 type ReviewListResponse = {
-    data: Review[]
-    average_rating: number | string | null
-    reviews_count: number
-}
+    data: Review[];
+    average_rating: number | string | null;
+    reviews_count: number;
+};
 
 type ReviewCreatePayload = {
-    rating: number
-    text?: string | null
-}
+    rating: number;
+    text?: string | null;
+};
 
 type ReviewCreateResponse = {
-    data: Review
-    message?: string
-}
+    data: Review;
+    message?: string;
+};
 
 export type Address = {
-    id: number
-    name: string
-    city: string
-    addr: string
-    postal_code?: string | null
-    phone?: string | null
-}
+    id: number;
+    name: string;
+    city: string;
+    addr: string;
+    postal_code?: string | null;
+    phone?: string | null;
+};
 
 export type Shipment = {
-    status?: string | null
-    tracking_number?: string | null
-    shipped_at?: string | null
-    delivered_at?: string | null
-}
+    status?: string | null;
+    tracking_number?: string | null;
+    shipped_at?: string | null;
+    delivered_at?: string | null;
+};
 
 export type OrderItemResponse = {
-    id: number
-    product_id: number
-    qty: number
-    price: number | string
-    subtotal?: number | string
-    preview_url?: string | null
-    name?: string | null
-    product?: Product | null
-}
+    id: number;
+    product_id: number;
+    qty: number;
+    price: number | string;
+    subtotal?: number | string;
+    preview_url?: string | null;
+    name?: string | null;
+    product?: Product | null;
+};
 
 export type OrderResponse = {
-    number: string
-    email: string
-    status?: string
-    payment_status?: string | null
-    subtotal?: number | string
-    total: number | string
-    discount_total?: number | string | null
-    coupon_code?: string | null
-    coupon_discount?: number | string | null
-    loyalty_points_used?: number | string | null
-    loyalty_points_value?: number | string | null
-    currency?: string
-    base_currency?: string
-    items: OrderItemResponse[]
-    shipment?: Shipment | null
+    number: string;
+    email: string;
+    status?: string;
+    payment_status?: string | null;
+    subtotal?: number | string;
+    total: number | string;
+    discount_total?: number | string | null;
+    coupon_code?: string | null;
+    coupon_discount?: number | string | null;
+    loyalty_points_used?: number | string | null;
+    loyalty_points_value?: number | string | null;
+    currency?: string;
+    base_currency?: string;
+    items: OrderItemResponse[];
+    shipment?: Shipment | null;
     shipping_address?: {
-        name?: string
-        city?: string
-        addr?: string
-        postal_code?: string | null
-        phone?: string | null
-    }
-    note?: string | null
-}
+        name?: string;
+        city?: string;
+        addr?: string;
+        postal_code?: string | null;
+        phone?: string | null;
+    };
+    note?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+};
+
+export type LoyaltyPointTransaction = {
+    id: number;
+    order_id?: number | null;
+    type?: string | null;
+    points: number | string;
+    amount?: number | string | null;
+    description?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+};
+
+export type LoyaltyPointsResponse = {
+    balance: number;
+    transactions: LoyaltyPointTransaction[];
+    total_earned?: number | string | null;
+    total_spent?: number | string | null;
+};
 
 /* ==================== AUTH ==================== */
 export const AuthApi = {
@@ -228,28 +245,28 @@ export const ProductsApi = {
         per_page?: number;
         search?: string;
         category_id?: number;
-        sort?: 'new'|'price_asc'|'price_desc';
-        with_facets?: 0|1;
+        sort?: 'new' | 'price_asc' | 'price_desc';
+        with_facets?: 0 | 1;
     }) {
-        return api.get('/products', { params }).then(r => r.data);
+        return api.get('/products', { params }).then((r) => r.data);
     },
     show(slug: string) {
-        return api.get<Product>(`/products/${encodeURIComponent(slug)}`).then(r => r.data)
+        return api.get<Product>(`/products/${encodeURIComponent(slug)}`).then((r) => r.data);
     },
     related: fetchRelatedProducts,
-}
+};
 
 export const CategoriesApi = {
     list() {
-        return api.get<Category[]>('/categories').then(r => r.data)
+        return api.get<Category[]>('/categories').then((r) => r.data);
     },
-}
+};
 
 export const AddressesApi = {
     list() {
-        return api.get<Address[]>('/profile/addresses').then(r => r.data)
+        return api.get<Address[]>('/profile/addresses').then((r) => r.data);
     },
-}
+};
 
 /* Сумісні з існуючим кодом Catalog.tsx обгортки: */
 export async function fetchProducts(params: ProductsQuery) {
@@ -257,32 +274,27 @@ export async function fetchProducts(params: ProductsQuery) {
         params: {
             ...params,
             color: params.color && params.color.length ? params.color : undefined,
-            size:  params.size  && params.size.length  ? params.size  : undefined,
+            size: params.size && params.size.length ? params.size : undefined,
             min_price: params.min_price ?? undefined,
             max_price: params.max_price ?? undefined,
-        }
+        },
     });
     return r.data as PaginatedWithFacets<Product>;
 }
 
-export async function fetchProductFacets(params: {
-    search?: string;
-    category_id?: number;
-    color?: string[];
-    size?: string[];
-}) {
+export async function fetchProductFacets(params: { search?: string; category_id?: number; color?: string[]; size?: string[] }) {
     const sp = new URLSearchParams();
     if (params.search) sp.set('search', params.search);
     if (params.category_id) sp.set('category_id', String(params.category_id));
-    (params.color ?? []).forEach(c => sp.append('filter[color][]', c));
-    (params.size  ?? []).forEach(s => sp.append('filter[size][]', s));
+    (params.color ?? []).forEach((c) => sp.append('filter[color][]', c));
+    (params.size ?? []).forEach((s) => sp.append('filter[size][]', s));
 
     const { data } = await api.get(`/products/facets?${sp.toString()}`);
     return data as {
         facets: {
             ['category_id']?: Record<string, number>;
             ['attrs.color']?: Record<string, number>;
-            ['attrs.size']?:  Record<string, number>;
+            ['attrs.size']?: Record<string, number>;
         };
         nbHits: number;
         driver: string;
@@ -290,34 +302,29 @@ export async function fetchProductFacets(params: {
     };
 }
 
-export async function fetchRelatedProducts(
-    category_id: number,
-    exclude_id?: number,
-    limit = 4
-): Promise<Product[]> {
+export async function fetchRelatedProducts(category_id: number, exclude_id?: number, limit = 4): Promise<Product[]> {
     const res = await fetchProducts({ page: 1, per_page: limit + 1, category_id, sort: 'new' });
     const items = res.data ?? [];
-    const filtered = exclude_id ? items.filter(p => p.id !== exclude_id) : items;
+    const filtered = exclude_id ? items.filter((p) => p.id !== exclude_id) : items;
     return filtered.slice(0, limit);
 }
 
-
 export async function fetchCategories(): Promise<Category[]> {
-    return CategoriesApi.list()
+    return CategoriesApi.list();
 }
 
 /* ==================== REVIEWS ==================== */
 
 export const ReviewsApi = {
     async list(productId: number): Promise<ReviewListResponse> {
-        const { data } = await api.get<ReviewListResponse>(`/products/${encodeURIComponent(productId)}/reviews`)
-        return data
+        const { data } = await api.get<ReviewListResponse>(`/products/${encodeURIComponent(productId)}/reviews`);
+        return data;
     },
     async create(productId: number, payload: ReviewCreatePayload): Promise<ReviewCreateResponse> {
-        const { data } = await api.post<ReviewCreateResponse>(`/products/${encodeURIComponent(productId)}/reviews`, payload)
-        return data
+        const { data } = await api.post<ReviewCreateResponse>(`/products/${encodeURIComponent(productId)}/reviews`, payload);
+        return data;
     },
-}
+};
 
 /* ==================== WISHLIST ==================== */
 
@@ -336,63 +343,66 @@ export const WishlistApi = {
 };
 
 /* ==================== CART ==================== */
-let activeCartId: string | null = null
-const setActiveCartId = (id: string) => { activeCartId = id }
+let activeCartId: string | null = null;
+const setActiveCartId = (id: string) => {
+    activeCartId = id;
+};
 
 export function resetCartCache() {
     activeCartId = null;
 }
 
-
-export const CART_KEY = 'cart_id'
-export async function ensureCartId() { return requireCartId() }
+export const CART_KEY = 'cart_id';
+export async function ensureCartId() {
+    return requireCartId();
+}
 export async function fetchCartById(id: string) {
-    const { data } = await api.get<Cart>(`/cart/${id}`)
-    setActiveCartId(data.id)
-    return data
+    const { data } = await api.get<Cart>(`/cart/${id}`);
+    setActiveCartId(data.id);
+    return data;
 }
 
 async function getCart(): Promise<Cart> {
-    const { data } = await api.get<Cart>('/cart')
-    setActiveCartId(data.id)
-    return data
+    const { data } = await api.get<Cart>('/cart');
+    setActiveCartId(data.id);
+    return data;
 }
 async function showCart(id: string): Promise<Cart> {
-    const { data } = await api.get<Cart>(`/cart/${id}`)
-    setActiveCartId(data.id)
-    return data
+    const { data } = await api.get<Cart>(`/cart/${id}`);
+    setActiveCartId(data.id);
+    return data;
 }
 async function requireCartId(): Promise<string> {
-    if (activeCartId) return activeCartId
-    const { data } = await api.get<Cart>('/cart') // створить активний кошик і поверне id
-    setActiveCartId(data.id)
-    return data.id
+    if (activeCartId) return activeCartId;
+    const { data } = await api.get<Cart>('/cart'); // створить активний кошик і поверне id
+    setActiveCartId(data.id);
+    return data.id;
 }
 
 async function addToCart(product_id: number, qty = 1): Promise<Cart> {
-    const id = await requireCartId()
-    const { data } = await api.post<Cart>(`/cart/${id}/items`, { product_id, qty })
-    setActiveCartId(data.id)
-    return data
+    const id = await requireCartId();
+    const { data } = await api.post<Cart>(`/cart/${id}/items`, { product_id, qty });
+    setActiveCartId(data.id);
+    return data;
 }
 async function updateCartItem(item_id: number, qty: number): Promise<Cart> {
-    const id = await requireCartId()
-    const { data } = await api.patch<Cart>(`/cart/${id}/items/${item_id}`, { qty })
-    return data
+    const id = await requireCartId();
+    const { data } = await api.patch<Cart>(`/cart/${id}/items/${item_id}`, { qty });
+    return data;
 }
 async function removeCartItem(item_id: number): Promise<Cart> {
-    const id = await requireCartId()
-    const { data } = await api.delete<Cart>(`/cart/${id}/items/${item_id}`)
-    return data
+    const id = await requireCartId();
+    const { data } = await api.delete<Cart>(`/cart/${id}/items/${item_id}`);
+    return data;
 }
 async function applyCouponToCart(code?: string | null): Promise<Cart> {
-    const cart_id = await requireCartId()
+    const cart_id = await requireCartId();
     const { data } = await api.post<Cart>('/cart/apply-coupon', {
         cart_id,
         code: code ?? null,
-    })
-    setActiveCartId(data.id)
-    return data
+    });
+    setActiveCartId(data.id);
+    return data;
 }
 async function refreshCart(): Promise<Cart> {
     try {
@@ -417,31 +427,34 @@ export const CartApi = {
     remove: removeCartItem,
     applyCoupon: applyCouponToCart,
     refresh: refreshCart,
-}
+};
 
 /* ==================== ORDERS ==================== */
 
 export const OrdersApi = {
     async create(payload: {
-        email: string
+        email: string;
         shipping_address: {
-            name: string
-            city: string
-            addr: string
-            postal_code?: string | null
-            phone?: string | null
-        }
-        billing_address?: Record<string, unknown>
-        note?: string
+            name: string;
+            city: string;
+            addr: string;
+            postal_code?: string | null;
+            phone?: string | null;
+        };
+        billing_address?: Record<string, unknown>;
+        note?: string;
     }): Promise<OrderResponse> {
-        const cart_id = await requireCartId()
-        const { data } = await api.post<OrderResponse>('/orders', { cart_id, ...payload })
-        return data
+        const cart_id = await requireCartId();
+        const { data } = await api.post<OrderResponse>('/orders', { cart_id, ...payload });
+        return data;
     },
     show(number: string) {
-        return api.get<OrderResponse>(`/orders/${encodeURIComponent(number)}`).then(r => r.data)
+        return api.get<OrderResponse>(`/orders/${encodeURIComponent(number)}`).then((r) => r.data);
     },
-}
+    listMine() {
+        return api.get<OrderResponse[]>('/profile/orders').then((r) => r.data);
+    },
+};
 
 export async function refreshOrderStatus(number: string, payment_intent?: string) {
     const res = await fetch(`/api/payment/refresh/${encodeURIComponent(number)}`, {
@@ -452,3 +465,9 @@ export async function refreshOrderStatus(number: string, payment_intent?: string
     if (!res.ok) throw new Error('refresh failed');
     return res.json();
 }
+
+export const ProfileApi = {
+    fetchPoints() {
+        return api.get<LoyaltyPointsResponse>('/profile/points').then((r) => r.data);
+    },
+};
