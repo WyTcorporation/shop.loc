@@ -12,6 +12,19 @@ export const api = axios.create({
 })
 
 /* ==================== TYPES ==================== */
+export type AuthUser = {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at?: string | null;
+    [key: string]: unknown;
+};
+
+type AuthTokenResponse = {
+    token: string;
+    user: AuthUser;
+};
+
 export type Image = {
     id: number
     url: string
@@ -83,6 +96,25 @@ export type Facets = Record<string, Record<string, number>>;
 
 export type PaginatedWithFacets<T> = Paginated<T> & {
     facets?: Facets;
+};
+
+/* ==================== AUTH ==================== */
+export const AuthApi = {
+    async login(payload: { email: string; password: string; remember?: boolean }) {
+        const { data } = await api.post<AuthTokenResponse>('/auth/login', payload);
+        return data;
+    },
+    async register(payload: { name: string; email: string; password: string; password_confirmation?: string; [key: string]: unknown }) {
+        const { data } = await api.post<AuthTokenResponse>('/auth/register', payload);
+        return data;
+    },
+    async me() {
+        const { data } = await api.get<AuthUser>('/auth/me');
+        return data;
+    },
+    async logout() {
+        await api.post('/auth/logout');
+    },
 };
 
 /* ==================== PRODUCTS / CATEGORIES ==================== */

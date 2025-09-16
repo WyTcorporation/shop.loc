@@ -1,6 +1,6 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import {BrowserRouter, Routes, Route, useLocation, createBrowserRouter} from 'react-router-dom';
+import {BrowserRouter, Routes, Route, useLocation} from 'react-router-dom';
 import CatalogPage from './pages/Catalog';
 import ProductPage from './pages/Product';
 import CartPage from './pages/Cart';
@@ -21,6 +21,10 @@ import NotFoundPage from './pages/NotFound';
 import './sentry';
 import LocaleProvider from './i18n/LocaleProvider';
 import {normalizeLang} from './i18n/config';
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register';
+import ProfilePage from './pages/Profile';
+import {AuthProvider} from './hooks/useAuth';
 
 initAnalyticsOnLoad();
 
@@ -85,24 +89,29 @@ if (el) {
                 <CartProvider>
                     <WishlistProvider>
                         <LangGate>
-                            <BrowserRouter>
-                                <AppErrorBoundary>
-                                    <RouteToastAutoClear/>
-                                    <CookieConsent/>
-                                    <Header/>
-                                    <JsonLd data={websiteLd}/>
-                                    <JsonLd data={orgLd}/>
-                                    <Routes>
-                                        <Route path="/" element={<CatalogPage/>}/>
-                                        <Route path="/product/:slug" element={<ProductPage/>}/>
-                                        <Route path="/cart" element={<CartPage/>}/>
-                                        <Route path="/checkout" element={<CheckoutPage/>}/>
-                                        <Route path="/order/:number" element={<OrderConfirmationPage/>}/>
-                                        <Route path="/wishlist" element={<WishlistPage/>}/>
-                                        <Route path="*" element={<NotFoundPage/>}/>
-                                    </Routes>
-                                </AppErrorBoundary>
-                            </BrowserRouter>
+                            <AuthProvider>
+                                <BrowserRouter>
+                                    <AppErrorBoundary>
+                                        <RouteToastAutoClear/>
+                                        <CookieConsent/>
+                                        <Header/>
+                                        <JsonLd data={websiteLd}/>
+                                        <JsonLd data={orgLd}/>
+                                        <Routes>
+                                            <Route path="/" element={<CatalogPage/>}/>
+                                            <Route path="/product/:slug" element={<ProductPage/>}/>
+                                            <Route path="/cart" element={<CartPage/>}/>
+                                            <Route path="/checkout" element={<CheckoutPage/>}/>
+                                            <Route path="/order/:number" element={<OrderConfirmationPage/>}/>
+                                            <Route path="/wishlist" element={<WishlistPage/>}/>
+                                            <Route path="/login" element={<LoginPage/>}/>
+                                            <Route path="/register" element={<RegisterPage/>}/>
+                                            <Route path="/profile" element={<ProfilePage/>}/>
+                                            <Route path="*" element={<NotFoundPage/>}/>
+                                        </Routes>
+                                    </AppErrorBoundary>
+                                </BrowserRouter>
+                            </AuthProvider>
                         </LangGate>
                     </WishlistProvider>
                 </CartProvider>
