@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\{CategoryController,
     ProductController,
     CartController,
     OrderController,
+    ReviewController,
     WishlistController};
 
 //Categories
@@ -15,6 +16,8 @@ Route::get('categories', [CategoryController::class,'index']);
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/facets', [ProductController::class, 'facets']);
 Route::get('products/{slug}', [ProductController::class, 'show']);
+Route::get('products/{id}/reviews', [ReviewController::class, 'index']);
+Route::middleware('auth:sanctum')->post('products/{id}/reviews', [ReviewController::class, 'store']);
 
 // Cart
 Route::get('cart', [CartController::class, 'getOrCreate']);
