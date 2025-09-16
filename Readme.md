@@ -30,6 +30,14 @@ app (php-fpm для artisan, web), horizon (черги), nginx (порт 8080), 
     docker compose exec app php artisan migrate --seed
 ```
 
+Повністю перегенерувати демо-вітрину (каталог, замовлення, програма лояльності тощо) можна командою:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+Вона очистить медіа-папки та запустить `FullDemoSeeder`, який відтворює повний сценарій магазину.
+
 Vite hot reload для Laravel:    
 public/hot вказує на http://localhost:5173 (ми виставляли руками при потребі).
 
