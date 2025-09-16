@@ -29,6 +29,15 @@ export type Image = {
     is_primary?: boolean;
 };
 
+export type Vendor = {
+    id: number;
+    name: string;
+    slug?: string | null;
+    contact_email?: string | null;
+    contact_phone?: string | null;
+    description?: string | null;
+};
+
 export type Product = {
     id: number;
     name: string;
@@ -38,6 +47,11 @@ export type Product = {
     price_old?: number | string | null;
     preview_url?: string | null;
     images?: { url: string; alt?: string; is_primary?: boolean }[];
+    currency?: string;
+    base_currency?: string;
+    price_cents?: number;
+    base_price_cents?: number;
+    vendor?: Vendor | null;
     [k: string]: any;
 };
 
@@ -81,6 +95,7 @@ export type CartItem = {
     qty: number;
     line_total?: number;
     product?: Product;
+    vendor?: Vendor | null;
 };
 
 export type Cart = {
@@ -101,6 +116,10 @@ export type Facets = Record<string, Record<string, number>>;
 
 export type PaginatedWithFacets<T> = Paginated<T> & {
     facets?: Facets;
+};
+
+export type SellerProductsResponse = Paginated<Product> & {
+    vendor: Vendor;
 };
 
 export type ReviewUser = {
@@ -164,6 +183,7 @@ export type OrderItemResponse = {
 };
 
 export type OrderResponse = {
+    id: number;
     number: string;
     email: string;
     status?: string;
@@ -189,6 +209,18 @@ export type OrderResponse = {
     note?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
+};
+
+export type OrderMessage = {
+    id: number;
+    order_id: number;
+    user_id: number;
+    body: string;
+    meta?: Record<string, unknown> | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    user?: { id: number; name: string } | null;
+    is_author?: boolean;
 };
 
 export type LoyaltyPointTransaction = {
@@ -253,6 +285,11 @@ export const ProductsApi = {
     show(slug: string) {
         return api.get<Product>(`/products/${encodeURIComponent(slug)}`).then((r) => r.data);
     },
+    sellerProducts(vendorId: number | string, params: { page?: number; per_page?: number } = {}) {
+        return api
+            .get<SellerProductsResponse>(`/seller/${encodeURIComponent(String(vendorId))}/products`, { params })
+            .then((r) => r.data);
+    },
     related: fetchRelatedProducts,
 };
 
@@ -280,6 +317,17 @@ export async function fetchProducts(params: ProductsQuery) {
         },
     });
     return r.data as PaginatedWithFacets<Product>;
+}
+
+export async function fetchSellerProducts(
+    vendorId: number | string,
+    params: { page?: number; per_page?: number } = {},
+): Promise<SellerProductsResponse> {
+    const { data } = await api.get<SellerProductsResponse>(
+        `/seller/${encodeURIComponent(String(vendorId))}/products`,
+        { params },
+    );
+    return data;
 }
 
 export async function fetchProductFacets(params: { search?: string; category_id?: number; color?: string[]; size?: string[] }) {
@@ -453,6 +501,16 @@ export const OrdersApi = {
     },
     listMine() {
         return api.get<OrderResponse[]>('/profile/orders').then((r) => r.data);
+    },
+    listMessages(orderId: number | string) {
+        return api
+            .get<{ data: OrderMessage[] }>(`/orders/${encodeURIComponent(String(orderId))}/messages`)
+            .then((r) => r.data.data ?? []);
+    },
+    sendMessage(orderId: number | string, body: string) {
+        return api
+            .post<OrderMessage>(`/orders/${encodeURIComponent(String(orderId))}/messages`, { body })
+            .then((r) => r.data);
     },
 };
 

@@ -32,12 +32,23 @@ export default function CartPage() {
                     const p = (it as any).product ?? it; // 🔁 підтримка обох форм
                     const preview = p.preview_url ?? p.images?.[0]?.url;
                     const line = Number(p.price || it.price || 0) * Number(it.qty || 0);
+                    const vendor = (p as any).vendor ?? (it as any).vendor ?? null;
                     return (
                         <div key={it.id} className="flex items-center gap-3 border rounded p-3">
                             {preview ? <img src={preview} className="w-16 h-16 object-cover rounded" /> : <div className="w-16 h-16 bg-gray-100 rounded" />}
                             <div className="flex-1">
                                 <div className="font-medium">{p.name ?? it.name}</div>
                                 <div className="text-sm text-gray-600">{money(p.price ?? it.price)}</div>
+                                {vendor && (
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        Продавець: {vendor.name ?? '—'}{' '}
+                                        {vendor.id && (
+                                            <Link className="text-blue-600 hover:underline" to={`/seller/${vendor.id}`}>
+                                                Написати продавцю
+                                            </Link>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <input
                                 type="number"

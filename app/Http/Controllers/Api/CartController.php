@@ -17,12 +17,12 @@ class CartController extends Controller
     {
         $id = $request->cookie('cart_id');
         $cart = $id
-            ? Cart::active()->with(['items.product', 'coupon', 'user'])->find($id)
+            ? Cart::active()->with(['items.product.vendor', 'coupon', 'user'])->find($id)
             : null;
 
         if (! $cart) {
             $cart = Cart::create(['user_id' => auth()->id()]);
-            $cart->load(['items.product', 'coupon', 'user']);
+            $cart->load(['items.product.vendor', 'coupon', 'user']);
         }
 
         return $this->cartResponse($cart)
@@ -31,7 +31,7 @@ class CartController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($id);
+        $cart = Cart::with(['items.product.vendor', 'coupon', 'user'])->findOrFail($id);
 
         return $this->cartResponse($cart);
     }
@@ -44,7 +44,7 @@ class CartController extends Controller
         ]);
         $qty = (int) ($data['qty'] ?? 1);
 
-        $cart = Cart::active()->with(['items.product', 'coupon', 'user'])->findOrFail($id);
+        $cart = Cart::active()->with(['items.product.vendor', 'coupon', 'user'])->findOrFail($id);
 
         return DB::transaction(function () use ($cart, $data, $qty) {
             $product = Product::lockForUpdate()->findOrFail($data['product_id']);
@@ -73,7 +73,7 @@ class CartController extends Controller
                 ]);
             }
 
-            $cart->load(['items.product', 'coupon', 'user']);
+            $cart->load(['items.product.vendor', 'coupon', 'user']);
 
             return $this->cartResponse($cart);
         });
@@ -96,7 +96,7 @@ class CartController extends Controller
             if ($qty === 0) {
                 $cartId = $item->cart_id;
                 $item->delete();
-                $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($cartId);
+                $cart = Cart::with(['items.product.vendor', 'coupon', 'user'])->findOrFail($cartId);
 
                 return $this->cartResponse($cart);
             }
@@ -106,7 +106,7 @@ class CartController extends Controller
                 'price' => $product->price,
             ]);
 
-            $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($item->cart_id);
+            $cart = Cart::with(['items.product.vendor', 'coupon', 'user'])->findOrFail($item->cart_id);
 
             return $this->cartResponse($cart);
         });
@@ -119,7 +119,7 @@ class CartController extends Controller
         }
 
         $item->delete();
-        $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($id);
+        $cart = Cart::with(['items.product.vendor', 'coupon', 'user'])->findOrFail($id);
 
         return $this->cartResponse($cart);
     }
@@ -131,7 +131,7 @@ class CartController extends Controller
             'code' => ['nullable', 'string'],
         ]);
 
-        $cart = Cart::active()->with(['items.product', 'coupon', 'user'])->findOrFail($data['cart_id']);
+        $cart = Cart::active()->with(['items.product.vendor', 'coupon', 'user'])->findOrFail($data['cart_id']);
 
         if (blank($data['code'])) {
             $cart->coupon()->dissociate();
@@ -173,7 +173,7 @@ class CartController extends Controller
             'points' => ['required', 'integer', 'min:0'],
         ]);
 
-        $cart = Cart::active()->with(['items.product', 'coupon', 'user'])->findOrFail($data['cart_id']);
+        $cart = Cart::active()->with(['items.product.vendor', 'coupon', 'user'])->findOrFail($data['cart_id']);
 
         if (! $cart->user_id) {
             throw ValidationException::withMessages([
@@ -189,7 +189,7 @@ class CartController extends Controller
 
     private function cartResponse(Cart $cart): JsonResponse
     {
-        $cart->loadMissing(['items.product', 'coupon', 'user']);
+        $cart->loadMissing(['items.product.vendor', 'coupon', 'user']);
 
         $items = $cart->items->map(function (CartItem $item) {
             return [
@@ -201,6 +201,13 @@ class CartController extends Controller
                 'price' => (float) $item->price,
                 'qty' => (int) $item->qty,
                 'line_total' => (float) $item->price * (int) $item->qty,
+                'vendor' => $item->product?->vendor ? [
+                    'id' => $item->product->vendor->id,
+                    'name' => $item->product->vendor->name,
+                    'slug' => $item->product->vendor->slug,
+                    'contact_email' => $item->product->vendor->contact_email,
+                    'contact_phone' => $item->product->vendor->contact_phone,
+                ] : null,
             ];
         })->values();
 

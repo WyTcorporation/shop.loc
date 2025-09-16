@@ -56,5 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile/wishlist', [WishlistController::class, 'index']);
     Route::post('profile/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('profile/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::get('orders/{order}/messages', [OrderMessageController::class, 'index']);
     Route::post('orders/{order}/messages', [OrderMessageController::class, 'store']);
 });

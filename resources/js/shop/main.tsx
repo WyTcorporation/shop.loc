@@ -22,6 +22,7 @@ import ProfileAddressesPage from './pages/ProfileAddresses';
 import ProfileOrdersPage from './pages/ProfileOrders';
 import ProfilePointsPage from './pages/ProfilePoints';
 import RegisterPage from './pages/Register';
+import SellerPage from './pages/SellerPage';
 import WishlistPage from './pages/Wishlist';
 import './sentry';
 import { AppErrorBoundary } from './ui/ErrorBoundary';
@@ -104,6 +105,7 @@ if (el) {
                                         <Routes>
                                             <Route path="/" element={<CatalogPage />} />
                                             <Route path="/product/:slug" element={<ProductPage />} />
+                                            <Route path="/seller/:id" element={<SellerPage />} />
                                             <Route path="/cart" element={<CartPage />} />
                                             <Route path="/checkout" element={<CheckoutPage />} />
                                             <Route path="/order/:number" element={<OrderConfirmationPage />} />
