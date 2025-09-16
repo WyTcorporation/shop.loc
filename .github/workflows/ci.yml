@@ -65,6 +65,7 @@ jobs:
         env:
           VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          WAYFINDER: off
         run: npm run build
       - name: Playwright install
         run: npx playwright install --with-deps
