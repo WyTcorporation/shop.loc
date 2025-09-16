@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import {useParams, Link, useSearchParams} from 'react-router-dom';
-import { OrdersApi, refreshOrderStatus } from '../api';
+import { OrdersApi, refreshOrderStatus, type Product } from '../api';
 import { formatPrice } from '../ui/format';
 import SeoHead from '../components/SeoHead';
 import { GA } from '../ui/ga';
 import PayOrder from "@/shop/components/PayOrder";
+import OrderChat from '../components/OrderChat';
+import { Button } from '@/components/ui/button';
 
 type OrderItem = {
     id: number;
     product_id: number;
     qty: number;
     price: number | string;
-    product?: { name: string; slug: string; preview_url?: string | null };
+    product?: Product | null;
 };
 
 type Shipment = {
@@ -20,6 +22,7 @@ type Shipment = {
 };
 
 type Order = {
+    id: number;
     number: string;
     total: number | string;
     email: string;
@@ -34,12 +37,14 @@ type Order = {
         postal_code?: string | null;
         phone?: string | null;
     };
+    currency?: string | null;
 };
 
 export default function OrderConfirmation() {
     const { number } = useParams<{ number: string }>();
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const [chatOpen, setChatOpen] = useState(false);
 
     const [sp] = useSearchParams();
     const payment_intent = sp.get('payment_intent') ?? undefined;
@@ -86,6 +91,7 @@ export default function OrderConfirmation() {
               .replace(/_/g, ' ')
               .replace(/^[a-zа-яіїєґ]/i, (c) => c.toUpperCase())
         : null;
+    const currency = order.currency ?? 'EUR';
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6">
@@ -93,10 +99,25 @@ export default function OrderConfirmation() {
             <h1 className="text-2xl font-semibold" data-testid="order-confirmed">
                 Дякуємо! Замовлення {order.number} оформлено
             </h1>
-            <p className="text-gray-600">
-                Підтвердження надіслано на {order.email}.
-                {!isPaid && ' — Оплата очікується.'}
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+                <p className="text-gray-600">
+                    Підтвердження надіслано на {order.email}.
+                    {!isPaid && ' — Оплата очікується.'}
+                </p>
+                {order.id && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setChatOpen((open) => !open)}
+                    >
+                        {chatOpen ? 'Сховати чат' : 'Написати продавцю'}
+                    </Button>
+                )}
+            </div>
+            {chatOpen && order.id && (
+                <OrderChat orderId={order.id} orderNumber={order.number} />
+            )}
             <div className="rounded-xl border border-gray-200 p-4 space-y-2">
                 <h2 className="text-lg font-semibold">Доставка та відстеження</h2>
                 <p className="text-sm text-gray-600">
@@ -145,19 +166,32 @@ export default function OrderConfirmation() {
                                                 Переглянути товар
                                             </Link>
                                         )}
+                                        {it.product?.vendor && (
+                                            <div className="mt-1 text-xs text-gray-500">
+                                                Продавець: {it.product.vendor.name ?? `#${it.product.vendor.id}`}{' '}
+                                                {it.product.vendor.id && (
+                                                    <Link
+                                                        to={`/seller/${it.product.vendor.id}`}
+                                                        className="text-blue-600 hover:underline"
+                                                    >
+                                                        Написати продавцю
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </td>
                             <td className="p-3">{it.qty}</td>
-                            <td className="p-3">{formatPrice(it.price)}</td>
-                            <td className="p-3">{formatPrice(Number(it.price) * Number(it.qty))}</td>
+                            <td className="p-3">{formatPrice(it.price, currency)}</td>
+                            <td className="p-3">{formatPrice(Number(it.price) * Number(it.qty), currency)}</td>
                         </tr>
                     ))}
                     </tbody>
                     <tfoot className="border-t bg-gray-50">
                     <tr>
                         <td className="p-3 text-right font-medium" colSpan={3}>Разом за товари</td>
-                        <td className="p-3 font-semibold">{formatPrice(itemsTotal)}</td>
+                        <td className="p-3 font-semibold">{formatPrice(itemsTotal, currency)}</td>
                     </tr>
                     </tfoot>
                 </table>

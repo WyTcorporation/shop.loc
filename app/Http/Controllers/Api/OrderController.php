@@ -193,7 +193,7 @@ class OrderController extends Controller
 
         SendOrderConfirmation::dispatch($order);
 
-        $order->load('items.product.images', 'shipment');
+        $order->load('items.product.images', 'items.product.vendor', 'shipment');
 
         return response()->json($this->transformOrder($order, $currency), 201);
     }
@@ -204,6 +204,7 @@ class OrderController extends Controller
 
         $order = Order::with([
             'items.product.images' => fn($q) => $q->orderBy('sort'),
+            'items.product.vendor',
             'shipment',
         ])->where('number', $number)->firstOrFail();
 
