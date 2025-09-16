@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use App\Enums\OrderStatus;
+use App\Enums\ShipmentStatus;
 use Illuminate\Support\Facades\DB;
 
 class Order extends Model
@@ -18,7 +20,8 @@ class Order extends Model
     protected $fillable = [
         'user_id', 'email', 'status', 'total',
         'shipping_address', 'billing_address', 'note', 'number',
-        'currency','payment_intent_id','payment_status','paid_at'
+        'shipping_address_id',
+        'currency','payment_intent_id','payment_status','paid_at','inventory_committed_at'
     ];
 
     protected $casts = [
@@ -66,6 +69,11 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function shippingAddress(): BelongsTo
+    {
+        return $this->belongsTo(Address::class, 'shipping_address_id');
+    }
+
     public function canTransitionTo(OrderStatus $to): bool
     {
         return match ($this->status) {
@@ -84,22 +92,41 @@ class Order extends Model
 
         DB::transaction(function () use ($to) {
             if ($to === OrderStatus::Paid && $this->status === OrderStatus::New) {
-                foreach ($this->items as $item) {
+                $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
                     $item->product->adjustStock(-$item->qty);
-                }
+                });
             }
             if ($to === OrderStatus::Cancelled && $this->status === OrderStatus::Paid) {
-                foreach ($this->items as $item) {
+                $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
                     $item->product->adjustStock($item->qty);
-                }
+                });
             }
+
             $this->update(['status' => $to]);
+
+            match ($to) {
+                OrderStatus::Shipped => $this->syncShipment([
+                    'status' => ShipmentStatus::Shipped,
+                    'shipped_at' => now(),
+                ]),
+                OrderStatus::Cancelled => $this->syncShipment([
+                    'status' => ShipmentStatus::Cancelled,
+                    'shipped_at' => null,
+                    'delivered_at' => null,
+                ]),
+                default => null,
+            };
         });
     }
 
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function shipment(): HasOne
+    {
+        return $this->hasOne(Shipment::class);
     }
 
     public function isShipped(): bool
@@ -163,7 +190,7 @@ class Order extends Model
         if ($this->status !== OrderStatus::Paid) {
             throw new \RuntimeException('Only PAID orders can be marked shipped.');
         }
-        $this->update(['status' => OrderStatus::Shipped]);
+        $this->transitionTo(OrderStatus::Shipped);
     }
 
     /** @throws \RuntimeException */
@@ -180,6 +207,11 @@ class Order extends Model
             }
 
             $this->update(['status' => OrderStatus::Cancelled]);
+            $this->syncShipment([
+                'status' => ShipmentStatus::Cancelled,
+                'shipped_at' => null,
+                'delivered_at' => null,
+            ]);
         });
     }
 
@@ -196,5 +228,26 @@ class Order extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(OrderStatusLog::class)->latest('id');
+    }
+
+    protected function syncShipment(array $attributes, bool $createIfMissing = true): void
+    {
+        $shipment = $this->shipment;
+
+        if (! $shipment && ! $createIfMissing) {
+            return;
+        }
+
+        if (! $shipment) {
+            $shipment = $this->shipment()->make();
+        }
+
+        $shipment->fill(array_merge([
+            'address_id' => $this->shipping_address_id,
+        ], $attributes));
+
+        $shipment->save();
+
+        $this->setRelation('shipment', $shipment);
     }
 }

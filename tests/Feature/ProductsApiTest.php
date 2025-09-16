@@ -42,5 +42,6 @@ it('creates order from cart flow (smoke)', function () {
 
     $this->postJson('/api/orders', $payload)
         ->assertCreated()
-        ->assertJsonPath('items.0.product_id', $product->id);
+        ->assertJsonPath('items.0.product_id', $product->id)
+        ->assertJsonPath('shipment.status', 'pending');
 });
