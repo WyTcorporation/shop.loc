@@ -23,7 +23,9 @@ class Product extends Model
         'stock',
         'price',
         'price_old',
-        'is_active'
+        'is_active',
+        'reviews_count',
+        'rating',
     ];
 
     protected $casts = [
@@ -31,6 +33,8 @@ class Product extends Model
         'is_active' => 'boolean',
         'price' => 'decimal:2',
         'price_old' => 'decimal:2',
+        'reviews_count' => 'integer',
+        'rating' => 'decimal:2',
     ];
 
 
@@ -42,6 +46,11 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function adjustStock(int $delta): void
@@ -91,6 +100,23 @@ class Product extends Model
     {
         return $this->images()->where('is_primary', true)->first()
             ?? $this->images()->orderBy('sort')->first();
+    }
+
+    public function refreshRating(): void
+    {
+        $aggregate = $this->reviews()
+            ->approved()
+            ->selectRaw('COUNT(*) as aggregate_count, AVG(rating) as aggregate_avg')
+            ->toBase()
+            ->first();
+
+        $count = (int) ($aggregate->aggregate_count ?? 0);
+        $avg = $aggregate->aggregate_avg;
+
+        $this->forceFill([
+            'reviews_count' => $count,
+            'rating' => $count > 0 && $avg !== null ? round((float) $avg, 2) : null,
+        ])->saveQuietly();
     }
 
     public function getCoverUrlAttribute(): ?string
