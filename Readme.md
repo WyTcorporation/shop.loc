@@ -91,6 +91,7 @@ VITE_COOKIE_DEFAULT=granted|denied
 - `vendors` — відображення продавця на користувача (`user_id` unique, `name`, `slug`, контакти, опис; `database/migrations/2025_10_07_000000_create_vendors_table.php`). Продукти підтягують `vendor` для сторінки продавця (`App\Http\Controllers\Api\ProductController::sellerProducts`).
 - `warehouses` — реєстр складів з базовим записом `MAIN` (`database/migrations/2025_10_05_000000_create_warehouses_table.php`), який використовується методами `App\Models\Product` для резервування/звільнення залишків.
 - `product_stocks` — залишки по складах (`product_id`, `warehouse_id`, `qty`, `reserved`, `unique` пара) з ініціалізацією зі старого поля `stock` (`database/migrations/2025_10_05_000100_create_product_stock_table.php`).
+- `database/seeders/DemoCatalogSeeder.php` — наповнює склад `MAIN` та створює записи у `product_stocks` через `afterCreating` фабрики продуктів.
 - `currencies` — курси валют, база береться з `config('shop.currency.base')` і використовується сервісом `App\Services\Currency\CurrencyConverter` (`database/migrations/2025_10_06_000000_create_currencies_table.php`).
 - `reviews` — оцінки/коментарі з `status=pending|approved|rejected`, `rating` 1–5 та індексом за `product_id` (`database/migrations/2025_10_01_120000_create_reviews_table.php`, модель `App\Models\Review`).
 
