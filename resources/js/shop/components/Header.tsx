@@ -3,6 +3,7 @@ import useCart from '../useCart';
 import MiniCart from './MiniCart';
 import WishlistBadge from '../components/WishlistBadge';
 import { openCookiePreferences } from '../ui/analytics';
+import LanguageSwitcher from "@/shop/components/LanguageSwitcher";
 
 export default function Header() {
     const { cart, total } = useCart();
@@ -21,6 +22,7 @@ export default function Header() {
                     <button onClick={openCookiePreferences} className="text-xs underline">
                         Налаштувати cookies
                     </button>
+                    <LanguageSwitcher />
                 </nav>
             </div>
         </header>
