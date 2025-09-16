@@ -13,12 +13,27 @@ use App\Http\Controllers\Api\{AddressController,
 //Categories
 Route::get('categories', [CategoryController::class,'index']);
 
-// Products
-Route::get('products', [ProductController::class, 'index']);
-Route::get('products/facets', [ProductController::class, 'facets']);
-Route::get('products/{slug}', [ProductController::class, 'show']);
-Route::get('products/{id}/reviews', [ReviewController::class, 'index']);
-Route::middleware('auth:sanctum')->post('products/{id}/reviews', [ReviewController::class, 'store']);
+$productsAndOrders = function () {
+    // Products
+    Route::get('products', [ProductController::class, 'index']);
+    Route::get('products/facets', [ProductController::class, 'facets']);
+    Route::get('products/{slug}', [ProductController::class, 'show']);
+    Route::get('products/{id}/reviews', [ReviewController::class, 'index']);
+    Route::middleware('auth:sanctum')->post('products/{id}/reviews', [ReviewController::class, 'store']);
+
+    // Checkout
+    Route::post('orders', [OrderController::class, 'store']);
+    Route::get('orders/{number}', [OrderController::class, 'show']);
+};
+
+$productsAndOrders();
+
+Route::pattern('currency', '[A-Za-z]{3}');
+
+Route::group([
+    'prefix' => '{currency}',
+    'where' => ['currency' => '[A-Za-z]{3}'],
+], $productsAndOrders);
 
 // Cart
 Route::get('cart', [CartController::class, 'getOrCreate']);
@@ -28,11 +43,6 @@ Route::patch('cart/{id}/items/{item}', [CartController::class, 'updateItem']);
 Route::delete('cart/{id}/items/{item}', [CartController::class, 'removeItem']);
 Route::post('cart/apply-coupon', [CartController::class, 'applyCoupon']);
 Route::post('cart/apply-points', [CartController::class, 'applyPoints']);
-
-
-// Checkout
-Route::post('orders', [OrderController::class, 'store']);
-Route::get('/orders/{number}', [OrderController::class, 'show']);
 
 Route::post('/payments/intent', [PaymentController::class, 'intent']);
 Route::post('/payment/refresh/{number}', [PaymentController::class, 'refreshStatus']);

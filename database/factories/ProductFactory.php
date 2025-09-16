@@ -38,6 +38,7 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         $name = ucfirst($this->faker->unique()->words(3, true));
+        $price = $this->faker->randomFloat(2, 10, 500);
 
         return [
             'name' => $name,
@@ -49,7 +50,8 @@ class ProductFactory extends Factory
                 'color' => $this->faker->safeColorName(),
             ],
             'stock' => $this->faker->numberBetween(0, 100),
-            'price' => $this->faker->randomFloat(2, 10, 500),
+            'price' => $price,
+            'price_cents' => (int) round($price * 100),
             'price_old' => null,
             'is_active' => true,
         ];

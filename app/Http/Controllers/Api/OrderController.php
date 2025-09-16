@@ -7,6 +7,7 @@ use App\Jobs\SendOrderConfirmation;
 use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem, Warehouse};
 use App\Enums\ShipmentStatus;
 use App\Services\Carts\CartPricingService;
+use App\Services\Currency\CurrencyConverter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,14 @@ use DomainException;
 
 class OrderController extends Controller
 {
+    public function __construct(private CurrencyConverter $converter)
+    {
+    }
+
     public function store(Request $r): JsonResponse
     {
+        $currency = $this->resolveCurrency($r);
+
         $data = $r->validate([
             'cart_id' => ['required', 'uuid', 'exists:carts,id'],
             'email' => ['required', 'email'],
@@ -139,6 +146,7 @@ class OrderController extends Controller
                 'billing_address' => $data['billing_address'] ?? null,
                 'note' => $data['note'] ?? null,
                 'inventory_committed_at' => now(),
+                'currency' => $this->converter->getBaseCurrency(),
             ]);
 
             $items = $cart->items->map(fn ($it) => new OrderItem([
@@ -184,34 +192,78 @@ class OrderController extends Controller
         });
 
         SendOrderConfirmation::dispatch($order);
-        return response()->json($order->load('items', 'shipment'), 201);
+
+        $order->load('items.product.images', 'shipment');
+
+        return response()->json($this->transformOrder($order, $currency), 201);
     }
 
-    public function show(string $number)
+    public function show(Request $request, string $number)
     {
+        $currency = $this->resolveCurrency($request);
+
         $order = Order::with([
             'items.product.images' => fn($q) => $q->orderBy('sort'),
             'shipment',
         ])->where('number', $number)->firstOrFail();
 
-        // підкласти preview_url для кожного item (якщо не збережений у таблиці)
-        $items = $order->items->map(function ($it) {
-            $preview = $it->preview_url
-                ?? optional($it->product?->images?->firstWhere('is_primary', true))->url
-                ?? optional($it->product?->images?->first())->url
-                ?? $it->product?->preview_url;
+        return response()->json($this->transformOrder($order, $currency));
+    }
 
-            return array_merge($it->toArray(), [
+    private function transformOrder(Order $order, string $currency): array
+    {
+        $baseCurrency = $this->converter->getBaseCurrency();
+
+        $items = $order->items->map(function (OrderItem $item) use ($currency) {
+            $preview = $item->preview_url
+                ?? optional($item->product?->images?->firstWhere('is_primary', true))->url
+                ?? optional($item->product?->images?->first())->url
+                ?? $item->product?->preview_url;
+
+            $basePrice = (float) ($item->price ?? $item->product?->price ?? 0);
+            $convertedPrice = $this->converter->convertFromBase($basePrice, $currency);
+
+            $qty = (int) ($item->qty ?? 0);
+            $baseSubtotal = $basePrice * $qty;
+            $convertedSubtotal = $this->converter->convertFromBase($baseSubtotal, $currency);
+
+            return array_merge($item->toArray(), [
                 'preview_url' => $preview,
-                'name'        => $it->name ?? $it->product?->name,
-                'price'       => (float)($it->price ?? $it->product?->price ?? 0),
-                'subtotal'    => (float)($it->subtotal ?? (($it->price ?? 0) * ($it->qty ?? 0))),
+                'name' => $item->name ?? $item->product?->name,
+                'price' => $convertedPrice,
+                'subtotal' => round($convertedSubtotal, 2),
             ]);
         });
 
         $payload = $order->toArray();
-        $payload['items'] = $items;
 
-        return response()->json($payload);
+        foreach (['subtotal', 'discount_total', 'total', 'coupon_discount', 'loyalty_points_value'] as $field) {
+            if (! array_key_exists($field, $payload)) {
+                continue;
+            }
+
+            $value = $order->{$field};
+
+            if ($value === null) {
+                $payload[$field] = null;
+                continue;
+            }
+
+            $payload[$field] = $this->converter->convertFromBase((float) $value, $currency);
+        }
+
+        $payload['currency'] = $currency;
+        $payload['base_currency'] = $baseCurrency;
+        $payload['items'] = $items->all();
+
+        return $payload;
+    }
+
+    private function resolveCurrency(Request $request): string
+    {
+        $routeCurrency = $request->route('currency');
+        $queryCurrency = $request->query('currency');
+
+        return $this->converter->normalizeCurrency($routeCurrency ?? $queryCurrency);
     }
 }

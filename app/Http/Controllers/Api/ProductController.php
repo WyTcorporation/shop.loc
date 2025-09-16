@@ -4,20 +4,25 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\Currency\CurrencyConverter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Builder;
-use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Client as Meili;
+use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Search\SearchResult;
 
 
 class ProductController extends Controller
 {
-
+    public function __construct(private CurrencyConverter $converter)
+    {
+    }
 
     public function index(Request $r): JsonResponse
     {
+        $currency = $this->resolveCurrency($r);
+
         $perPage    = max(1, min((int)$r->integer('per_page', 12), 100));
         $page       = max(1, (int)$r->integer('page', 1));
         $search     = trim((string) $r->query('search', ''));
@@ -27,6 +32,14 @@ class ProductController extends Controller
 
         $minPrice = $r->has('min_price') ? (float)$r->query('min_price') : null;
         $maxPrice = $r->has('max_price') ? (float)$r->query('max_price') : null;
+
+        if ($minPrice !== null) {
+            $minPrice = $this->converter->convertToBase($minPrice, $currency);
+        }
+
+        if ($maxPrice !== null) {
+            $maxPrice = $this->converter->convertToBase($maxPrice, $currency);
+        }
 
 
         $colors = $r->has('color')
@@ -99,6 +112,10 @@ class ProductController extends Controller
         };
 
         $pag = $qb->paginate($perPage, ['*'], 'page', $page);
+
+        $pag->setCollection(
+            $pag->getCollection()->map(fn (Product $product) => $this->transformProduct($product, $currency))
+        );
 
         // ===== Facets (optional) =====
         $facetsPayload = (object)[];
@@ -187,7 +204,7 @@ class ProductController extends Controller
     }
 
 
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
         $product = Product::query()
             ->where('slug', $slug)
@@ -195,7 +212,40 @@ class ProductController extends Controller
             ->with(['images' => fn($q) => $q->orderBy('sort'), 'category'])
             ->firstOrFail();
 
-        return response()->json($product);
+        $currency = $this->resolveCurrency($request);
+
+        return response()->json($this->transformProduct($product, $currency));
+    }
+
+    private function transformProduct(Product $product, string $currency): array
+    {
+        $data = $product->toArray();
+
+        $baseCurrency = $this->converter->getBaseCurrency();
+        $basePriceCents = $product->price_cents ?? (int) round((float) $product->price * 100);
+        $convertedPriceCents = $this->converter->convertBaseCents($basePriceCents, $currency);
+
+        $data['base_currency'] = $baseCurrency;
+        $data['currency'] = $currency;
+        $data['base_price_cents'] = $basePriceCents;
+        $data['price_cents'] = $convertedPriceCents;
+        $data['price'] = round($convertedPriceCents / 100, 2);
+
+        if (array_key_exists('price_old', $data)) {
+            $data['price_old'] = $data['price_old'] !== null
+                ? $this->converter->convertFromBase((float) $product->price_old, $currency)
+                : null;
+        }
+
+        return $data;
+    }
+
+    private function resolveCurrency(Request $request): string
+    {
+        $routeCurrency = $request->route('currency');
+        $queryCurrency = $request->query('currency');
+
+        return $this->converter->normalizeCurrency($routeCurrency ?? $queryCurrency);
     }
 
     public function facets(Request $r): JsonResponse
