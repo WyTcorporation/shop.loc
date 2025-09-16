@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ProductsApi, type Product } from '../api';
+import { ProductsApi, ReviewsApi, type Product, type Review } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
@@ -14,6 +14,8 @@ import { useHreflangs } from '../hooks/useHreflangs';
 import ImageLightbox from '../components/ImageLightbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { GA } from '../ui/ga';
+import ReviewList from '../components/ReviewList';
+import ReviewForm from '../components/ReviewForm';
 
 export default function ProductPage() {
     const { slug } = useParams();
@@ -22,6 +24,9 @@ export default function ProductPage() {
     const [loadingRelated, setLoadingRelated] = useState(false);
     const [qty, setQty] = useState(1);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [averageRating, setAverageRating] = useState<number | null>(null);
+    const [loadingReviews, setLoadingReviews] = useState(false);
 
     const { add } = useCart();
     const { success, error } = useNotify();
@@ -74,6 +79,40 @@ export default function ProductPage() {
     useEffect(() => {
         if (p) GA.view_item(p);
     }, [p]);
+
+    useEffect(() => {
+        if (!p?.id) return;
+        let ignore = false;
+        setReviews([]);
+        setAverageRating(null);
+        setLoadingReviews(true);
+        ReviewsApi.list(p.id)
+            .then((res) => {
+                if (ignore) return;
+                const list = Array.isArray(res.data) ? res.data : [];
+                const rawAvg = res.average_rating;
+                const parsed = (() => {
+                    if (rawAvg == null) return null;
+                    const numeric = typeof rawAvg === 'string' ? Number(rawAvg) : rawAvg;
+                    return Number.isFinite(numeric) ? Number(numeric) : null;
+                })();
+                setReviews(list);
+                setAverageRating(parsed);
+            })
+            .catch((err) => {
+                if (ignore) return;
+                console.error('Failed to load reviews', err);
+                setReviews([]);
+                setAverageRating(null);
+            })
+            .finally(() => {
+                if (ignore) return;
+                setLoadingReviews(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [p?.id]);
 
     // ---------- derived (hooks стабільні) ----------
     const stock = Number(p?.stock ?? 0);
@@ -194,6 +233,10 @@ export default function ProductPage() {
         setLightboxIndex((lightboxIndex + 1) % gallery.length);
     };
 
+    const handleReviewSubmitted = (review: Review) => {
+        setReviews((prev) => [review, ...prev]);
+    };
+
     return (
         <div className="max-w-6xl mx-auto grid gap-6 p-4 md:grid-cols-2">
             <SeoHead
@@ -243,6 +286,18 @@ export default function ProductPage() {
                 </h1>
 
                 <div className="text-xl">{formatPrice(p.price)}</div>
+
+                <div className="text-sm text-muted-foreground">
+                    {loadingReviews
+                        ? 'Завантаження рейтингу…'
+                        : averageRating != null
+                            ? (
+                                <>
+                                    Середній рейтинг: <span className="font-medium">{averageRating.toFixed(1)}</span> із 5
+                                </>
+                            )
+                            : 'Ще немає відгуків'}
+                </div>
 
                 {canBuy ? (
                     <div className="text-sm text-green-700">В наявності: {stock} шт.</div>
@@ -308,6 +363,11 @@ export default function ProductPage() {
                         </ul>
                     </TabsContent>
                 </Tabs>
+
+                <div className="space-y-6 border-t pt-6">
+                    <ReviewList reviews={reviews} averageRating={averageRating} loading={loadingReviews} />
+                    <ReviewForm productId={p.id} onSubmitted={handleReviewSubmitted} />
+                </div>
 
                 <div>
                     <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>

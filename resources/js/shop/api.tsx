@@ -98,6 +98,39 @@ export type PaginatedWithFacets<T> = Paginated<T> & {
     facets?: Facets;
 };
 
+export type ReviewUser = {
+    id: number
+    name: string
+}
+
+export type Review = {
+    id: number
+    product_id: number
+    user_id: number
+    rating: number
+    text?: string | null
+    status?: string | null
+    created_at?: string | null
+    updated_at?: string | null
+    user?: ReviewUser | null
+}
+
+type ReviewListResponse = {
+    data: Review[]
+    average_rating: number | string | null
+    reviews_count: number
+}
+
+type ReviewCreatePayload = {
+    rating: number
+    text?: string | null
+}
+
+type ReviewCreateResponse = {
+    data: Review
+    message?: string
+}
+
 /* ==================== AUTH ==================== */
 export const AuthApi = {
     async login(payload: { email: string; password: string; remember?: boolean }) {
@@ -204,6 +237,19 @@ export async function fetchRelatedProducts(
 
 export async function fetchCategories(): Promise<Category[]> {
     return CategoriesApi.list()
+}
+
+/* ==================== REVIEWS ==================== */
+
+export const ReviewsApi = {
+    async list(productId: number): Promise<ReviewListResponse> {
+        const { data } = await api.get<ReviewListResponse>(`/products/${encodeURIComponent(productId)}/reviews`)
+        return data
+    },
+    async create(productId: number, payload: ReviewCreatePayload): Promise<ReviewCreateResponse> {
+        const { data } = await api.post<ReviewCreateResponse>(`/products/${encodeURIComponent(productId)}/reviews`, payload)
+        return data
+    },
 }
 
 /* ==================== WISHLIST ==================== */
