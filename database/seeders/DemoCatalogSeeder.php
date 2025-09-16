@@ -24,11 +24,15 @@ class DemoCatalogSeeder extends Seeder
         $vendors = Vendor::factory()->count(5)->create();
 
         // 60 товарів, кожному ставимо випадкову категорію та продавця
-        $products = Product::factory()->count(60)->make()->each(function (Product $p) use ($cats, $vendors) {
-            $p->category_id = $cats->random()->id;
-            $p->vendor_id = $vendors->random()->id;
-            $p->save();
-        });
+        $products = Product::factory()
+            ->count(60)
+            ->state(function () use ($cats, $vendors) {
+                return [
+                    'category_id' => $cats->random()->id,
+                    'vendor_id' => $vendors->random()->id,
+                ];
+            })
+            ->create();
 
         // 1–3 зображення на товар + одне головне
         $products->each(function (Product $p) {
