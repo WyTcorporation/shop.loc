@@ -9,8 +9,8 @@ use App\Services\Currency\CurrencyConverter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Meilisearch\Client as Meili;
-use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Search\SearchResult;
 
 
@@ -300,12 +300,16 @@ class ProductController extends Controller
     public function facets(Request $r): JsonResponse
     {
         if (config('scout.driver') !== 'meilisearch') {
-            return response()->json([
-                'facets' => (object)['category_id' => (object)[], 'attrs.color' => (object)[], 'attrs.size' => (object)[]],
-                'nbHits' => 0,
-                'driver' => 'db',
-                'error' => null,
-            ]);
+            $payload = Cache::remember('products:facets:db', now()->addMinutes(10), function () {
+                return [
+                    'facets' => (object) ['category_id' => (object) [], 'attrs.color' => (object) [], 'attrs.size' => (object) []],
+                    'nbHits' => 0,
+                    'driver' => 'db',
+                    'error' => null,
+                ];
+            });
+
+            return response()->json($payload);
         }
 
         $search = (string)$r->query('search', '');
@@ -313,53 +317,80 @@ class ProductController extends Controller
         $colors = array_values(array_filter((array)$r->query('color', []), fn($v) => $v !== '' && $v !== null));
         $sizes = array_values(array_filter((array)$r->query('size', []), fn($v) => $v !== '' && $v !== null));
 
+        $cacheKey = $this->facetsCacheKey($search, $categoryId, $colors, $sizes);
+
         // фільтр Meili
         $parts = ['is_active = true'];
-        if ($categoryId) $parts[] = "category_id = {$categoryId}";
-        $q = fn($v) => "'" . str_replace("'", "\\'", (string)$v) . "'";
-        if ($colors) $parts[] = '(' . implode(' OR ', array_map(fn($c) => "attrs.color = " . $q($c), $colors)) . ')';
-        if ($sizes) $parts[] = '(' . implode(' OR ', array_map(fn($s) => "attrs.size = " . $q($s), $sizes)) . ')';
+        if ($categoryId) {
+            $parts[] = "category_id = {$categoryId}";
+        }
+        $q = fn($v) => "'" . str_replace("'", "\\'", (string) $v) . "'";
+        if ($colors) {
+            $parts[] = '(' . implode(' OR ', array_map(fn($c) => "attrs.color = " . $q($c), $colors)) . ')';
+        }
+        if ($sizes) {
+            $parts[] = '(' . implode(' OR ', array_map(fn($s) => "attrs.size = " . $q($s), $sizes)) . ')';
+        }
         $filter = implode(' AND ', $parts);
 
         try {
-            /** @var Meili $meili */
-            $meili = app(Meili::class);
-            $index = $meili->index((new Product)->searchableAs());
+            $payload = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $filter) {
+                /** @var Meili $meili */
+                $meili = app(Meili::class);
+                $index = $meili->index((new Product)->searchableAs());
 
-            // ВАЖЛИВО: у v1 параметр називається "facets"; у відповіді — поле/метод "facetDistribution".
-            $result = $index->search($search, [
-                'facets' => ['category_id', 'attrs.color', 'attrs.size'],
-                'filter' => $filter,
-                'limit' => 0, // потрібні лише підрахунки
-            ]);
+                // ВАЖЛИВО: у v1 параметр називається "facets"; у відповіді — поле/метод "facetDistribution".
+                $result = $index->search($search, [
+                    'facets' => ['category_id', 'attrs.color', 'attrs.size'],
+                    'filter' => $filter,
+                    'limit' => 0, // потрібні лише підрахунки
+                ]);
 
-            // Сумісність з різними версіями PHP-SDK: масив vs SearchResult
-            $facetDist = [];
-            $hits = 0;
+                // Сумісність з різними версіями PHP-SDK: масив vs SearchResult
+                $facetDist = [];
+                $hits = 0;
 
-            if (is_array($result)) {
-                $facetDist = $result['facetDistribution'] ?? [];
-                $hits = $result['estimatedTotalHits'] ?? ($result['nbHits'] ?? 0);
-            } elseif ($result instanceof \Meilisearch\Search\SearchResult) {
-                $facetDist = $result->getFacetDistribution() ?? [];
-                $hits = method_exists($result, 'getEstimatedTotalHits')
-                    ? ($result->getEstimatedTotalHits() ?? 0)
-                    : ($result->getNbHits() ?? 0);
-            }
+                if (is_array($result)) {
+                    $facetDist = $result['facetDistribution'] ?? [];
+                    $hits = $result['estimatedTotalHits'] ?? ($result['nbHits'] ?? 0);
+                } elseif ($result instanceof \Meilisearch\Search\SearchResult) {
+                    $facetDist = $result->getFacetDistribution() ?? [];
+                    $hits = method_exists($result, 'getEstimatedTotalHits')
+                        ? ($result->getEstimatedTotalHits() ?? 0)
+                        : ($result->getNbHits() ?? 0);
+                }
 
-            return response()->json([
-                'facets' => (object)$facetDist,
-                'nbHits' => (int)$hits,
-                'driver' => 'meilisearch',
-                'error' => null,
-            ]);
+                return [
+                    'facets' => (object) $facetDist,
+                    'nbHits' => (int) $hits,
+                    'driver' => 'meilisearch',
+                    'error' => null,
+                ];
+            });
+
+            return response()->json($payload);
         } catch (\Throwable $e) {
             return response()->json([
-                'facets' => (object)['category_id' => (object)[], 'attrs.color' => (object)[], 'attrs.size' => (object)[]],
+                'facets' => (object) ['category_id' => (object) [], 'attrs.color' => (object) [], 'attrs.size' => (object) []],
                 'nbHits' => 0,
                 'driver' => 'meilisearch-error',
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function facetsCacheKey(string $search, ?int $categoryId, array $colors, array $sizes): string
+    {
+        sort($colors);
+        sort($sizes);
+
+        $version = (int) Cache::get(Product::FACETS_CACHE_VERSION_KEY, 1);
+
+        return 'products:facets:' . $version . ':' . md5(json_encode([
+            'search' => $search,
+            'category' => $categoryId,
+            'colors' => $colors,
+            'sizes' => $sizes,
+        ]));
     }
 }

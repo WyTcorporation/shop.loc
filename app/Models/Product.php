@@ -8,12 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
     use HasFactory, Searchable;
+
+    public const FACETS_CACHE_VERSION_KEY = 'products:facets:version';
 
     protected $fillable = [
         'name',
@@ -54,6 +57,18 @@ class Product extends Model
                 $product->price = round(((int) $product->price_cents) / 100, 2);
             }
         });
+
+        $invalidate = fn () => static::bumpFacetsCacheVersion();
+
+        static::saved($invalidate);
+        static::deleted($invalidate);
+    }
+
+    protected static function bumpFacetsCacheVersion(): void
+    {
+        $key = self::FACETS_CACHE_VERSION_KEY;
+        $current = (int) Cache::get($key, 0);
+        Cache::forever($key, $current + 1);
     }
 
 
