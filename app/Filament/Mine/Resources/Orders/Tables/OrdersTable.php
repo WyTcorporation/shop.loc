@@ -3,6 +3,7 @@
 namespace App\Filament\Mine\Resources\Orders\Tables;
 
 use App\Enums\OrderStatus;
+use App\Filament\Mine\Resources\Orders\OrderResource;
 use App\Models\Order;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -68,6 +69,12 @@ class OrdersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('messages')
+                    ->label('Messages')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('gray')
+                    ->url(fn (Order $record) => OrderResource::getUrl('messages', ['record' => $record]))
+                    ->visible(fn (Order $record) => auth()->user()?->can('view', $record)),
                 Action::make('markPaid')
                     ->label('Mark paid')
                     ->icon('heroicon-o-banknotes')

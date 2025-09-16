@@ -149,6 +149,32 @@ class Order extends Model
         return $this->hasOne(Shipment::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class)->latest('created_at');
+    }
+
+    public function involvesVendor(int $vendorId): bool
+    {
+        if ($this->relationLoaded('items')) {
+            $items = $this->items;
+
+            if ($items->contains(function ($item) use ($vendorId) {
+                if (! $item->relationLoaded('product')) {
+                    return false;
+                }
+
+                return (int) ($item->product?->vendor_id ?? 0) === $vendorId;
+            })) {
+                return true;
+            }
+        }
+
+        return $this->items()
+            ->whereHas('product', fn ($query) => $query->where('vendor_id', $vendorId))
+            ->exists();
+    }
+
     public function isShipped(): bool
     {
         return !is_null($this->shipped_at);

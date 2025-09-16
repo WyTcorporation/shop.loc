@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Product;
+use App\Models\Vendor;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -45,6 +46,7 @@ class ProductFactory extends Factory
             'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
             'sku' => Str::upper(Str::random(10)),
             'category_id' => Category::factory(),
+            'vendor_id' => Vendor::factory(),
             'attributes' => [
                 'size' => $this->faker->randomElement(['S','M','L']),
                 'color' => $this->faker->safeColorName(),

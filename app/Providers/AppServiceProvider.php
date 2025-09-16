@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Auth\Events\Login;
 use App\Models\Product;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
+use App\Policies\ProductPolicy;
+use App\Policies\OrderPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(120)->by(optional($request->user())->id ?: 'guest'),
             ];
         });
+
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
 
         if (Config::get('scout.driver') === 'meilisearch') {
             Product::created(fn($p) => $p->searchable());

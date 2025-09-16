@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -58,6 +59,16 @@ class User extends Authenticatable implements FilamentUser
     public function loyaltyPointTransactions(): HasMany
     {
         return $this->hasMany(LoyaltyPointTransaction::class);
+    }
+
+    public function vendor(): HasOne
+    {
+        return $this->hasOne(Vendor::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
     }
 
     public function loyaltyPointsBalance(): int

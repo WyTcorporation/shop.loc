@@ -5,6 +5,7 @@ namespace App\Filament\Mine\Resources\Products\Pages;
 use App\Filament\Mine\Resources\Products\ProductResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditProduct extends EditRecord
 {
@@ -15,5 +16,14 @@ class EditProduct extends EditRecord
         return [
             DeleteAction::make(),
         ];
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        if ($vendor = Auth::user()?->vendor) {
+            $data['vendor_id'] = $this->record->vendor_id ?? $vendor->id;
+        }
+
+        return $data;
     }
 }

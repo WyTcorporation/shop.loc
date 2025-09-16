@@ -15,6 +15,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Filament\Forms;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 
 class ProductResource extends Resource
@@ -42,12 +43,20 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['images' => fn($q) => $q
                 ->select('id','product_id','path','disk','is_primary','sort')
                 ->orderByDesc('is_primary')
                 ->orderBy('sort')
             ]);
+
+        $user = Auth::user();
+
+        if ($user?->vendor) {
+            $query->where('vendor_id', $user->vendor->id);
+        }
+
+        return $query;
     }
 
     public static function getPages(): array

@@ -23,6 +23,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Mine\Resources\Products\ProductResource;
 use App\Filament\Mine\Resources\Categories\CategoryResource;
 use App\Filament\Mine\Resources\Orders\OrderResource;
+use App\Filament\Mine\Resources\Vendors\VendorResource;
 
 class MinePanelProvider extends PanelProvider
 {
@@ -43,6 +44,7 @@ class MinePanelProvider extends PanelProvider
             ->resources([
                 ProductResource::class,
                 CategoryResource::class,
+                VendorResource::class,
                 OrderResource::class,
             ])
             ->navigationGroups([
