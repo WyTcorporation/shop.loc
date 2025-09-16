@@ -6,30 +6,32 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OrderItem extends Model
+class ProductStock extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'product_id', 'warehouse_id', 'qty', 'price'];
+    protected $fillable = [
+        'product_id',
+        'warehouse_id',
+        'qty',
+        'reserved',
+    ];
 
     protected $casts = [
         'qty' => 'integer',
-        'price' => 'decimal:2',
+        'reserved' => 'integer',
     ];
 
-    protected $touches = ['order'];
+    protected $appends = ['available'];
 
     protected static function booted(): void
     {
-        $recalc = fn ($item) => $item->order?->recalculateTotal();
-        static::created($recalc);
-        static::updated($recalc);
-        static::deleted($recalc);
-    }
+        $sync = function (ProductStock $stock): void {
+            $stock->product?->syncAvailableStock();
+        };
 
-    public function order(): BelongsTo
-    {
-        return $this->belongsTo(Order::class);
+        static::saved($sync);
+        static::deleted($sync);
     }
 
     public function product(): BelongsTo
@@ -40,5 +42,10 @@ class OrderItem extends Model
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function getAvailableAttribute(): int
+    {
+        return max(0, (int) $this->qty - (int) $this->reserved);
     }
 }

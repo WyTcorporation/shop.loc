@@ -111,14 +111,15 @@ class Order extends Model
 
         DB::transaction(function () use ($to) {
             if ($to === OrderStatus::Paid && $this->status === OrderStatus::New) {
-                $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
-                    $item->product->adjustStock(-$item->qty);
-                });
+                $this->reserveInventory();
             }
-            if ($to === OrderStatus::Cancelled && $this->status === OrderStatus::Paid) {
-                $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
-                    $item->product->adjustStock($item->qty);
-                });
+
+            if ($to === OrderStatus::Cancelled && $this->inventoryCommitted()) {
+                $this->releaseInventory();
+            }
+
+            if ($to === OrderStatus::Shipped) {
+                $this->commitReservedInventory();
             }
 
             $this->update(['status' => $to]);
@@ -188,17 +189,7 @@ class Order extends Model
             if ($this->status !== OrderStatus::New) {
                 throw new \RuntimeException('Only NEW orders can be marked paid.');
             }
-            $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
-                $product = $item->product;
-                if (!$product) {
-                    throw new \RuntimeException('Order item without product.');
-                }
-                if ($product->stock < $item->qty) {
-                    throw new \RuntimeException("Not enough stock for {$product->name}.");
-                }
-                $product->decrement('stock', $item->qty);
-            });
-
+            $this->reserveInventory();
             $this->update(['status' => OrderStatus::Paid]);
         });
     }
@@ -219,10 +210,8 @@ class Order extends Model
             if (in_array($this->status, [OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
                 throw new \RuntimeException('Cannot cancel shipped/canceled order.');
             }
-            if ($this->status === OrderStatus::Paid) {
-                $this->items()->with('product')->lockForUpdate()->get()->each(function ($item) {
-                    $item->product?->increment('stock', $item->qty);
-                });
+            if ($this->inventoryCommitted()) {
+                $this->releaseInventory();
             }
 
             $this->update(['status' => OrderStatus::Cancelled]);
@@ -232,6 +221,104 @@ class Order extends Model
                 'delivered_at' => null,
             ]);
         });
+    }
+
+
+    public function reserveInventory(): void
+    {
+        if ($this->inventoryCommitted()) {
+            return;
+        }
+
+        $items = $this->items()->with('product')->lockForUpdate()->get();
+
+        if ($items->isEmpty()) {
+            $this->forceFill(['inventory_committed_at' => now()])->saveQuietly();
+            return;
+        }
+
+        $defaultWarehouseId = Warehouse::getDefault()->id;
+
+        foreach ($items as $item) {
+            $product = $item->product;
+
+            if (! $product) {
+                throw new \RuntimeException('Order item without product.');
+            }
+
+            $warehouseId = $item->warehouse_id ?? $defaultWarehouseId;
+
+            if (! $item->warehouse_id) {
+                $item->forceFill(['warehouse_id' => $warehouseId])->saveQuietly();
+            }
+
+            try {
+                $product->reserveStock($item->qty, $warehouseId);
+            } catch (\DomainException $e) {
+                throw new \RuntimeException($e->getMessage(), 0, $e);
+            }
+        }
+
+        $this->forceFill(['inventory_committed_at' => now()])->saveQuietly();
+    }
+
+    public function releaseInventory(): void
+    {
+        if (! $this->inventoryCommitted()) {
+            return;
+        }
+
+        $items = $this->items()->with('product')->lockForUpdate()->get();
+
+        $defaultWarehouseId = Warehouse::getDefault()->id;
+
+        foreach ($items as $item) {
+            $product = $item->product;
+
+            if (! $product) {
+                continue;
+            }
+
+            $warehouseId = $item->warehouse_id ?? $defaultWarehouseId;
+
+            $product->releaseReservedStock($item->qty, $warehouseId);
+        }
+
+        $this->forceFill(['inventory_committed_at' => null])->saveQuietly();
+    }
+
+    public function commitReservedInventory(): void
+    {
+        if (! $this->inventoryCommitted()) {
+            $this->reserveInventory();
+        }
+
+        $items = $this->items()->with('product')->lockForUpdate()->get();
+
+        if ($items->isEmpty()) {
+            $this->forceFill(['inventory_committed_at' => null])->saveQuietly();
+            return;
+        }
+
+        $defaultWarehouseId = Warehouse::getDefault()->id;
+
+        foreach ($items as $item) {
+            $product = $item->product;
+
+            if (! $product) {
+                continue;
+            }
+
+            $warehouseId = $item->warehouse_id ?? $defaultWarehouseId;
+
+            try {
+                $product->commitReservedStock($item->qty, $warehouseId);
+            } catch (\DomainException $e) {
+                throw new \RuntimeException($e->getMessage(), 0, $e);
+            }
+        }
+
+        $this->forceFill(['inventory_committed_at' => null])->saveQuietly();
     }
 
 

@@ -16,6 +16,7 @@ class OrderStateService
         }
 
         DB::transaction(function () use ($order) {
+            $order->reserveInventory();
             $order->update(['status' => OrderStatus::Paid]);
         });
     }
@@ -27,6 +28,7 @@ class OrderStateService
         }
 
         DB::transaction(function () use ($order) {
+            $order->commitReservedInventory();
             $order->update(['status' => OrderStatus::Shipped]);
         });
     }
@@ -38,10 +40,7 @@ class OrderStateService
         }
 
         DB::transaction(function () use ($order) {
-            // Якщо списуєте склад при створенні або при "paid", тут відкотити залишки:
-            // foreach ($order->items as $item) {
-            //     $item->product()->increment('stock', $item->qty);
-            // }
+            $order->releaseInventory();
 
             $order->update(['status' => OrderStatus::Cancelled]);
         });

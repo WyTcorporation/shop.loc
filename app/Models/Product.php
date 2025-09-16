@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -48,20 +49,172 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    public function stocks(): HasMany
+    {
+        return $this->hasMany(ProductStock::class);
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
 
-    public function adjustStock(int $delta): void
+    public function adjustStock(int $delta, ?int $warehouseId = null): void
     {
-        $new = $this->stock + $delta;
-        if ($new < 0) {
-            throw new \DomainException("Not enough stock for product {$this->id}");
+        if ($delta === 0) {
+            return;
         }
 
-        $this->forceFill(['stock' => $new])->save();
+        $warehouseId ??= Warehouse::getDefault()->id;
+
+        DB::transaction(function () use ($delta, $warehouseId) {
+            $stock = $this->stockForUpdate($warehouseId);
+
+            $newQty = $stock->qty + $delta;
+
+            if ($newQty < $stock->reserved) {
+                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+            }
+
+            $stock->qty = $newQty;
+            $stock->save();
+
+            $this->syncAvailableStock();
+        });
     }
+
+    public function reserveStock(int $qty, ?int $warehouseId = null): void
+    {
+        if ($qty <= 0) {
+            return;
+        }
+
+        $warehouseId ??= Warehouse::getDefault()->id;
+
+        DB::transaction(function () use ($qty, $warehouseId) {
+            $stock = $this->stockForUpdate($warehouseId);
+
+            $available = $stock->qty - $stock->reserved;
+
+            if ($available < $qty) {
+                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+            }
+
+            $stock->reserved += $qty;
+            $stock->save();
+
+            $this->syncAvailableStock();
+        });
+    }
+
+    public function releaseReservedStock(int $qty, ?int $warehouseId = null): void
+    {
+        if ($qty <= 0) {
+            return;
+        }
+
+        $warehouseId ??= Warehouse::getDefault()->id;
+
+        DB::transaction(function () use ($qty, $warehouseId) {
+            $stock = $this->stocks()
+                ->where('warehouse_id', $warehouseId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $stock) {
+                return;
+            }
+
+            $stock->reserved = max(0, $stock->reserved - $qty);
+            $stock->save();
+
+            $this->syncAvailableStock();
+        });
+    }
+
+    public function commitReservedStock(int $qty, ?int $warehouseId = null): void
+    {
+        if ($qty <= 0) {
+            return;
+        }
+
+        $warehouseId ??= Warehouse::getDefault()->id;
+
+        DB::transaction(function () use ($qty, $warehouseId) {
+            $stock = $this->stocks()
+                ->where('warehouse_id', $warehouseId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $stock) {
+                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+            }
+
+            if ($stock->reserved < $qty) {
+                throw new \DomainException("Not enough reserved stock for product {$this->id} at warehouse {$warehouseId}");
+            }
+
+            if ($stock->qty < $qty) {
+                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+            }
+
+            $stock->reserved -= $qty;
+            $stock->qty -= $qty;
+            $stock->save();
+
+            $this->syncAvailableStock();
+        });
+    }
+
+    public function availableStock(?int $warehouseId = null): int
+    {
+        if ($warehouseId === null) {
+            return (int) $this->stock;
+        }
+
+        $stock = $this->relationLoaded('stocks')
+            ? $this->stocks->firstWhere('warehouse_id', $warehouseId)
+            : $this->stocks()->where('warehouse_id', $warehouseId)->first();
+
+        if (! $stock) {
+            return 0;
+        }
+
+        return max(0, (int) $stock->qty - (int) $stock->reserved);
+    }
+
+    public function syncAvailableStock(): void
+    {
+        $total = (int) $this->stocks()
+            ->selectRaw('COALESCE(SUM(qty - reserved), 0) as aggregate_available')
+            ->value('aggregate_available');
+
+        $this->forceFill(['stock' => max(0, $total)])->saveQuietly();
+    }
+
+    protected function stockForUpdate(int $warehouseId): ProductStock
+    {
+        $query = $this->stocks()->where('warehouse_id', $warehouseId);
+
+        $stock = $query->lockForUpdate()->first();
+
+        if (! $stock) {
+            $this->stocks()->create([
+                'warehouse_id' => $warehouseId,
+                'qty' => 0,
+                'reserved' => 0,
+            ]);
+
+            $stock = $query->lockForUpdate()->first();
+        }
+
+        if (! $stock) {
+            throw new \RuntimeException('Unable to obtain stock row.');
+        }
+
+        return $stock;
+    }
+
 
     public function primaryImage(): HasOne
     {
