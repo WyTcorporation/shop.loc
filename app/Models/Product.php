@@ -23,6 +23,7 @@ class Product extends Model
         'attributes',
         'stock',
         'price',
+        'price_cents',
         'price_old',
         'is_active',
         'reviews_count',
@@ -33,10 +34,26 @@ class Product extends Model
         'attributes' => 'array',
         'is_active' => 'boolean',
         'price' => 'decimal:2',
+        'price_cents' => 'integer',
         'price_old' => 'decimal:2',
         'reviews_count' => 'integer',
         'rating' => 'decimal:2',
     ];
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function (Product $product) {
+            if ($product->isDirty('price')) {
+                $price = max(0, (float) $product->price);
+                $product->price_cents = (int) round($price * 100);
+            } elseif ($product->isDirty('price_cents') && ! $product->isDirty('price')) {
+                $product->price = round(((int) $product->price_cents) / 100, 2);
+            }
+        });
+    }
 
 
     public function category(): BelongsTo
