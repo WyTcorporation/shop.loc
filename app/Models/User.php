@@ -3,19 +3,26 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\TwoFactorSecret;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
+
+    protected $appends = [
+        'two_factor_enabled',
+        'two_factor_confirmed_at',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -93,5 +100,20 @@ class User extends Authenticatable implements FilamentUser
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
+    }
+
+    public function twoFactorSecret(): HasOne
+    {
+        return $this->hasOne(TwoFactorSecret::class);
+    }
+
+    public function getTwoFactorEnabledAttribute(): bool
+    {
+        return (bool) $this->twoFactorSecret?->isConfirmed();
+    }
+
+    public function getTwoFactorConfirmedAtAttribute(): ?string
+    {
+        return $this->twoFactorSecret?->confirmed_at?->toISOString();
     }
 }
