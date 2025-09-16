@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Product;
+use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use App\Models\Category;
@@ -12,6 +13,23 @@ use App\Models\Category;
  */
 class ProductFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Product $product) {
+            $warehouse = Warehouse::getDefault();
+
+            $product->stocks()->updateOrCreate(
+                ['warehouse_id' => $warehouse->id],
+                [
+                    'qty' => (int) $product->stock,
+                    'reserved' => 0,
+                ]
+            );
+
+            $product->syncAvailableStock();
+        });
+    }
+
     /**
      * Define the model's default state.
      *

@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendOrderConfirmation;
-use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem};
+use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem, Warehouse};
 use App\Enums\ShipmentStatus;
 use App\Services\Carts\CartPricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use DomainException;
 
 class OrderController extends Controller
 {
@@ -40,8 +41,10 @@ class OrderController extends Controller
                 abort(422, 'Cart is empty');
             }
 
+            $warehouse = Warehouse::getDefault();
+
             foreach ($cart->items as $item) {
-                if ($item->product->stock < $item->qty) {
+                if ($item->product->availableStock($warehouse->id) < $item->qty) {
                     abort(422, "Insufficient stock for product #{$item->product_id}");
                 }
             }
@@ -70,7 +73,11 @@ class OrderController extends Controller
             CartPricingService::syncCartAdjustments($cart, $totals);
 
             foreach ($cart->items as $item) {
-                $item->product()->decrement('stock', $item->qty);
+                try {
+                    $item->product->reserveStock($item->qty, $warehouse->id);
+                } catch (DomainException $e) {
+                    abort(422, "Insufficient stock for product #{$item->product_id}");
+                }
             }
 
             $coupon = $totals->coupon
@@ -136,6 +143,7 @@ class OrderController extends Controller
 
             $items = $cart->items->map(fn ($it) => new OrderItem([
                 'product_id' => $it->product_id,
+                'warehouse_id' => $warehouse->id,
                 'qty' => $it->qty,
                 'price' => $it->price,
             ]));
