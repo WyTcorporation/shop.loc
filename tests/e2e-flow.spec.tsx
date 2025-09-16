@@ -54,21 +54,20 @@ test('catalog → product → cart → checkout → order confirmation', async (
     await page.getByTestId('shipping-city').fill('Kyiv');
     await page.getByTestId('shipping-addr').fill('Street 1');
 
+    const toDeliveryBtn = page.getByRole('button', { name: /до доставки/i });
+    await toDeliveryBtn.click();
+
+    await expect(page.getByText(/спосіб доставки/i)).toBeVisible();
+
     const placeOrderBtn = page.getByTestId('place-order')
-        .or(page.getByRole('button', { name: /place order|замовлення|оформити/i }));
+        .or(page.getByRole('button', { name: /до оплати|оплатити/i }));
 
-    // ⚠️ Спочатку чекаємо, поки перекинуло на /order/..., і лише після цього чекаємо GET деталей
-    await Promise.all([
-        page.waitForURL(/\/order\/.+/, { timeout: 15000 }),
-        placeOrderBtn.click(),
-    ]);
-
-    // Чек саме на 200 від /api/orders/:number
-    await page.waitForResponse(
-        r => r.url().includes('/api/orders/') && r.request().method() === 'GET' && r.status() === 200,
-        { timeout: 15000 }
+    const waitOrderCreate = page.waitForResponse(
+        r => r.url().includes('/api/orders') && r.request().method() === 'POST' && r.status() === 201
     );
 
-    // await expect(page.getByTestId('order-confirmed')).toBeVisible({ timeout: 15000 });
-    // await expect(page.getByText(/Підтвердження надіслано/i)).toBeVisible();
+    await placeOrderBtn.click();
+    await waitOrderCreate;
+
+    await expect(page.getByTestId('payment-form')).toBeVisible({ timeout: 15000 });
 });
