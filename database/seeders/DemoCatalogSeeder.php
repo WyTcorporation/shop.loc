@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Vendor;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -19,9 +20,13 @@ class DemoCatalogSeeder extends Seeder
         // 5 категорій
         $cats = Category::factory()->count(5)->create();
 
-        // 60 товарів, кожному ставимо випадкову категорію
-        $products = Product::factory()->count(60)->make()->each(function (Product $p) use ($cats) {
+        // створимо кілька продавців
+        $vendors = Vendor::factory()->count(5)->create();
+
+        // 60 товарів, кожному ставимо випадкову категорію та продавця
+        $products = Product::factory()->count(60)->make()->each(function (Product $p) use ($cats, $vendors) {
             $p->category_id = $cats->random()->id;
+            $p->vendor_id = $vendors->random()->id;
             $p->save();
         });
 

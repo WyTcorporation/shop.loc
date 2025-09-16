@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Filament\Mine\Resources\Vendors;
+
+use App\Filament\Mine\Resources\Vendors\Pages\CreateVendor;
+use App\Filament\Mine\Resources\Vendors\Pages\EditVendor;
+use App\Filament\Mine\Resources\Vendors\Pages\ListVendors;
+use App\Filament\Mine\Resources\Vendors\Schemas\VendorForm;
+use App\Filament\Mine\Resources\Vendors\Tables\VendorsTable;
+use App\Models\Vendor;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+
+class VendorResource extends Resource
+{
+    protected static ?string $model = Vendor::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
+
+    protected static string|null|\UnitEnum $navigationGroup = 'Catalog';
+
+    public static function form(Schema $schema): Schema
+    {
+        return VendorForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return VendorsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = Auth::user();
+
+        if ($user?->vendor) {
+            $query->whereKey($user->vendor->id);
+        }
+
+        return $query->with('user');
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListVendors::route('/'),
+            'create' => CreateVendor::route('/create'),
+            'edit' => EditVendor::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Vendor::count();
+    }
+}

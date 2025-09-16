@@ -5,6 +5,7 @@ namespace App\Filament\Mine\Resources\Orders;
 use App\Filament\Mine\Resources\Orders\Pages\CreateOrder;
 use App\Filament\Mine\Resources\Orders\Pages\EditOrder;
 use App\Filament\Mine\Resources\Orders\Pages\ListOrders;
+use App\Filament\Mine\Resources\Orders\Pages\OrderMessages;
 use App\Filament\Mine\Resources\Orders\Schemas\OrderForm;
 use App\Filament\Mine\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
@@ -13,6 +14,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class OrderResource extends Resource
 {
@@ -38,6 +41,19 @@ class OrderResource extends Resource
         return OrdersTable::configure($table);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = Auth::user();
+
+        if ($user?->vendor) {
+            $query->whereHas('items.product', fn ($builder) => $builder->where('vendor_id', $user->vendor->id));
+        }
+
+        return $query->with(['items.product.vendor']);
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -52,6 +68,7 @@ class OrderResource extends Resource
             'index' => ListOrders::route('/'),
             'create' => CreateOrder::route('/create'),
             'edit' => EditOrder::route('/{record}/edit'),
+            'messages' => OrderMessages::route('/{record}/messages'),
         ];
     }
 

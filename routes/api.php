@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\{AddressController,
     ProductController,
     CartController,
     OrderController,
+    OrderMessageController,
     ReviewController,
     WishlistController};
 
@@ -20,6 +21,9 @@ $productsAndOrders = function () {
     Route::get('products/{slug}', [ProductController::class, 'show']);
     Route::get('products/{id}/reviews', [ReviewController::class, 'index']);
     Route::middleware('auth:sanctum')->post('products/{id}/reviews', [ReviewController::class, 'store']);
+
+    Route::get('seller/{vendor}/products', [ProductController::class, 'sellerProducts'])
+        ->whereNumber('vendor');
 
     // Checkout
     Route::post('orders', [OrderController::class, 'store']);
@@ -52,4 +56,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile/wishlist', [WishlistController::class, 'index']);
     Route::post('profile/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('profile/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::post('orders/{order}/messages', [OrderMessageController::class, 'store']);
 });

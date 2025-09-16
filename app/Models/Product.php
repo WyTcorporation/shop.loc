@@ -20,6 +20,7 @@ class Product extends Model
         'slug',
         'sku',
         'category_id',
+        'vendor_id',
         'attributes',
         'stock',
         'price',
@@ -59,6 +60,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
     }
 
     public function images(): HasMany
@@ -239,7 +245,7 @@ class Product extends Model
     }
 
 // щоб не ловити N+1 і аксесор працював без додаткових запитів
-    protected $with = ['images'];
+    protected $with = ['images', 'vendor'];
 
 // якщо хочеш бачити поле як атрибут (не обов'язково для таблиці)
     protected $appends = ['preview_url'];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Vendor;
 use App\Services\Currency\CurrencyConverter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -209,12 +210,50 @@ class ProductController extends Controller
         $product = Product::query()
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->with(['images' => fn($q) => $q->orderBy('sort'), 'category'])
+            ->with([
+                'images' => fn($q) => $q->orderBy('sort'),
+                'category',
+                'vendor',
+            ])
             ->firstOrFail();
 
         $currency = $this->resolveCurrency($request);
 
         return response()->json($this->transformProduct($product, $currency));
+    }
+
+    public function sellerProducts(Request $request, int $vendorId): JsonResponse
+    {
+        $vendor = Vendor::query()->findOrFail($vendorId);
+        $currency = $this->resolveCurrency($request);
+
+        $perPage = max(1, min((int) $request->integer('per_page', 12), 100));
+        $page = max(1, (int) $request->integer('page', 1));
+
+        $paginated = $vendor->products()
+            ->where('is_active', true)
+            ->with(['images' => fn ($query) => $query->orderBy('sort'), 'category', 'vendor'])
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $paginated->setCollection(
+            $paginated->getCollection()->map(fn (Product $product) => $this->transformProduct($product, $currency))
+        );
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'per_page' => $paginated->perPage(),
+            'total' => $paginated->total(),
+            'vendor' => [
+                'id' => $vendor->id,
+                'name' => $vendor->name,
+                'slug' => $vendor->slug,
+                'contact_email' => $vendor->contact_email,
+                'contact_phone' => $vendor->contact_phone,
+                'description' => $vendor->description,
+            ],
+        ]);
     }
 
     private function transformProduct(Product $product, string $currency): array
@@ -236,6 +275,16 @@ class ProductController extends Controller
                 ? $this->converter->convertFromBase((float) $product->price_old, $currency)
                 : null;
         }
+
+        $data['vendor'] = $product->relationLoaded('vendor') && $product->vendor
+            ? [
+                'id' => $product->vendor->id,
+                'name' => $product->vendor->name,
+                'slug' => $product->vendor->slug,
+                'contact_email' => $product->vendor->contact_email,
+                'contact_phone' => $product->vendor->contact_phone,
+            ]
+            : null;
 
         return $data;
     }

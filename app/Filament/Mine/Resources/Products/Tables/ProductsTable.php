@@ -15,13 +15,22 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ProductsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => Product::query()->with(['images', 'category']))
+            ->query(function (): Builder {
+                $query = Product::query()->with(['images', 'category']);
+
+                if ($vendor = Auth::user()?->vendor) {
+                    $query->where('vendor_id', $vendor->id);
+                }
+
+                return $query;
+            })
             ->columns([
                 ImageColumn::make('preview')
                     ->label('Preview')
