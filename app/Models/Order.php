@@ -20,13 +20,21 @@ class Order extends Model
     protected $fillable = [
         'user_id', 'email', 'status', 'total',
         'shipping_address', 'billing_address', 'note', 'number',
-        'shipping_address_id',
+        'shipping_address_id', 'subtotal', 'discount_total', 'coupon_id',
+        'coupon_code', 'coupon_discount', 'loyalty_points_used', 'loyalty_points_value',
+        'loyalty_points_earned',
         'currency','payment_intent_id','payment_status','paid_at','inventory_committed_at'
     ];
 
     protected $casts = [
         'status' => OrderStatus::class,
         'total' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'discount_total' => 'decimal:2',
+        'coupon_discount' => 'decimal:2',
+        'loyalty_points_value' => 'decimal:2',
+        'loyalty_points_used' => 'integer',
+        'loyalty_points_earned' => 'integer',
         'shipping_address' => 'array',
         'billing_address' => 'array',
         'paid_at' => 'datetime',
@@ -37,6 +45,12 @@ class Order extends Model
 
     protected $attributes = [
         'total' => 0,
+        'subtotal' => 0,
+        'discount_total' => 0,
+        'coupon_discount' => 0,
+        'loyalty_points_used' => 0,
+        'loyalty_points_value' => 0,
+        'loyalty_points_earned' => 0,
     ];
 
     protected static function booted(): void
@@ -72,6 +86,11 @@ class Order extends Model
     public function shippingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'shipping_address_id');
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function canTransitionTo(OrderStatus $to): bool
@@ -218,11 +237,18 @@ class Order extends Model
 
     public function recalculateTotal(): void
     {
-        $total = (float)($this->items()
+        $subtotal = (float)($this->items()
             ->selectRaw('COALESCE(SUM(qty * price), 0) AS t')
             ->value('t') ?? 0);
 
-        $this->forceFill(['total' => $total])->saveQuietly();
+        $discount = round((float)($this->coupon_discount ?? 0) + (float)($this->loyalty_points_value ?? 0), 2);
+        $total = max(0, round($subtotal - $discount, 2));
+
+        $this->forceFill([
+            'subtotal' => $subtotal,
+            'discount_total' => $discount,
+            'total' => $total,
+        ])->saveQuietly();
     }
 
     public function logs(): HasMany
