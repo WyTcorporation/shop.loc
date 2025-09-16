@@ -90,7 +90,15 @@ export type Cart = {
     id: string
     status: 'active' | 'ordered' | string
     items: CartItem[]
-    total: number
+    total: number | string
+    subtotal?: number | string
+    discounts?: {
+        coupon?: { code?: string | null; amount?: number | string | null }
+        loyalty_points?: { used?: number | string | null; value?: number | string | null }
+        total?: number | string | null
+    }
+    available_points?: number
+    max_redeemable_points?: number
 }
 export type Facets = Record<string, Record<string, number>>;
 
@@ -129,6 +137,59 @@ type ReviewCreatePayload = {
 type ReviewCreateResponse = {
     data: Review
     message?: string
+}
+
+export type Address = {
+    id: number
+    name: string
+    city: string
+    addr: string
+    postal_code?: string | null
+    phone?: string | null
+}
+
+export type Shipment = {
+    status?: string | null
+    tracking_number?: string | null
+    shipped_at?: string | null
+    delivered_at?: string | null
+}
+
+export type OrderItemResponse = {
+    id: number
+    product_id: number
+    qty: number
+    price: number | string
+    subtotal?: number | string
+    preview_url?: string | null
+    name?: string | null
+    product?: Product | null
+}
+
+export type OrderResponse = {
+    number: string
+    email: string
+    status?: string
+    payment_status?: string | null
+    subtotal?: number | string
+    total: number | string
+    discount_total?: number | string | null
+    coupon_code?: string | null
+    coupon_discount?: number | string | null
+    loyalty_points_used?: number | string | null
+    loyalty_points_value?: number | string | null
+    currency?: string
+    base_currency?: string
+    items: OrderItemResponse[]
+    shipment?: Shipment | null
+    shipping_address?: {
+        name?: string
+        city?: string
+        addr?: string
+        postal_code?: string | null
+        phone?: string | null
+    }
+    note?: string | null
 }
 
 /* ==================== AUTH ==================== */
@@ -181,6 +242,12 @@ export const ProductsApi = {
 export const CategoriesApi = {
     list() {
         return api.get<Category[]>('/categories').then(r => r.data)
+    },
+}
+
+export const AddressesApi = {
+    list() {
+        return api.get<Address[]>('/profile/addresses').then(r => r.data)
     },
 }
 
@@ -318,6 +385,15 @@ async function removeCartItem(item_id: number): Promise<Cart> {
     const { data } = await api.delete<Cart>(`/cart/${id}/items/${item_id}`)
     return data
 }
+async function applyCouponToCart(code?: string | null): Promise<Cart> {
+    const cart_id = await requireCartId()
+    const { data } = await api.post<Cart>('/cart/apply-coupon', {
+        cart_id,
+        code: code ?? null,
+    })
+    setActiveCartId(data.id)
+    return data
+}
 async function refreshCart(): Promise<Cart> {
     try {
         if (!activeCartId) return getCart();
@@ -339,6 +415,7 @@ export const CartApi = {
     add: addToCart,
     update: updateCartItem,
     remove: removeCartItem,
+    applyCoupon: applyCouponToCart,
     refresh: refreshCart,
 }
 
@@ -347,15 +424,22 @@ export const CartApi = {
 export const OrdersApi = {
     async create(payload: {
         email: string
-        shipping_address: { name: string; city: string; addr: string }
+        shipping_address: {
+            name: string
+            city: string
+            addr: string
+            postal_code?: string | null
+            phone?: string | null
+        }
+        billing_address?: Record<string, unknown>
         note?: string
-    }) {
+    }): Promise<OrderResponse> {
         const cart_id = await requireCartId()
-        const { data } = await api.post('/orders', { cart_id, ...payload })
+        const { data } = await api.post<OrderResponse>('/orders', { cart_id, ...payload })
         return data
     },
     show(number: string) {
-        return api.get(`/orders/${encodeURIComponent(number)}`).then(r => r.data)
+        return api.get<OrderResponse>(`/orders/${encodeURIComponent(number)}`).then(r => r.data)
     },
 }
 

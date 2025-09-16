@@ -4,7 +4,7 @@ import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-
 import { Button } from '@/components/ui/button';
 import { useNotify } from '../ui/notify';
 
-function Inner({ number, onPaid }: { number: string; onPaid?: () => void }) {
+function Inner({ number, onPaid }: { number: string; onPaid?: (status?: string) => void }) {
     const stripe = useStripe();
     const elements = useElements();
     const { error: notifyError, success } = useNotify();
@@ -17,15 +17,25 @@ function Inner({ number, onPaid }: { number: string; onPaid?: () => void }) {
         if (!stripe || !elements) return;
         setSubmitting(true);
         try {
-            const { error } = await stripe.confirmPayment({
+            const { error, paymentIntent } = await stripe.confirmPayment({
                 elements,
                 confirmParams: { return_url: returnUrl },
+                redirect: 'if_required',
             });
             if (error) {
                 notifyError({ title: error.message || 'Оплата не пройшла' });
             } else {
-                // якщо 3DS потрібен — Stripe зробить редірект
-                success({ title: 'Оплата обробляється…' });
+                const status = paymentIntent?.status;
+                if (status === 'succeeded') {
+                    success({ title: 'Оплата успішна' });
+                    onPaid?.(status);
+                } else if (status === 'processing') {
+                    success({ title: 'Оплата обробляється…' });
+                    onPaid?.(status);
+                } else {
+                    // якщо 3DS або редірект — Stripe сам обробить сценарій
+                    success({ title: 'Оплата обробляється…' });
+                }
             }
         } finally {
             setSubmitting(false);
@@ -33,8 +43,8 @@ function Inner({ number, onPaid }: { number: string; onPaid?: () => void }) {
     }
 
     return (
-        <div className="space-y-3">
-            <PaymentElement />
+        <div className="space-y-3" data-testid="payment-form">
+            <PaymentElement data-testid="payment-element" />
             <Button onClick={handlePay} disabled={!stripe || submitting}>
                 {submitting ? 'Оплата…' : 'Сплатити'}
             </Button>
@@ -42,7 +52,7 @@ function Inner({ number, onPaid }: { number: string; onPaid?: () => void }) {
     );
 }
 
-export default function PayOrder({ number, onPaid }: { number: string; onPaid?: () => void }) {
+export default function PayOrder({ number, onPaid }: { number: string; onPaid?: (status?: string) => void }) {
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [publishableKey, setPublishableKey] = useState<string | null>(null);
 
