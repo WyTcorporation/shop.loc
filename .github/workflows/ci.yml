@@ -46,12 +46,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - name: Install composer deps
+        run: composer install --no-interaction --prefer-dist
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-      - name: Install deps
+      - name: Install npm deps
         run: npm ci
+      - name: Clear Laravel caches
+        run: php artisan optimize:clear
       - name: Build
         env:
           VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
