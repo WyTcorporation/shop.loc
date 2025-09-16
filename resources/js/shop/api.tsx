@@ -55,6 +55,15 @@ export type Product = {
     [k: string]: any;
 };
 
+export type SearchSuggestion = {
+    id: number;
+    name: string;
+    slug: string;
+    preview_url?: string | null;
+    price?: number | null;
+    currency?: string | null;
+};
+
 export type ProductsQuery = {
     page?: number;
     per_page?: number;
@@ -317,6 +326,22 @@ export async function fetchProducts(params: ProductsQuery) {
         },
     });
     return r.data as PaginatedWithFacets<Product>;
+}
+
+export async function fetchSearchSuggestions(
+    query: string,
+    options: { signal?: AbortSignal } = {},
+): Promise<SearchSuggestion[]> {
+    if (!query.trim()) {
+        return [];
+    }
+
+    const { data } = await api.get<{ data?: SearchSuggestion[] }>('/search/suggestions', {
+        params: { q: query },
+        signal: options.signal,
+    });
+
+    return data?.data ?? [];
 }
 
 export async function fetchSellerProducts(

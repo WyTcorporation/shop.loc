@@ -9,10 +9,13 @@ use App\Http\Controllers\Api\{AddressController,
     OrderController,
     OrderMessageController,
     ReviewController,
+    SearchController,
     WishlistController};
 
 //Categories
 Route::get('categories', [CategoryController::class,'index']);
+
+Route::get('search/suggestions', [SearchController::class, 'suggestions']);
 
 $productsAndOrders = function () {
     // Products
