@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { normalizeLang } from './i18n/config';
+import type { WishItem } from './ui/wishlist';
 
 const API_BASE =
     (import.meta as any).env?.VITE_API_URL ||
@@ -172,6 +173,22 @@ export async function fetchRelatedProducts(
 export async function fetchCategories(): Promise<Category[]> {
     return CategoriesApi.list()
 }
+
+/* ==================== WISHLIST ==================== */
+
+export const WishlistApi = {
+    async list(): Promise<WishItem[]> {
+        const { data } = await api.get<WishItem[]>('/profile/wishlist');
+        return data;
+    },
+    async add(productId: number): Promise<WishItem> {
+        const { data } = await api.post<WishItem>(`/profile/wishlist/${encodeURIComponent(productId)}`);
+        return data;
+    },
+    async remove(productId: number): Promise<void> {
+        await api.delete(`/profile/wishlist/${encodeURIComponent(productId)}`);
+    },
+};
 
 /* ==================== CART ==================== */
 let activeCartId: string | null = null
