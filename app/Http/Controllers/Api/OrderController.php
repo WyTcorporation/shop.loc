@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendOrderConfirmation;
-use App\Models\{Address, Cart, Order, OrderItem};
+use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem};
 use App\Enums\ShipmentStatus;
+use App\Services\Carts\CartPricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -30,25 +32,68 @@ class OrderController extends Controller
         $order = null;
 
         DB::transaction(function () use (&$order, $data) {
-            $cart = Cart::with('items.product')->where('status', 'active')->findOrFail($data['cart_id']);
+            $cart = Cart::with(['items.product', 'coupon', 'user'])
+                ->where('status', 'active')
+                ->findOrFail($data['cart_id']);
+
             if ($cart->items->isEmpty()) {
                 abort(422, 'Cart is empty');
             }
 
-            // Перевірка складу
-            foreach ($cart->items as $it) {
-                if ($it->product->stock < $it->qty) {
-                    abort(422, "Insufficient stock for product #{$it->product_id}");
+            foreach ($cart->items as $item) {
+                if ($item->product->stock < $item->qty) {
+                    abort(422, "Insufficient stock for product #{$item->product_id}");
                 }
             }
 
-            // Декремент складу (простий варіант без резервування)
-            foreach ($cart->items as $it) {
-                $it->product()->decrement('stock', $it->qty);
+            $hadCoupon = (bool) $cart->coupon_id;
+            $requestedPoints = (int) $cart->loyalty_points_used;
+
+            $totals = CartPricingService::calculate($cart);
+
+            if ($hadCoupon && ! $totals->coupon) {
+                CartPricingService::syncCartAdjustments($cart, $totals);
+
+                throw ValidationException::withMessages([
+                    'coupon' => ['Coupon is no longer available.'],
+                ]);
             }
 
+            if ($requestedPoints > 0 && $totals->pointsUsed < $requestedPoints) {
+                CartPricingService::syncCartAdjustments($cart, $totals);
 
-            $total = $cart->items->sum(fn($it) => $it->qty * (float)$it->price);
+                throw ValidationException::withMessages([
+                    'points' => ['Not enough loyalty points to redeem the requested amount.'],
+                ]);
+            }
+
+            CartPricingService::syncCartAdjustments($cart, $totals);
+
+            foreach ($cart->items as $item) {
+                $item->product()->decrement('stock', $item->qty);
+            }
+
+            $coupon = $totals->coupon
+                ? Coupon::lockForUpdate()->find($totals->coupon->id)
+                : null;
+
+            if ($coupon) {
+                if (! CartPricingService::couponIsApplicable($coupon, $cart, $totals->subtotal)) {
+                    $cart->coupon()->dissociate();
+                    $cart->coupon_code = null;
+                    $cart->save();
+
+                    throw ValidationException::withMessages([
+                        'coupon' => ['Coupon is no longer available.'],
+                    ]);
+                }
+
+                if ($coupon->usage_limit !== null && $coupon->used + 1 > $coupon->usage_limit) {
+                    throw ValidationException::withMessages([
+                        'coupon' => ['Coupon usage limit reached.'],
+                    ]);
+                }
+            }
 
             $addressPayload = [
                 'name' => $data['shipping_address']['name'],
@@ -66,25 +111,61 @@ class OrderController extends Controller
                 ? Address::firstOrCreate($addressAttributes)
                 : Address::create($addressAttributes);
 
+            $earnRate = max(0.0, (float) config('shop.loyalty.earn_rate', 1));
+            $pointsEarned = $cart->user_id ? (int) floor($totals->total * $earnRate) : 0;
+
             $order = Order::create([
                 'user_id' => $cart->user_id,
                 'email' => $data['email'],
                 'status' => 'new',
-                'total' => $total,
+                'subtotal' => $totals->subtotal,
+                'discount_total' => $totals->discountTotal(),
+                'coupon_id' => $coupon?->id,
+                'coupon_code' => $totals->couponCode,
+                'coupon_discount' => $totals->couponDiscount,
+                'loyalty_points_used' => $totals->pointsUsed,
+                'loyalty_points_value' => $totals->pointsValue,
+                'loyalty_points_earned' => $pointsEarned,
+                'total' => $totals->total,
                 'shipping_address' => $addressPayload,
                 'shipping_address_id' => $shippingAddress->id,
                 'billing_address' => $data['billing_address'] ?? null,
                 'note' => $data['note'] ?? null,
-                'inventory_committed_at' => now()
+                'inventory_committed_at' => now(),
             ]);
 
-
-            $items = $cart->items->map(fn($it) => new OrderItem([
+            $items = $cart->items->map(fn ($it) => new OrderItem([
                 'product_id' => $it->product_id,
                 'qty' => $it->qty,
                 'price' => $it->price,
             ]));
             $order->items()->saveMany($items);
+
+            if ($coupon) {
+                $coupon->increment('used');
+            }
+
+            if ($cart->user_id && $totals->pointsUsed > 0) {
+                LoyaltyPointTransaction::create([
+                    'user_id' => $cart->user_id,
+                    'order_id' => $order->id,
+                    'type' => LoyaltyPointTransaction::TYPE_REDEEM,
+                    'points' => -$totals->pointsUsed,
+                    'amount' => $totals->pointsValue,
+                    'description' => 'Points redeemed for order ' . $order->number,
+                ]);
+            }
+
+            if ($cart->user_id && $pointsEarned > 0) {
+                LoyaltyPointTransaction::create([
+                    'user_id' => $cart->user_id,
+                    'order_id' => $order->id,
+                    'type' => LoyaltyPointTransaction::TYPE_EARN,
+                    'points' => $pointsEarned,
+                    'amount' => $totals->total,
+                    'description' => 'Points earned from order ' . $order->number,
+                ]);
+            }
 
             $cart->update(['status' => 'ordered']);
 

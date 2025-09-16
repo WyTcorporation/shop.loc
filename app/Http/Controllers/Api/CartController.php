@@ -3,20 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\{Cart, CartItem, Coupon, Product};
+use App\Services\Carts\CartPricingService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\{Cart, CartItem, Product};
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
-    public function getOrCreate(Request $r): JsonResponse
+    public function getOrCreate(Request $request): JsonResponse
     {
-        $id = $r->cookie('cart_id');
-        $cart = $id ? Cart::active()->with('items.product')->find($id) : null;
+        $id = $request->cookie('cart_id');
+        $cart = $id
+            ? Cart::active()->with(['items.product', 'coupon', 'user'])->find($id)
+            : null;
 
-        if (!$cart) {
+        if (! $cart) {
             $cart = Cart::create(['user_id' => auth()->id()]);
+            $cart->load(['items.product', 'coupon', 'user']);
         }
 
         return $this->cartResponse($cart)
@@ -25,39 +31,41 @@ class CartController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $cart = Cart::with('items.product')->findOrFail($id);
+        $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($id);
+
         return $this->cartResponse($cart);
     }
 
-    public function addItem(Request $r, string $id): JsonResponse
+    public function addItem(Request $request, string $id): JsonResponse
     {
-        $data = $r->validate([
+        $data = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'qty' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ]);
-        $qty = (int)($data['qty'] ?? 1);
+        $qty = (int) ($data['qty'] ?? 1);
 
-        $cart = Cart::active()->findOrFail($id);
+        $cart = Cart::active()->with(['items.product', 'coupon', 'user'])->findOrFail($id);
 
         return DB::transaction(function () use ($cart, $data, $qty) {
             $product = Product::lockForUpdate()->findOrFail($data['product_id']);
 
-            if ($qty > (int)$product->stock) {
+            if ($qty > (int) $product->stock) {
                 return response()->json(['message' => 'Not enough stock'], 422);
             }
 
-            $item = CartItem::where('cart_id', $cart->id)
+            $item = CartItem::query()
+                ->where('cart_id', $cart->id)
                 ->where('product_id', $product->id)
                 ->first();
 
             if ($item) {
-                $newQty = min($item->qty + $qty, (int)$product->stock);
+                $newQty = min($item->qty + $qty, (int) $product->stock);
                 $item->update([
                     'qty' => $newQty,
                     'price' => $product->price,
                 ]);
             } else {
-                $item = CartItem::create([
+                CartItem::create([
                     'cart_id' => $cart->id,
                     'product_id' => $product->id,
                     'qty' => $qty,
@@ -65,14 +73,15 @@ class CartController extends Controller
                 ]);
             }
 
-            $cart->load('items.product');
+            $cart->load(['items.product', 'coupon', 'user']);
+
             return $this->cartResponse($cart);
         });
     }
 
-    public function updateItem(Request $r, string $id, CartItem $item): JsonResponse
+    public function updateItem(Request $request, string $id, CartItem $item): JsonResponse
     {
-        $data = $r->validate([
+        $data = $request->validate([
             'qty' => ['required', 'integer', 'min:0', 'max:100000'],
         ]);
 
@@ -83,11 +92,12 @@ class CartController extends Controller
         return DB::transaction(function () use ($data, $item) {
             $product = Product::lockForUpdate()->findOrFail($item->product_id);
 
-            $qty = min((int)$data['qty'], max(0, (int)$product->stock));
+            $qty = min((int) $data['qty'], max(0, (int) $product->stock));
             if ($qty === 0) {
                 $cartId = $item->cart_id;
                 $item->delete();
-                $cart = Cart::with('items.product')->findOrFail($cartId);
+                $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($cartId);
+
                 return $this->cartResponse($cart);
             }
 
@@ -96,7 +106,8 @@ class CartController extends Controller
                 'price' => $product->price,
             ]);
 
-            $cart = Cart::with('items.product')->findOrFail($item->cart_id);
+            $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($item->cart_id);
+
             return $this->cartResponse($cart);
         });
     }
@@ -108,32 +119,113 @@ class CartController extends Controller
         }
 
         $item->delete();
-        $cart = Cart::with('items.product')->findOrFail($id);
+        $cart = Cart::with(['items.product', 'coupon', 'user'])->findOrFail($id);
+
+        return $this->cartResponse($cart);
+    }
+
+    public function applyCoupon(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'cart_id' => ['required', 'uuid', 'exists:carts,id'],
+            'code' => ['nullable', 'string'],
+        ]);
+
+        $cart = Cart::active()->with(['items.product', 'coupon', 'user'])->findOrFail($data['cart_id']);
+
+        if (blank($data['code'])) {
+            $cart->coupon()->dissociate();
+            $cart->coupon_code = null;
+            $cart->save();
+            $cart->setRelation('coupon', null);
+
+            return $this->cartResponse($cart);
+        }
+
+        $code = Str::upper($data['code']);
+        $coupon = Coupon::query()
+            ->whereRaw('UPPER(code) = ?', [$code])
+            ->first();
+
+        if (! $coupon) {
+            throw ValidationException::withMessages([
+                'code' => ['Coupon not found.'],
+            ]);
+        }
+
+        $totals = CartPricingService::calculate($cart, couponOverride: $coupon);
+
+        if (! $totals->coupon) {
+            throw ValidationException::withMessages([
+                'code' => ['Coupon cannot be applied to this cart.'],
+            ]);
+        }
+
+        CartPricingService::syncCartAdjustments($cart, $totals);
+
+        return $this->cartResponse($cart);
+    }
+
+    public function applyPoints(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'cart_id' => ['required', 'uuid', 'exists:carts,id'],
+            'points' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $cart = Cart::active()->with(['items.product', 'coupon', 'user'])->findOrFail($data['cart_id']);
+
+        if (! $cart->user_id) {
+            throw ValidationException::withMessages([
+                'points' => ['Only authenticated users can redeem loyalty points.'],
+            ]);
+        }
+
+        $totals = CartPricingService::calculate($cart, overridePoints: (int) $data['points']);
+        CartPricingService::syncCartAdjustments($cart, $totals);
+
         return $this->cartResponse($cart);
     }
 
     private function cartResponse(Cart $cart): JsonResponse
     {
-        $items = $cart->items->map(function (CartItem $i) {
+        $cart->loadMissing(['items.product', 'coupon', 'user']);
+
+        $items = $cart->items->map(function (CartItem $item) {
             return [
-                'id'         => $i->id,
-                'product_id' => $i->product_id,
-                'name'       => $i->product?->name,
-                'slug'       => $i->product?->slug,
-                'image'      => $i->product?->preview_url,
-                'price'      => (float)$i->price,
-                'qty'        => (int)$i->qty,
-                'line_total' => (float)$i->price * (int)$i->qty,
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'name' => $item->product?->name,
+                'slug' => $item->product?->slug,
+                'image' => $item->product?->preview_url,
+                'price' => (float) $item->price,
+                'qty' => (int) $item->qty,
+                'line_total' => (float) $item->price * (int) $item->qty,
             ];
         })->values();
 
-        $total = $items->sum('line_total');
+        $totals = CartPricingService::calculate($cart);
+        CartPricingService::syncCartAdjustments($cart, $totals);
 
         return response()->json([
-            'id'     => $cart->id,
+            'id' => $cart->id,
             'status' => $cart->status,
-            'items'  => $items,
-            'total'  => $total,
+            'items' => $items,
+            'subtotal' => $totals->subtotal,
+            'discounts' => [
+                'coupon' => [
+                    'code' => $totals->couponCode,
+                    'amount' => $totals->couponDiscount,
+                ],
+                'loyalty_points' => [
+                    'used' => $totals->pointsUsed,
+                    'value' => $totals->pointsValue,
+                ],
+                'total' => $totals->discountTotal(),
+            ],
+            'total' => $totals->total,
+            'available_points' => $totals->availablePoints,
+            'max_redeemable_points' => $totals->maxRedeemablePoints,
         ]);
     }
 }

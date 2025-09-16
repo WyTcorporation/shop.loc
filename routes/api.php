@@ -26,6 +26,9 @@ Route::get('cart/{id}', [CartController::class, 'show']);
 Route::post('cart/{id}/items', [CartController::class, 'addItem']);
 Route::patch('cart/{id}/items/{item}', [CartController::class, 'updateItem']);
 Route::delete('cart/{id}/items/{item}', [CartController::class, 'removeItem']);
+Route::post('cart/apply-coupon', [CartController::class, 'applyCoupon']);
+Route::post('cart/apply-points', [CartController::class, 'applyPoints']);
+
 
 // Checkout
 Route::post('orders', [OrderController::class, 'store']);

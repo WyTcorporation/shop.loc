@@ -55,6 +55,30 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    public function loyaltyPointTransactions(): HasMany
+    {
+        return $this->hasMany(LoyaltyPointTransaction::class);
+    }
+
+    public function loyaltyPointsBalance(): int
+    {
+        return (int) $this->loyalty_points_balance;
+    }
+
+    public function getLoyaltyPointsBalanceAttribute(): int
+    {
+        if (array_key_exists('loyalty_points_balance', $this->attributes)) {
+            return (int) $this->attributes['loyalty_points_balance'];
+        }
+
+        if ($this->relationLoaded('loyaltyPointTransactions')) {
+            return (int) $this->loyaltyPointTransactions->sum('points');
+        }
+
+        return (int) $this->loyaltyPointTransactions()->sum('points');
+    }
+
+
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
