@@ -86,10 +86,10 @@ if (el) {
     createRoot(el).render(
         <React.StrictMode>
             <NotifyProvider autoCloseMs={0}>
-                <CartProvider>
-                    <WishlistProvider>
-                        <LangGate>
-                            <AuthProvider>
+                <AuthProvider>
+                    <CartProvider>
+                        <WishlistProvider>
+                            <LangGate>
                                 <BrowserRouter>
                                     <AppErrorBoundary>
                                         <RouteToastAutoClear/>
@@ -111,10 +111,10 @@ if (el) {
                                         </Routes>
                                     </AppErrorBoundary>
                                 </BrowserRouter>
-                            </AuthProvider>
-                        </LangGate>
-                    </WishlistProvider>
-                </CartProvider>
+                            </LangGate>
+                        </WishlistProvider>
+                    </CartProvider>
+                </AuthProvider>
             </NotifyProvider>
         </React.StrictMode>
     );
