@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Wishlist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class WishlistController extends Controller
 {
@@ -43,7 +44,7 @@ class WishlistController extends Controller
         return response()->json($this->presentProduct($product));
     }
 
-    public function destroy(Request $request, Product $product): JsonResponse
+    public function destroy(Request $request, Product $product): Response
     {
         Wishlist::query()
             ->where('user_id', $request->user()->id)
