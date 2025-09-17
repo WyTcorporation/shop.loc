@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
+use function Pest\Laravel\deleteJson;
 
 it('returns wishlist items for an authenticated user', function () {
     $user = User::factory()->create();
@@ -58,4 +59,19 @@ it('upserts wishlist items when syncing after login', function () {
     getJson('/api/profile/wishlist')
         ->assertOk()
         ->assertJsonCount(1);
+});
+
+it('deletes wishlist items for an authenticated user', function () {
+    $user = User::factory()->create();
+    $product = Product::factory()->createQuietly();
+
+    Wishlist::query()->create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+    ]);
+
+    Sanctum::actingAs($user, [], 'sanctum');
+
+    deleteJson("/api/profile/wishlist/{$product->id}")
+        ->assertNoContent();
 });
