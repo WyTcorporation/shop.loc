@@ -19,6 +19,8 @@ it('sends delivery email once when shipment is delivered', function () {
     Mail::assertSent(OrderDeliveredMail::class, 1);
 
     Mail::assertSent(OrderDeliveredMail::class, function (OrderDeliveredMail $mail) use ($order) {
+        $mail->assertHasTag('order-delivered')->assertHasMetadata('type', 'order');
+
         return $mail->order->is($order);
     });
 });

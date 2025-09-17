@@ -20,6 +20,8 @@ class OrderPlacedMail extends Mailable
     public function build(): self
     {
         return $this->subject("Ваше замовлення #{$this->order->number} прийнято")
+            ->tag('order-placed')
+            ->metadata(['type' => 'order'])
             ->view('emails.orders.placed', [
                 'order' => $this->order->loadMissing(['items.product']),
             ]);
