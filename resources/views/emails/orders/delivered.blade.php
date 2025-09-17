@@ -1,17 +1,56 @@
-@component('mail::message')
-    # It's here!
+@php
+    $heading = __('Замовлення доставлено');
+    $introLines = [
+        __('Замовлення №:number успішно доставлене.', ['number' => $order->number]),
+        __('Сподіваємося, що вам сподобалися покупки. Дякуємо, що обрали :app!', ['app' => config('app.name')]),
+    ];
+    $buttonUrl = config('app.url');
+    $buttonLabel = __('Переглянути замовлення');
 
-    Your order **{{ $order->number }}** has been **delivered**.
+    $total = (float) ($order->total ?? 0);
+    $subtotal = (float) ($order->subtotal ?? $total);
+    $discount = (float) ($order->discount_total ?? 0);
+    $timezone = config('app.timezone', 'UTC');
+    $deliveredAt = $order->shipment?->delivered_at;
+@endphp
 
-    @component('mail::panel')
-        Total: **{{ number_format((float)$order->total, 2) }}**
-        Status: **{{ $order->status }}**
-    @endcomponent
-
-    @component('mail::button', ['url' => config('app.url')])
-        View order
-    @endcomponent
-
-    Cheers,<br>
-    {{ config('app.name') }}
-@endcomponent
+<x-emails.orders.layout
+    :order="$order"
+    :heading="$heading"
+    :intro-lines="$introLines"
+    :button-url="$buttonUrl"
+    :button-label="$buttonLabel"
+>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tbody>
+        <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('Номер замовлення') }}</td>
+            <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#111;font-weight:600;">{{ $order->number }}</td>
+        </tr>
+        <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('Сума товарів') }}</td>
+            <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#111;font-weight:600;">{{ \App\Support\OrderMailFormatter::money($order, $subtotal) }}</td>
+        </tr>
+        @if($discount > 0)
+            <tr>
+                <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('Знижки') }}</td>
+                <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#d20000;font-weight:600;">−{{ \App\Support\OrderMailFormatter::money($order, $discount) }}</td>
+            </tr>
+        @endif
+        <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('До сплати') }}</td>
+            <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#111;font-weight:700;">{{ \App\Support\OrderMailFormatter::money($order, $total) }}</td>
+        </tr>
+        <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('Статус') }}</td>
+            <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#0b7a29;font-weight:700;">{{ __('Доставлено') }}</td>
+        </tr>
+        @if($deliveredAt)
+            <tr>
+                <td style="padding:10px 0;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('Дата доставки') }}</td>
+                <td align="right" style="padding:10px 0;font-size:14px;color:#111;font-weight:600;">{{ $deliveredAt->timezone($timezone)->format('d.m.Y H:i') }}</td>
+            </tr>
+        @endif
+        </tbody>
+    </table>
+</x-emails.orders.layout>

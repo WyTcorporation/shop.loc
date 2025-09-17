@@ -12,9 +12,11 @@ class OrderDeliveredMail extends Mailable
     public function build()
     {
         return $this
-            ->subject("Order {$this->order->number} is delivered")
+            ->subject("Замовлення {$this->order->number} доставлено")
             ->tag('order-delivered')
             ->metadata(['type' => 'order'])
-            ->markdown('emails.orders.delivered', ['order' => $this->order]);
+            ->view('emails.orders.delivered', [
+                'order' => $this->order->loadMissing(['shipment']),
+            ]);
     }
 }
