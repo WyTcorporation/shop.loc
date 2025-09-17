@@ -12,6 +12,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Listeners\ClaimGuestOrders;
 use App\Listeners\MergeGuestCart;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Auth\Events\Login;
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
         Order::observe(OrderObserver::class);
         Currency::observe(CurrencyObserver::class);
         Event::listen(Login::class, MergeGuestCart::class);
+        Event::listen(Login::class, ClaimGuestOrders::class);
 
         RateLimiter::for('api', function (Request $request) {
             return [
