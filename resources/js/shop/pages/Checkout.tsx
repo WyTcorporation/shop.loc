@@ -50,6 +50,17 @@ type AddressFormState = {
 
 type AddressErrors = Partial<Record<'email' | keyof AddressFormState, string>>;
 
+type BillingFormState = {
+    name: string;
+    company: string;
+    tax_id: string;
+    city: string;
+    addr: string;
+    postal_code: string;
+};
+
+type BillingErrors = Partial<Record<keyof BillingFormState, string>>;
+
 const stepOrder: CheckoutStep[] = ['address', 'delivery', 'payment'];
 const stepLabels: Record<CheckoutStep, string> = {
     address: 'Адреса',
@@ -109,6 +120,15 @@ const emptyAddress: AddressFormState = {
     phone: '',
 };
 
+const emptyBilling: BillingFormState = {
+    name: '',
+    company: '',
+    tax_id: '',
+    city: '',
+    addr: '',
+    postal_code: '',
+};
+
 export default function CheckoutPage() {
     const nav = useNavigate();
     const { error: notifyError, success: notifySuccess } = useNotify();
@@ -119,6 +139,9 @@ export default function CheckoutPage() {
     const [email, setEmail] = useState('');
     const [addressForm, setAddressForm] = useState<AddressFormState>({ ...emptyAddress });
     const [addressErrors, setAddressErrors] = useState<AddressErrors>({});
+    const [billingEnabled, setBillingEnabled] = useState(false);
+    const [billingForm, setBillingForm] = useState<BillingFormState>({ ...emptyBilling });
+    const [billingErrors, setBillingErrors] = useState<BillingErrors>({});
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [addressesError, setAddressesError] = useState<string | null>(null);
@@ -244,6 +267,38 @@ export default function CheckoutPage() {
         });
     };
 
+    const handleBillingInputChange = (field: keyof BillingFormState) => (
+        event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const value = event.target.value;
+        setBillingForm((prev) => ({ ...prev, [field]: value }));
+        setBillingErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    };
+
+    const handleToggleBilling = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = event.target.checked;
+        setBillingEnabled(checked);
+        if (!checked) {
+            setBillingForm({ ...emptyBilling });
+            setBillingErrors({});
+        }
+    };
+
+    const handleCopyShippingToBilling = () => {
+        setBillingForm((prev) => ({
+            ...prev,
+            name: addressForm.name,
+            city: addressForm.city,
+            addr: addressForm.addr,
+            postal_code: addressForm.postal_code,
+        }));
+    };
+
     const handleSelectAddress = (addr: Address) => {
         setSelectedAddressId(addr.id);
         setAddressForm({
@@ -259,6 +314,7 @@ export default function CheckoutPage() {
     const handleAddressSubmit = (event: React.FormEvent) => {
         event.preventDefault();
         const errors: AddressErrors = {};
+        const billingIssues: BillingErrors = {};
         const trimmedEmail = email.trim();
         if (!trimmedEmail) {
             errors.email = 'Вкажіть email для підтвердження.';
@@ -269,8 +325,18 @@ export default function CheckoutPage() {
         if (!addressForm.city.trim()) errors.city = 'Вкажіть місто доставки.';
         if (!addressForm.addr.trim()) errors.addr = 'Вкажіть адресу доставки.';
 
+        if (billingEnabled) {
+            if (!billingForm.name.trim()) billingIssues.name = 'Вкажіть імʼя платника.';
+            if (!billingForm.city.trim()) billingIssues.city = 'Вкажіть місто платника.';
+            if (!billingForm.addr.trim()) billingIssues.addr = 'Вкажіть адресу платника.';
+            if (billingForm.company.trim() && !billingForm.tax_id.trim()) {
+                billingIssues.tax_id = 'Вкажіть податковий номер компанії.';
+            }
+        }
+
         setAddressErrors(errors);
-        if (Object.keys(errors).length === 0) {
+        setBillingErrors(billingIssues);
+        if (Object.keys(errors).length === 0 && Object.keys(billingIssues).length === 0) {
             setStep('delivery');
         }
     };
@@ -309,6 +375,18 @@ export default function CheckoutPage() {
                 ...(addressForm.postal_code.trim() ? { postal_code: addressForm.postal_code.trim() } : {}),
                 ...(addressForm.phone.trim() ? { phone: addressForm.phone.trim() } : {}),
             };
+            const billing = billingEnabled
+                ? {
+                      name: billingForm.name.trim(),
+                      city: billingForm.city.trim(),
+                      addr: billingForm.addr.trim(),
+                      ...(billingForm.company.trim() ? { company: billingForm.company.trim() } : {}),
+                      ...(billingForm.tax_id.trim() ? { tax_id: billingForm.tax_id.trim() } : {}),
+                      ...(billingForm.postal_code.trim()
+                          ? { postal_code: billingForm.postal_code.trim() }
+                          : {}),
+                  }
+                : null;
             const delivery = deliveryOptions.find((opt) => opt.id === deliveryMethod);
             const noteParts = [delivery ? `Доставка: ${delivery.title}` : null];
             if (deliveryComment.trim()) {
@@ -317,6 +395,7 @@ export default function CheckoutPage() {
             const payload = {
                 email: trimmedEmail,
                 shipping_address: shipping,
+                ...(billing ? { billing_address: billing } : {}),
                 note: noteParts.filter(Boolean).join('\n') || undefined,
             };
             const created = await OrdersApi.create(payload);
@@ -525,6 +604,136 @@ export default function CheckoutPage() {
                         </div>
                     </div>
 
+                    <div className="space-y-4 rounded-xl border border-gray-200 p-4">
+                        <label className="flex items-center gap-3 text-sm font-medium text-gray-700">
+                            <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-gray-300"
+                                checked={billingEnabled}
+                                onChange={handleToggleBilling}
+                            />
+                            Потрібні реквізити для рахунку
+                        </label>
+
+                        {billingEnabled && (
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <p className="text-sm text-gray-600 flex-1">
+                                        Вкажіть платіжні дані для рахунку та документів.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyShippingToBilling}
+                                        className="text-sm font-medium text-blue-600 hover:underline"
+                                    >
+                                        Заповнити як для доставки
+                                    </button>
+                                </div>
+                                <div className="grid gap-4">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-name">
+                                            Імʼя / відповідальна особа
+                                        </label>
+                                        <input
+                                            id="billing-name"
+                                            className={`mt-1 w-full rounded-lg border px-3 py-2 ${
+                                                billingErrors.name ? 'border-red-500' : 'border-gray-300'
+                                            }`}
+                                            value={billingForm.name}
+                                            onChange={handleBillingInputChange('name')}
+                                            placeholder="Імʼя Прізвище"
+                                            aria-invalid={billingErrors.name ? 'true' : 'false'}
+                                        />
+                                        {billingErrors.name && (
+                                            <p className="text-sm text-red-600">{billingErrors.name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-company">
+                                            Компанія (необовʼязково)
+                                        </label>
+                                        <input
+                                            id="billing-company"
+                                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                            value={billingForm.company}
+                                            onChange={handleBillingInputChange('company')}
+                                            placeholder="ТОВ «Приклад»"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-tax">
+                                            Податковий номер (ІПН / VAT)
+                                        </label>
+                                        <input
+                                            id="billing-tax"
+                                            className={`mt-1 w-full rounded-lg border px-3 py-2 ${
+                                                billingErrors.tax_id ? 'border-red-500' : 'border-gray-300'
+                                            }`}
+                                            value={billingForm.tax_id}
+                                            onChange={handleBillingInputChange('tax_id')}
+                                            placeholder="1234567890"
+                                            aria-invalid={billingErrors.tax_id ? 'true' : 'false'}
+                                        />
+                                        {billingErrors.tax_id && (
+                                            <p className="text-sm text-red-600">{billingErrors.tax_id}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-city">
+                                            Місто
+                                        </label>
+                                        <input
+                                            id="billing-city"
+                                            className={`mt-1 w-full rounded-lg border px-3 py-2 ${
+                                                billingErrors.city ? 'border-red-500' : 'border-gray-300'
+                                            }`}
+                                            value={billingForm.city}
+                                            onChange={handleBillingInputChange('city')}
+                                            placeholder="Київ"
+                                            aria-invalid={billingErrors.city ? 'true' : 'false'}
+                                        />
+                                        {billingErrors.city && (
+                                            <p className="text-sm text-red-600">{billingErrors.city}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-addr">
+                                            Адреса платника
+                                        </label>
+                                        <input
+                                            id="billing-addr"
+                                            className={`mt-1 w-full rounded-lg border px-3 py-2 ${
+                                                billingErrors.addr ? 'border-red-500' : 'border-gray-300'
+                                            }`}
+                                            value={billingForm.addr}
+                                            onChange={handleBillingInputChange('addr')}
+                                            placeholder="вул. Шевченка, 1"
+                                            aria-invalid={billingErrors.addr ? 'true' : 'false'}
+                                        />
+                                        {billingErrors.addr && (
+                                            <p className="text-sm text-red-600">{billingErrors.addr}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-postal">
+                                            Поштовий індекс (необовʼязково)
+                                        </label>
+                                        <input
+                                            id="billing-postal"
+                                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                            value={billingForm.postal_code}
+                                            onChange={handleBillingInputChange('postal_code')}
+                                            placeholder="01001"
+                                        />
+                                        {billingErrors.postal_code && (
+                                            <p className="text-sm text-red-600">{billingErrors.postal_code}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex justify-end gap-3">
                         <button
                             type="submit"
@@ -702,6 +911,40 @@ export default function CheckoutPage() {
                                     підтвердження замовлення.
                                 </p>
                                 <PayOrder number={order.number} onPaid={handlePaid} />
+                            </div>
+
+                            <div className="space-y-3">
+                                <h2 className="text-lg font-semibold">Платіжні дані</h2>
+                                <div className="rounded-xl border border-gray-200 p-4 text-sm text-gray-700">
+                                    {order.billing_address ? (
+                                        <>
+                                            {order.billing_address.company && (
+                                                <div className="font-medium">{order.billing_address.company}</div>
+                                            )}
+                                            {order.billing_address.name && (
+                                                <div>{order.billing_address.name}</div>
+                                            )}
+                                            {order.billing_address.tax_id && (
+                                                <div className="text-xs text-gray-500">
+                                                    Податковий номер: {order.billing_address.tax_id}
+                                                </div>
+                                            )}
+                                            {order.billing_address.city && (
+                                                <div>{order.billing_address.city}</div>
+                                            )}
+                                            {order.billing_address.addr && (
+                                                <div>{order.billing_address.addr}</div>
+                                            )}
+                                            {order.billing_address.postal_code && (
+                                                <div>{order.billing_address.postal_code}</div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="text-gray-600">
+                                            Реквізити для рахунку збігаються з адресою доставки.
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="space-y-3">
