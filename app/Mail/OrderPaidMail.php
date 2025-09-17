@@ -12,7 +12,7 @@ class OrderPaidMail extends Mailable
     public function build()
     {
         return $this
-            ->subject("Order {$this->order->number} is paid")
-            ->markdown('emails.orders.paid', ['order' => $this->order]);
+            ->subject("Замовлення {$this->order->number} оплачене")
+            ->view('emails.orders.paid', ['order' => $this->order]);
     }
 }

@@ -12,7 +12,7 @@ class OrderShippedMail extends Mailable
     public function build()
     {
         return $this
-            ->subject("Order {$this->order->number} is shipped")
-            ->markdown('emails.orders.shipped', ['order' => $this->order]);
+            ->subject("Замовлення {$this->order->number} відправлено")
+            ->view('emails.orders.shipped', ['order' => $this->order]);
     }
 }
