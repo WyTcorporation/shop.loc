@@ -55,6 +55,8 @@ jobs:
           tools: composer
       - name: Install composer deps
         run: composer install --no-interaction --prefer-dist
+      - name: Generate Wayfinder actions
+        run: php artisan wayfinder:generate --with-form
       - uses: actions/setup-node@v4
         with:
           node-version: 20
