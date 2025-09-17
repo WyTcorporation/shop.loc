@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PasswordChangedMail;
 use App\Mail\VerifyEmailMail;
 use App\Mail\WelcomeMail;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
@@ -155,13 +157,24 @@ class AuthController extends Controller
             $user->email_verified_at = null;
         }
 
+        $passwordChanged = false;
+
         if (! empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
+            $passwordChanged = ! Hash::check($data['password'], $user->password);
+
+            if ($passwordChanged) {
+                $user->password = Hash::make($data['password']);
+            }
         }
 
         $user->save();
         $user->refresh();
         $user->loadMissing('twoFactorSecret');
+
+        if ($passwordChanged) {
+            Mail::to($user)->queue(new PasswordChangedMail($user));
+            $this->maybeAlertSupportAboutPasswordChange($user);
+        }
 
         return response()->json($this->formatUser($user));
     }
@@ -203,5 +216,18 @@ class AuthController extends Controller
         Mail::to($user)->queue(new VerifyEmailMail($user, $verificationUrl));
 
         return $verificationUrl;
+    }
+
+    private function maybeAlertSupportAboutPasswordChange(User $user): void
+    {
+        if (! config('services.support.alert_password_changes')) {
+            return;
+        }
+
+        Log::channel(config('services.support.channel', config('logging.default')))
+            ->warning('User password changed', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
     }
 }
