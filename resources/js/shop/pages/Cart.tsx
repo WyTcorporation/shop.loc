@@ -29,18 +29,40 @@ export default function CartPage() {
 
             <div className="space-y-3">
                 {cart.items.map(it => {
-                    const p = (it as any).product ?? it; // 🔁 підтримка обох форм
+                    const embeddedProduct = (it as any).product ?? null;
+                    const p = embeddedProduct ?? it; // 🔁 підтримка обох форм
                     const preview = p.preview_url ?? p.images?.[0]?.url;
                     const line = Number(p.price || it.price || 0) * Number(it.qty || 0);
                     const vendor = (p as any).vendor ?? (it as any).vendor ?? null;
+                    const slug = embeddedProduct?.slug ?? p.slug ?? (it as any).slug ?? null;
+                    const productUrl = slug ? `/product/${slug}` : null;
+                    const namePriceContent = (
+                        <>
+                            {preview ? (
+                                <img src={preview} className="w-16 h-16 object-cover rounded shrink-0" />
+                            ) : (
+                                <div className="w-16 h-16 bg-gray-100 rounded shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">{p.name ?? it.name}</div>
+                                <div className="text-sm text-gray-600">{money(p.price ?? it.price)}</div>
+                            </div>
+                        </>
+                    );
                     return (
                         <div key={it.id} className="flex items-center gap-3 border rounded p-3">
-                            {preview ? <img src={preview} className="w-16 h-16 object-cover rounded" /> : <div className="w-16 h-16 bg-gray-100 rounded" />}
-                            <div className="flex-1">
-                                <div className="font-medium">{p.name ?? it.name}</div>
-                                <div className="text-sm text-gray-600">{money(p.price ?? it.price)}</div>
+                            <div className="flex flex-col flex-1 min-w-0 gap-1">
+                                {productUrl ? (
+                                    <Link to={productUrl} className="flex items-center gap-3 min-w-0">
+                                        {namePriceContent}
+                                    </Link>
+                                ) : (
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        {namePriceContent}
+                                    </div>
+                                )}
                                 {vendor && (
-                                    <div className="mt-1 text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 mt-1">
                                         Продавець: {vendor.name ?? '—'}{' '}
                                         {vendor.id && (
                                             <Link className="text-blue-600 hover:underline" to={`/seller/${vendor.id}`}>
