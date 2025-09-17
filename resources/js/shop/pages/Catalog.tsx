@@ -295,7 +295,7 @@ export default function Catalog() {
                             placeholder="Ціна від"
                             value={minPrice ?? ''}
                             onChange={(e) => setMinPrice(e.target.value === '' ? undefined : Number(e.target.value))}
-                            className="w-28"
+                            className="w-48"
                         />
                         <Input
                             data-testid="price-max"
@@ -303,7 +303,7 @@ export default function Catalog() {
                             placeholder="до"
                             value={maxPrice ?? ''}
                             onChange={(e) => setMaxPrice(e.target.value === '' ? undefined : Number(e.target.value))}
-                            className="w-24"
+                            className="w-32"
                         />
                         <Button
                             data-testid="apply-price"
