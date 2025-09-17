@@ -93,4 +93,35 @@ describe('OrderConfirmation billing details', () => {
 
         expect(screen.queryByText('Платіжні дані')).not.toBeInTheDocument();
     });
+
+    it('shows coupon and totals summary when discount applied', async () => {
+        renderOrderPage({
+            ...baseOrder,
+            number: 'ORD-003',
+            items: [
+                {
+                    id: 11,
+                    product_id: 5,
+                    qty: 2,
+                    price: 50,
+                    product: null,
+                },
+            ],
+            subtotal: 100,
+            discount_total: 15,
+            coupon_code: 'SAVE15',
+            coupon_discount: 15,
+            total: 85,
+        });
+
+        await screen.findByTestId('order-confirmed');
+
+        expect(screen.getByText('Разом за товари')).toBeInTheDocument();
+        expect(screen.getByText('Купон')).toBeInTheDocument();
+        expect(screen.getByText('SAVE15')).toBeInTheDocument();
+        expect(screen.getByText('Знижка')).toBeInTheDocument();
+        expect(screen.getByText(/−15,00/)).toBeInTheDocument();
+        expect(screen.getByText('До сплати')).toBeInTheDocument();
+        expect(screen.getByText(/85,00/)).toBeInTheDocument();
+    });
 });
