@@ -26,7 +26,7 @@ use function formatCurrency;
 
 class ItemsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'Items';
+    protected static string $relationship = 'items';
 
     public function form(Schema $schema): Schema
     {
