@@ -50,6 +50,8 @@ class MinePanelProvider extends PanelProvider
             ->navigationGroups([
                 'Catalog',
                 'Sales',
+                'Inventory',
+                'Settings',
             ])
             ->brandName('Shop Admin')
             ->discoverResources(in: app_path('Filament/Mine/Resources'), for: 'App\Filament\Mine\Resources')

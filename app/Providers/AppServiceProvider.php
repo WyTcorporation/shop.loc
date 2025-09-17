@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Currency;
 use App\Models\Order;
+use App\Models\Warehouse;
 use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
+use App\Observers\CurrencyObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -17,6 +20,8 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use App\Policies\ProductPolicy;
 use App\Policies\OrderPolicy;
+use App\Policies\WarehousePolicy;
+use App\Policies\CurrencyPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Product::observe(ProductObserver::class);
         Order::observe(OrderObserver::class);
+        Currency::observe(CurrencyObserver::class);
         Event::listen(Login::class, MergeGuestCart::class);
 
         RateLimiter::for('api', function (Request $request) {
@@ -50,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(Warehouse::class, WarehousePolicy::class);
+        Gate::policy(Currency::class, CurrencyPolicy::class);
 
         if (Config::get('scout.driver') === 'meilisearch') {
             Product::created(fn($p) => $p->searchable());
