@@ -41,11 +41,55 @@ const DEFAULT_LOCALE_OPTIONS: Option[] = [
     { value: 'en', label: 'English' },
 ];
 
-const DEFAULT_CURRENCY_OPTIONS: Option[] = [
-    { value: 'EUR', label: 'EUR €' },
-    { value: 'USD', label: 'USD $' },
-    { value: 'UAH', label: 'UAH ₴' },
-];
+const FALLBACK_BASE_CURRENCY = { code: 'EUR', symbol: '€' } as const;
+
+function readBaseCurrencyMeta(): { code: string; symbol: string } {
+    if (typeof document !== 'undefined') {
+        const { baseCurrency, baseCurrencySymbol } = document.documentElement.dataset;
+
+        if (baseCurrency) {
+            const code = baseCurrency.trim().toUpperCase();
+            const symbol = (baseCurrencySymbol ?? '').trim();
+
+            return {
+                code: code || FALLBACK_BASE_CURRENCY.code,
+                symbol: symbol || code || FALLBACK_BASE_CURRENCY.symbol,
+            };
+        }
+    }
+
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as Record<string, unknown>).APP === 'object') {
+        const app = (globalThis as Record<string, any>).APP;
+        const code = typeof app?.baseCurrency === 'string' ? app.baseCurrency.trim().toUpperCase() : '';
+        const symbol = typeof app?.baseCurrencySymbol === 'string' ? app.baseCurrencySymbol.trim() : '';
+
+        if (code) {
+            return {
+                code,
+                symbol: symbol || code,
+            };
+        }
+    }
+
+    return FALLBACK_BASE_CURRENCY;
+}
+
+function buildDefaultCurrencyOptions(): Option[] {
+    const base = readBaseCurrencyMeta();
+    const baseOption: Option = {
+        value: base.code,
+        label: `${base.code} ${base.symbol}`.trim(),
+    };
+
+    const extras: Option[] = [
+        { value: 'USD', label: 'USD $' },
+        { value: 'UAH', label: 'UAH ₴' },
+    ];
+
+    return [baseOption, ...extras.filter((option) => option.value !== baseOption.value)];
+}
+
+const DEFAULT_CURRENCY_OPTIONS: Option[] = buildDefaultCurrencyOptions();
 
 const LOCALE_STORAGE_KEY = 'app.locale';
 const CURRENCY_STORAGE_KEY = 'app.currency';

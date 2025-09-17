@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html
+    lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    @class(['dark' => ($appearance ?? 'system') == 'dark'])
+    data-base-currency="{{ baseCurrency() }}"
+    data-base-currency-symbol="{{ currencySymbol() }}"
+>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,6 +34,13 @@
                 background-color: oklch(0.145 0 0);
             }
         </style>
+
+        <script>
+            window.APP = Object.assign({}, window.APP, {
+                baseCurrency: @js(baseCurrency()),
+                baseCurrencySymbol: @js(currencySymbol()),
+            });
+        </script>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 

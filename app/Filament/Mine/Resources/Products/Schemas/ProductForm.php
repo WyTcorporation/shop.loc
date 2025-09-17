@@ -2,12 +2,13 @@
 
 namespace App\Filament\Mine\Resources\Products\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
-use Filament\Forms\Components\FileUpload;
+use function currencySymbol;
 
 class ProductForm
 {
@@ -43,7 +44,7 @@ class ProductForm
                 TextInput::make('price')
                     ->required()
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix(currencySymbol()),
                 TextInput::make('price_old')
                     ->numeric(),
                 Toggle::make('is_active')

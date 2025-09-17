@@ -5,6 +5,7 @@ namespace App\Filament\Mine\Resources\Orders\RelationManagers;
 use App\Enums\OrderStatus;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Filament\Mine\Resources\Orders\Pages\EditOrder;
 use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -20,7 +21,8 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use App\Filament\Mine\Resources\Orders\Pages\EditOrder;
+use function currencySymbol;
+use function formatCurrency;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -28,6 +30,8 @@ class ItemsRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
+        $symbol = currencySymbol($this->getOwnerRecord()?->currency);
+
         return $schema
             ->components([
                 Select::make('product_id')
@@ -51,7 +55,7 @@ class ItemsRelationManager extends RelationManager
                     ->numeric()
                     ->rule('decimal:0,2')
                     ->required()
-                    ->prefix('₴'),
+                    ->prefix($symbol),
             ])->columns(3);
     }
 
@@ -63,10 +67,12 @@ class ItemsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('product.name')->label('Product'),
                 TextColumn::make('qty'),
-                TextColumn::make('price')->money('usd'),
+                TextColumn::make('price')
+                    ->state(fn (OrderItem $record) => formatCurrency($record->price, $record->order?->currency))
+                    ->label('Price'),
                 TextColumn::make('subtotal')
                     ->label('Subtotal')
-                    ->state(fn ($record) => number_format($record->qty * (float) $record->price, 2)),
+                    ->state(fn (OrderItem $record) => formatCurrency($record->qty * (float) $record->price, $record->order?->currency)),
             ])
             ->filters([
                 //

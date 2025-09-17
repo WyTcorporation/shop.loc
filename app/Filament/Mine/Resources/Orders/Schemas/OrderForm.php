@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use function currencySymbol;
 
 
 class OrderForm
@@ -60,7 +61,7 @@ class OrderForm
 
                     TextInput::make('total')
                         ->label('Total')
-                        ->prefix('₴')
+                        ->prefix(fn (?Order $record) => currencySymbol($record?->currency))
                         ->disabled()
                         ->dehydrated(false)
 
