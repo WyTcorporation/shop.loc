@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Models\Currency;
 use App\Models\Order;
+use App\Models\Shipment;
 use App\Models\Warehouse;
 use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
 use App\Observers\CurrencyObserver;
+use App\Observers\ShipmentObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
         Product::observe(ProductObserver::class);
         Order::observe(OrderObserver::class);
         Currency::observe(CurrencyObserver::class);
+        Shipment::observe(ShipmentObserver::class);
         Event::listen(Login::class, MergeGuestCart::class);
         Event::listen(Login::class, ClaimGuestOrders::class);
 

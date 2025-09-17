@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Mail\OrderDeliveredMail;
 use App\Mail\OrderPaidMail;
 use App\Mail\OrderShippedMail;
 use App\Models\Order;
@@ -29,9 +30,10 @@ class SendOrderStatusMail implements ShouldQueue
         }
 
         match ($this->status) {
-            'paid'    => Mail::to($order->email)->send(new OrderPaidMail($order)),
-            'shipped' => Mail::to($order->email)->send(new OrderShippedMail($order)),
-            default   => null,
+            'paid'      => Mail::to($order->email)->send(new OrderPaidMail($order)),
+            'shipped'   => Mail::to($order->email)->send(new OrderShippedMail($order)),
+            'delivered' => Mail::to($order->email)->send(new OrderDeliveredMail($order)),
+            default     => null,
         };
     }
 }
