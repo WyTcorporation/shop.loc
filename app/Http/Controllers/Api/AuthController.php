@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\VerifyEmailMail;
 use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\Auth\TwoFactorService;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -32,9 +33,9 @@ class AuthController extends Controller
 
         $user->loadMissing('twoFactorSecret');
 
-        event(new Registered($user));
-        $user->sendEmailVerificationNotification();
-        Mail::to($user)->queue(new WelcomeMail($user));
+        $verificationUrl = $this->queueEmailVerification($user);
+
+        Mail::to($user)->queue(new WelcomeMail($user, $verificationUrl));
 
         $token = $user->createToken('shop')->plainTextToken;
 
@@ -57,7 +58,9 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user->sendEmailVerificationNotification();
+        if (! $user->hasVerifiedEmail()) {
+            $this->queueEmailVerification($user);
+        }
 
         return response()->json([
             'message' => 'Verification link sent.',
@@ -184,5 +187,21 @@ class AuthController extends Controller
             'two_factor_enabled' => $user->two_factor_enabled,
             'two_factor_confirmed_at' => $user->two_factor_confirmed_at,
         ];
+    }
+
+    private function queueEmailVerification(User $user): string
+    {
+        $verificationUrl = URL::temporarySignedRoute(
+            'api.email.verify',
+            now()->addMinutes(config('auth.verification.expire', 60)),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1($user->getEmailForVerification()),
+            ]
+        );
+
+        Mail::to($user)->queue(new VerifyEmailMail($user, $verificationUrl));
+
+        return $verificationUrl;
     }
 }

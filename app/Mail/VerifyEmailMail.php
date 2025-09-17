@@ -8,20 +8,20 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class WelcomeMail extends Mailable implements ShouldQueue
+class VerifyEmailMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public User $user, public ?string $verificationUrl = null)
+    public function __construct(public User $user, public string $verificationUrl)
     {
     }
 
     public function build(): self
     {
-        return $this->subject('Ласкаво просимо до Shop')
-            ->tag('auth-welcome')
+        return $this->subject('Підтвердіть електронну адресу для Shop')
+            ->tag('auth-verify-email')
             ->metadata(['type' => 'auth'])
-            ->view('emails.auth.welcome', [
+            ->view('emails.auth.verify-email', [
                 'user' => $this->user,
                 'verificationUrl' => $this->verificationUrl,
             ]);

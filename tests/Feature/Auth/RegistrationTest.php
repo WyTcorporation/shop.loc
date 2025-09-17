@@ -1,10 +1,9 @@
 <?php
 
+use App\Mail\VerifyEmailMail;
 use App\Mail\WelcomeMail;
 use App\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
     config(['auth.guards.sanctum' => [
@@ -13,8 +12,7 @@ beforeEach(function () {
     ]]);
 });
 
-it('sends verification notification and welcome mail when registering', function () {
-    Notification::fake();
+it('sends verification and welcome mails when registering', function () {
     Mail::fake();
 
     $response = $this->postJson('/api/auth/register', [
@@ -27,9 +25,16 @@ it('sends verification notification and welcome mail when registering', function
     $user = User::where('email', 'jane@example.com')->first();
     expect($user)->not->toBeNull();
 
-    Notification::assertSentTo($user, VerifyEmail::class);
+    Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
+        expect($mail->verificationUrl)->toBeString();
+
+        return $mail->hasTo($user->email);
+    });
 
     Mail::assertQueued(WelcomeMail::class, function (WelcomeMail $mail) use ($user) {
+        expect($mail->verificationUrl)->toBeString();
+        expect($mail->render())->toContain(e($mail->verificationUrl));
+
         return $mail->hasTo($user->email);
     });
 
@@ -47,7 +52,7 @@ it('sends verification notification and welcome mail when registering', function
 });
 
 it('resends the verification email for authenticated users', function () {
-    Notification::fake();
+    Mail::fake();
 
     $user = User::factory()->unverified()->create();
 
@@ -57,5 +62,35 @@ it('resends the verification email for authenticated users', function () {
         ->assertStatus(202)
         ->assertJson(['message' => 'Verification link sent.']);
 
-    Notification::assertSentTo($user->fresh(), VerifyEmail::class);
+    Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
+        return $mail->hasTo($user->email);
+    });
+});
+
+it('verifies the email address via the API endpoint', function () {
+    Mail::fake();
+
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user, 'sanctum');
+
+    $this->postJson('/api/email/resend')->assertStatus(202);
+
+    $verificationUrl = null;
+
+    Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user, &$verificationUrl) {
+        $verificationUrl = $mail->verificationUrl;
+
+        expect($mail->render())->toContain(e($mail->verificationUrl));
+
+        return $mail->hasTo($user->email);
+    });
+
+    expect($verificationUrl)->not->toBeNull();
+
+    $this->getJson($verificationUrl)
+        ->assertOk()
+        ->assertJson(['message' => 'Електронну адресу підтверджено.']);
+
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });
