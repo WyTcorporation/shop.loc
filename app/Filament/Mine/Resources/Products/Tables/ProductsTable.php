@@ -3,12 +3,11 @@
 namespace App\Filament\Mine\Resources\Products\Tables;
 
 use App\Models\Product;
+use App\Models\Vendor;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -16,6 +15,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use function formatCurrency;
 
 class ProductsTable
 {
@@ -23,7 +23,7 @@ class ProductsTable
     {
         return $table
             ->query(function (): Builder {
-                $query = Product::query()->with(['images', 'category']);
+                $query = Product::query()->with(['images', 'category', 'stocks']);
 
                 if ($vendor = Auth::user()?->vendor) {
                     $query->where('vendor_id', $vendor->id);
@@ -108,21 +108,32 @@ class ProductsTable
 //                    })
 //                    ->tooltip(fn ($state) => is_array($state) ? json_encode($state, JSON_UNESCAPED_UNICODE) : (string) $state)
 //                    ->wrap(),
-                TextInputColumn::make('stock')
-                    ->label('Stock')
-                    ->rules(['required', 'integer', 'min:0'])
-                    ->sortable()
-                    ->extraAttributes(['class' => 'text-right'])
-                    ->width('100px'),
+                TextColumn::make('vendor.name')
+                    ->label('Vendor')
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query
+                        ->orderBy(
+                            Vendor::query()
+                                ->select('name')
+                                ->whereColumn('vendors.id', Product::query()->qualifyColumn('vendor_id')),
+                            $direction,
+                        ))
+                    ->searchable()
+                    ->visible(fn () => Auth::user()?->vendor === null),
 
-                TextInputColumn::make('price')
-                    ->label('Price')
-                    ->rules(['required', 'decimal:0,2', 'min:0'])
-                    ->type('number')
-                    ->step('0.01')
+                TextColumn::make('stock')
+                    ->label('Stock')
+                    ->state(fn (Product $record): int => $record->relationLoaded('stocks')
+                        ? (int) $record->stocks->sum('available')
+                        : (int) $record->stock)
+                    ->numeric()
                     ->sortable()
-                    ->width('120px')
-                    ->extraAttributes(['class' => 'text-right']),
+                    ->extraAttributes(['class' => 'text-right tabular-nums font-mono']),
+
+                TextColumn::make('price')
+                    ->label('Price')
+                    ->formatStateUsing(fn ($state): string => formatCurrency($state))
+                    ->sortable()
+                    ->extraAttributes(['class' => 'text-right tabular-nums font-mono']),
 
                 ToggleColumn::make('is_active')
                     ->label('Active')
