@@ -28,6 +28,12 @@ type Order = {
     email: string;
     status?: string | null;
     payment_status?: string | null;
+    subtotal?: number | string | null;
+    discount_total?: number | string | null;
+    coupon_code?: string | null;
+    coupon_discount?: number | string | null;
+    loyalty_points_used?: number | string | null;
+    loyalty_points_value?: number | string | null;
     items: OrderItem[];
     shipment?: Shipment | null;
     shipping_address?: {
@@ -86,7 +92,26 @@ export default function OrderConfirmation() {
     if (!order) return <div className="max-w-6xl mx-auto p-4">Замовлення не знайдено.</div>;
 
     const items = order.items ?? [];
+    const toNumber = (value: number | string | null | undefined) => {
+        const parsed = Number(value ?? 0);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
     const itemsTotal = items.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
+    const subtotal = order.subtotal != null ? toNumber(order.subtotal) : itemsTotal;
+    const couponCode = (order.coupon_code ?? '').trim() || null;
+    const couponDiscount = toNumber(order.coupon_discount);
+    const loyaltyPointsUsed = toNumber(order.loyalty_points_used);
+    const loyaltyPointsValue = toNumber(order.loyalty_points_value);
+    const discountTotal = Math.max(
+        0,
+        order.discount_total != null ? toNumber(order.discount_total) : couponDiscount + loyaltyPointsValue,
+    );
+    const hasCouponCode = Boolean(couponCode);
+    const hasDiscount = discountTotal > 0;
+    const hasLoyaltyPoints = loyaltyPointsUsed > 0;
+    const loyaltyPointsDisplay = hasLoyaltyPoints
+        ? new Intl.NumberFormat('uk-UA').format(loyaltyPointsUsed)
+        : '';
 
     const isPaid =
         (order.payment_status ?? '').toLowerCase() === 'succeeded' ||
@@ -221,10 +246,39 @@ export default function OrderConfirmation() {
                         </tr>
                     ))}
                     </tbody>
-                    <tfoot className="border-t bg-gray-50">
+                    <tfoot className="border-t bg-gray-50 text-sm">
                     <tr>
                         <td className="p-3 text-right font-medium" colSpan={3}>Разом за товари</td>
-                        <td className="p-3 font-semibold">{formatPrice(itemsTotal, currency)}</td>
+                        <td className="p-3 font-semibold">{formatPrice(subtotal, currency)}</td>
+                    </tr>
+                    {hasCouponCode && (
+                        <tr>
+                            <td className="p-3 text-right font-medium" colSpan={3}>Купон</td>
+                            <td className="p-3 font-semibold">{couponCode}</td>
+                        </tr>
+                    )}
+                    {hasDiscount && (
+                        <tr>
+                            <td className="p-3 text-right font-medium" colSpan={3}>Знижка</td>
+                            <td className="p-3 font-semibold text-red-600">−{formatPrice(discountTotal, currency)}</td>
+                        </tr>
+                    )}
+                    {hasLoyaltyPoints && (
+                        <tr>
+                            <td className="p-3 text-right font-medium" colSpan={3}>Використані бали</td>
+                            <td className="p-3 font-semibold">
+                                {loyaltyPointsDisplay}
+                                {loyaltyPointsValue > 0 && (
+                                    <span className="ml-1 text-gray-500">
+                                        (−{formatPrice(loyaltyPointsValue, currency)})
+                                    </span>
+                                )}
+                            </td>
+                        </tr>
+                    )}
+                    <tr>
+                        <td className="p-3 text-right font-semibold" colSpan={3}>До сплати</td>
+                        <td className="p-3 text-lg font-semibold">{formatPrice(order.total, currency)}</td>
                     </tr>
                     </tfoot>
                 </table>

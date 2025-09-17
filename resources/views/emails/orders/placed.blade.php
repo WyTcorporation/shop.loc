@@ -17,6 +17,10 @@
         ];
     });
 
+    $subtotal = (float) ($order->subtotal ?? $items->sum('sum'));
+    $discountTotal = max(0, (float) ($order->discount_total ?? (($order->coupon_discount ?? 0) + ($order->loyalty_points_value ?? 0))));
+    $loyaltyPointsUsed = (int) ($order->loyalty_points_used ?? 0);
+    $loyaltyPointsValue = max(0, (float) ($order->loyalty_points_value ?? 0));
     $total = (float) ($order->total ?? $items->sum('sum'));
     $heading = __('Дякуємо за замовлення!');
     $introLines = [
@@ -54,7 +58,34 @@
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" align="right" style="padding:14px 0;font-weight:600;color:#111">{{ __('Разом') }}</td>
+            <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Разом за товари') }}</td>
+            <td align="right" style="padding:12px 0;font-weight:700;color:#111">{{ \App\Support\OrderMailFormatter::money($order, $subtotal) }}</td>
+        </tr>
+        @if(!empty($order->coupon_code))
+            <tr>
+                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Купон') }}</td>
+                <td align="right" style="padding:12px 0;font-weight:700;color:#111">{{ $order->coupon_code }}</td>
+            </tr>
+        @endif
+        @if($discountTotal > 0)
+            <tr>
+                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Знижка') }}</td>
+                <td align="right" style="padding:12px 0;font-weight:700;color:#d20000;">−{{ \App\Support\OrderMailFormatter::money($order, $discountTotal) }}</td>
+            </tr>
+        @endif
+        @if($loyaltyPointsUsed > 0)
+            <tr>
+                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Використані бали') }}</td>
+                <td align="right" style="padding:12px 0;font-weight:700;color:#111;">
+                    {{ number_format($loyaltyPointsUsed, 0, ',', ' ') }}
+                    @if($loyaltyPointsValue > 0)
+                        <span style="color:#666;font-weight:600;">(−{{ \App\Support\OrderMailFormatter::money($order, $loyaltyPointsValue) }})</span>
+                    @endif
+                </td>
+            </tr>
+        @endif
+        <tr>
+            <td colspan="3" align="right" style="padding:14px 0;font-weight:600;color:#111">{{ __('До сплати') }}</td>
             <td align="right" style="padding:14px 0;font-weight:700;color:#111">{{ \App\Support\OrderMailFormatter::money($order, $total) }}</td>
         </tr>
         </tfoot>
