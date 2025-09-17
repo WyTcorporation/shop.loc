@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendOrderConfirmation;
 use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem, Warehouse};
 use App\Enums\ShipmentStatus;
 use App\Services\Carts\CartPricingService;
@@ -216,8 +215,6 @@ class OrderController extends Controller
                 'status' => ShipmentStatus::Pending,
             ]);
         });
-
-        SendOrderConfirmation::dispatch($order);
 
         $order->load('items.product.images', 'items.product.vendor', 'shipment');
 
