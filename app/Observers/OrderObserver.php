@@ -11,6 +11,8 @@ use BackedEnum;
 
 class OrderObserver
 {
+    public bool $afterCommit = true;
+
     public function created(Order $order): void
     {
         SendOrderConfirmation::dispatch($order)->afterCommit();
