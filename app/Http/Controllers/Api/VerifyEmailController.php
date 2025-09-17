@@ -48,7 +48,9 @@ class VerifyEmailController extends Controller
             '/'
         );
 
-        $path = $alreadyVerified ? '/email-verified?verified=already' : '/email-verified?verified=1';
+        $path = $alreadyVerified
+            ? config('app.frontend_verified_already_path', '/profile?email_verified=already')
+            : config('app.frontend_verified_path', '/profile?email_verified=1');
 
         return redirect()->away($frontendUrl . $path);
     }
