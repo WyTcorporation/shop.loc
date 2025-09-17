@@ -4,6 +4,7 @@ import {
     AddressesApi,
     CartApi,
     OrdersApi,
+    refreshOrderStatus,
     type Address,
     type Cart,
     type OrderResponse,
@@ -337,10 +338,25 @@ export default function CheckoutPage() {
     };
 
     const orderNumber = order?.number;
-    const handlePaid = useCallback(() => {
-        if (!orderNumber) return;
-        nav(`/order/${encodeURIComponent(orderNumber)}`, { replace: true });
-    }, [nav, orderNumber]);
+    const handlePaid = useCallback(
+        async (_status?: string, paymentIntentId?: string) => {
+            if (!orderNumber) return;
+            const attemptRefresh = async (intent?: string) => {
+                await refreshOrderStatus(orderNumber, intent);
+            };
+            try {
+                await attemptRefresh(paymentIntentId);
+            } catch (error) {
+                try {
+                    await attemptRefresh();
+                } catch (secondaryError) {
+                    console.error('Failed to refresh order status', secondaryError);
+                }
+            }
+            nav(`/order/${encodeURIComponent(orderNumber)}`, { replace: true });
+        },
+        [nav, orderNumber],
+    );
 
     const selectedDelivery = useMemo(
         () => deliveryOptions.find((opt) => opt.id === deliveryMethod) ?? deliveryOptions[0],
