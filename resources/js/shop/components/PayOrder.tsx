@@ -4,7 +4,13 @@ import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-
 import { Button } from '@/components/ui/button';
 import { useNotify } from '../ui/notify';
 
-function Inner({ number, onPaid }: { number: string; onPaid?: (status?: string) => void }) {
+function Inner({
+    number,
+    onPaid,
+}: {
+    number: string;
+    onPaid?: (status?: string, paymentIntentId?: string) => void;
+}) {
     const stripe = useStripe();
     const elements = useElements();
     const { error: notifyError, success } = useNotify();
@@ -26,12 +32,13 @@ function Inner({ number, onPaid }: { number: string; onPaid?: (status?: string) 
                 notifyError({ title: error.message || 'Оплата не пройшла' });
             } else {
                 const status = paymentIntent?.status;
+                const paymentIntentId = paymentIntent?.id;
                 if (status === 'succeeded') {
                     success({ title: 'Оплата успішна' });
-                    onPaid?.(status);
+                    onPaid?.(status, paymentIntentId);
                 } else if (status === 'processing') {
                     success({ title: 'Оплата обробляється…' });
-                    onPaid?.(status);
+                    onPaid?.(status, paymentIntentId);
                 } else {
                     // якщо 3DS або редірект — Stripe сам обробить сценарій
                     success({ title: 'Оплата обробляється…' });
@@ -52,7 +59,13 @@ function Inner({ number, onPaid }: { number: string; onPaid?: (status?: string) 
     );
 }
 
-export default function PayOrder({ number, onPaid }: { number: string; onPaid?: (status?: string) => void }) {
+export default function PayOrder({
+    number,
+    onPaid,
+}: {
+    number: string;
+    onPaid?: (status?: string, paymentIntentId?: string) => void;
+}) {
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [publishableKey, setPublishableKey] = useState<string | null>(null);
 
