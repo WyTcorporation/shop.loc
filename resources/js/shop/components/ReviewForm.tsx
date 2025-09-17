@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ReviewsApi, type Review } from '../api';
+import RatingStars from './RatingStars';
 import useAuth from '../hooks/useAuth';
 import { useNotify } from '../ui/notify';
 import { resolveErrorMessage } from '../lib/errors';
@@ -55,6 +56,8 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
     const fieldsetDisabled = submitting || !isAuthenticated;
     const containerClassName = className ? `space-y-4 ${className}` : 'space-y-4';
 
+    const ratingLabelId = React.useId();
+
     return (
         <section className={containerClassName} aria-label="Форма відгуку">
             <h3 className="text-lg font-semibold">Залишити відгук</h3>
@@ -77,22 +80,14 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
             <form className="space-y-4" onSubmit={handleSubmit}>
                 <fieldset className="space-y-4" disabled={fieldsetDisabled}>
                     <div className="space-y-1">
-                        <label htmlFor="review-rating" className="block text-sm font-medium text-gray-700">
+                        <span id={ratingLabelId} className="block text-sm font-medium text-gray-700">
                             Оцінка
-                        </label>
-                        <select
-                            id="review-rating"
+                        </span>
+                        <RatingStars
                             value={rating}
-                            onChange={(event) => setRating(Number(event.target.value))}
-                            className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                            required
-                        >
-                            <option value={5}>5 — Чудово</option>
-                            <option value={4}>4 — Добре</option>
-                            <option value={3}>3 — Задовільно</option>
-                            <option value={2}>2 — Посередньо</option>
-                            <option value={1}>1 — Погано</option>
-                        </select>
+                            onChange={setRating}
+                            aria-labelledby={ratingLabelId}
+                        />
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="review-text" className="block text-sm font-medium text-gray-700">

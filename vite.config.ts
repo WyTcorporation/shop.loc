@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
-const useWayfinder = process.env.WAYFINDER !== 'off';
+const isVitest = process.env.VITEST === 'true';
+const useWayfinder = !isVitest && process.env.WAYFINDER !== 'off';
 
 export default defineConfig({
     server: {
@@ -26,23 +27,38 @@ export default defineConfig({
         },
     },
     plugins: [
-        laravel({
-            input: [
-                'resources/css/app.css',
-                'resources/js/app.tsx',
-                'resources/js/shop/main.tsx',
-            ],
-            ssr: 'resources/js/ssr.tsx',
-            // refresh: true,
-            refresh: ['resources/views/**/*.blade.php'],
-        }),
+        ...(isVitest
+            ? []
+            : [
+                  laravel({
+                      input: [
+                          'resources/css/app.css',
+                          'resources/js/app.tsx',
+                          'resources/js/shop/main.tsx',
+                      ],
+                      ssr: 'resources/js/ssr.tsx',
+                      // refresh: true,
+                      refresh: ['resources/views/**/*.blade.php'],
+                  }),
+                  ...(useWayfinder
+                      ? [
+                            wayfinder({
+                                formVariants: true,
+                            }),
+                        ]
+                      : []),
+              ]),
         react(),
         tailwindcss(),
-        ...(useWayfinder ? [wayfinder({
-            formVariants: true
-        })] : []),
     ],
     esbuild: {
         jsx: 'automatic',
+    },
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        setupFiles: ['resources/js/test/setupTests.ts'],
+        include: ['resources/js/**/*.{test,spec}.{ts,tsx}'],
+        exclude: ['tests/**'],
     },
 });
