@@ -67,6 +67,7 @@ Route::post('/payments/intent', [PaymentController::class, 'intent']);
 Route::post('/payment/refresh/{number}', [PaymentController::class, 'refreshStatus']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('profile/orders', [OrderController::class, 'index']);
     Route::apiResource('profile/addresses', AddressController::class);
     Route::get('profile/wishlist', [WishlistController::class, 'index']);
     Route::post('profile/wishlist/{product}', [WishlistController::class, 'store']);

@@ -20,6 +20,32 @@ class OrderController extends Controller
     {
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            abort(401);
+        }
+
+        $currency = $this->resolveCurrency($request);
+
+        $orders = Order::with([
+            'items.product.images' => fn ($query) => $query->orderBy('sort'),
+            'items.product.vendor',
+            'shipment',
+        ])->where('user_id', $user->id)
+            ->latest('created_at')
+            ->get();
+
+        $payload = $orders
+            ->map(fn (Order $order) => $this->transformOrder($order, $currency))
+            ->values()
+            ->all();
+
+        return response()->json($payload);
+    }
+
     public function store(Request $r): JsonResponse
     {
         $currency = $this->resolveCurrency($r);
