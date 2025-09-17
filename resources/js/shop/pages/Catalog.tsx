@@ -24,6 +24,8 @@ import SeoHead from '../components/SeoHead';
 import JsonLd from '../components/JsonLd';
 import { useHreflangs } from '../hooks/useHreflangs';
 import { GA } from '../ui/ga';
+import useCart from '../useCart';
+import { Loader2 } from 'lucide-react';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
@@ -33,6 +35,8 @@ export default function Catalog() {
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [addingId, setAddingId] = useState<number | null>(null);
+    const { add } = useCart();
 
     // пошук у URL
     const [q, setQ] = useQueryParam('q', '');
@@ -454,8 +458,12 @@ export default function Catalog() {
                             (p.images && p.images.length > 0 ? p.images[0] : undefined);
 
                         return (
-                            <Card key={p.id} className="overflow-hidden">
-                                <Link to={`/product/${p.slug ?? p.id}`} className="block" data-testid="catalog-card">
+                            <Card key={p.id} className="flex h-full flex-col overflow-hidden">
+                                <Link
+                                    to={`/product/${p.slug ?? p.id}`}
+                                    className="flex flex-1 flex-col"
+                                    data-testid="catalog-card"
+                                >
                                     <div className="aspect-square bg-muted/40">
                                         {primary ? (
                                             <img
@@ -475,10 +483,31 @@ export default function Catalog() {
                                         <div className="mt-1 text-sm text-muted-foreground">{formatPrice(p.price)}</div>
                                     </div>
                                 </Link>
-                                <h1 className="text-2xl font-semibold flex items-center gap-3">
-                                    {p.name}
-                                    <WishlistButton product={p} />
-                                </h1>
+                                <div className="flex flex-wrap items-center gap-2 border-t px-3 py-3">
+                                    <WishlistButton product={p} className="flex-1 justify-center" />
+                                    <Button
+                                        type="button"
+                                        className="flex-1"
+                                        disabled={addingId === p.id}
+                                        onClick={async () => {
+                                            setAddingId(p.id);
+                                            try {
+                                                await add(p.id);
+                                            } finally {
+                                                setAddingId((current) => (current === p.id ? null : current));
+                                            }
+                                        }}
+                                    >
+                                        {addingId === p.id ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                                <span>Купуємо…</span>
+                                            </>
+                                        ) : (
+                                            'Купити'
+                                        )}
+                                    </Button>
+                                </div>
                             </Card>
                         );
                     })}
