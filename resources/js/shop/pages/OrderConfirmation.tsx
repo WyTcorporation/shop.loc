@@ -37,6 +37,14 @@ type Order = {
         postal_code?: string | null;
         phone?: string | null;
     };
+    billing_address?: {
+        name?: string | null;
+        company?: string | null;
+        tax_id?: string | null;
+        city?: string | null;
+        addr?: string | null;
+        postal_code?: string | null;
+    } | null;
     currency?: string | null;
 };
 
@@ -139,6 +147,29 @@ export default function OrderConfirmation() {
                         {order.shipping_address.postal_code && <div>{order.shipping_address.postal_code}</div>}
                         {order.shipping_address.phone && <div>{order.shipping_address.phone}</div>}
                     </div>
+                )}
+            </div>
+            <div className="rounded-xl border border-gray-200 p-4 space-y-2">
+                <h2 className="text-lg font-semibold">Платіжні дані</h2>
+                {order.billing_address ? (
+                    <div className="text-sm text-gray-600">
+                        {order.billing_address.company && (
+                            <div className="font-medium text-gray-800">{order.billing_address.company}</div>
+                        )}
+                        {order.billing_address.name && <div>{order.billing_address.name}</div>}
+                        {order.billing_address.tax_id && (
+                            <div className="text-xs text-gray-500">
+                                Податковий номер: {order.billing_address.tax_id}
+                            </div>
+                        )}
+                        {order.billing_address.city && <div>{order.billing_address.city}</div>}
+                        {order.billing_address.addr && <div>{order.billing_address.addr}</div>}
+                        {order.billing_address.postal_code && <div>{order.billing_address.postal_code}</div>}
+                    </div>
+                ) : (
+                    <p className="text-sm text-gray-600">
+                        Реквізити для рахунку збігаються з адресою доставки.
+                    </p>
                 )}
             </div>
             <div className="border rounded-xl overflow-hidden">
