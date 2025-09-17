@@ -13,6 +13,8 @@ class OrderPaidMail extends Mailable
     {
         return $this
             ->subject("Замовлення {$this->order->number} оплачене")
+            ->tag('order-paid')
+            ->metadata(['type' => 'order'])
             ->view('emails.orders.paid', ['order' => $this->order]);
     }
 }

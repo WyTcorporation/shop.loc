@@ -13,6 +13,8 @@ class OrderShippedMail extends Mailable
     {
         return $this
             ->subject("Замовлення {$this->order->number} відправлено")
+            ->tag('order-shipped')
+            ->metadata(['type' => 'order'])
             ->view('emails.orders.shipped', ['order' => $this->order]);
     }
 }

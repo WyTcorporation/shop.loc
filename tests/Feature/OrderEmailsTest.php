@@ -28,8 +28,10 @@ it('sends order placed email', function () {
 
     SendOrderConfirmation::dispatchSync($order);
 
-    Mail::assertSent(OrderPlacedMail::class, function ($m) use ($order) {
-        return $m->order->is($order);
+    Mail::assertSent(OrderPlacedMail::class, function (OrderPlacedMail $mail) use ($order) {
+        $mail->assertHasTag('order-placed')->assertHasMetadata('type', 'order');
+
+        return $mail->order->is($order);
     });
 });
 
@@ -44,9 +46,17 @@ it('sends paid and shipped emails on status change', function () {
 
     // mark paid
     $o->update(['status' => OrderStatus::Paid->value]);
-    Mail::assertSent(OrderPaidMail::class);
+    Mail::assertSent(OrderPaidMail::class, function (OrderPaidMail $mail) {
+        $mail->assertHasTag('order-paid')->assertHasMetadata('type', 'order');
+
+        return true;
+    });
 
     // mark shipped
     $o->update(['status' => OrderStatus::Shipped->value]);
-    Mail::assertSent(OrderShippedMail::class);
+    Mail::assertSent(OrderShippedMail::class, function (OrderShippedMail $mail) {
+        $mail->assertHasTag('order-shipped')->assertHasMetadata('type', 'order');
+
+        return true;
+    });
 });

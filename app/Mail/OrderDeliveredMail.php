@@ -13,6 +13,8 @@ class OrderDeliveredMail extends Mailable
     {
         return $this
             ->subject("Order {$this->order->number} is delivered")
+            ->tag('order-delivered')
+            ->metadata(['type' => 'order'])
             ->markdown('emails.orders.delivered', ['order' => $this->order]);
     }
 }
