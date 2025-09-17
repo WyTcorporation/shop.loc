@@ -26,6 +26,8 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::middleware('auth:sanctum')->post('email/resend', [AuthController::class, 'resendEmailVerification']);
+
 //Categories
 Route::get('categories', [CategoryController::class,'index']);
 
