@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\Auth\TwoFactorService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -29,6 +32,10 @@ class AuthController extends Controller
 
         $user->loadMissing('twoFactorSecret');
 
+        event(new Registered($user));
+        $user->sendEmailVerificationNotification();
+        Mail::to($user)->queue(new WelcomeMail($user));
+
         $token = $user->createToken('shop')->plainTextToken;
 
         event(new Login('sanctum', $user, false));
@@ -37,6 +44,24 @@ class AuthController extends Controller
             'token' => $token,
             'user' => $this->formatUser($user),
         ], 201);
+    }
+
+    public function resendEmailVerification(Request $request): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'message' => 'Verification link sent.',
+        ], 202);
     }
 
     public function login(Request $request, TwoFactorService $twoFactorService): JsonResponse
