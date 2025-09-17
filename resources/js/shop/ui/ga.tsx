@@ -8,7 +8,27 @@ type GAItem = {
     item_category?: string;
 };
 
-const CURRENCY = 'UAH';
+function detectCurrency(): string {
+    if (typeof document !== 'undefined') {
+        const currency = document.documentElement.dataset.baseCurrency;
+
+        if (currency) {
+            return currency.trim().toUpperCase();
+        }
+    }
+
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as Record<string, any>).APP === 'object') {
+        const appCurrency = (globalThis as Record<string, any>).APP?.baseCurrency;
+
+        if (typeof appCurrency === 'string' && appCurrency.trim()) {
+            return appCurrency.trim().toUpperCase();
+        }
+    }
+
+    return 'EUR';
+}
+
+const CURRENCY = detectCurrency();
 
 // Безпечний шорткат: якщо gtag не ініціалізовано — нічого не робимо.
 function gtagSafe(...args: any[]) {

@@ -9,6 +9,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use function formatCurrency;
 
 class CouponsTable
 {
@@ -30,11 +31,11 @@ class CouponsTable
                     ->state(function (Coupon $record) {
                         return $record->type === Coupon::TYPE_PERCENT
                             ? number_format((float) $record->value, 2) . '%'
-                            : '₴ ' . number_format((float) $record->value, 2);
+                            : formatCurrency($record->value);
                     }),
                 TextColumn::make('min_cart_total')
                     ->label('Min cart')
-                    ->state(fn (Coupon $record) => '₴ ' . number_format((float) $record->min_cart_total, 2))
+                    ->state(fn (Coupon $record) => formatCurrency($record->min_cart_total))
                     ->toggleable(),
                 TextColumn::make('usage_limit')
                     ->label('Usage')

@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
+use function formatCurrency;
 
 class OgImageController extends Controller
 {
@@ -20,8 +21,8 @@ class OgImageController extends Controller
                 if (!$p) abort(404);
             }
 
-            $title = (string)$p->name;
-            $price = number_format((float)$p->price, 2, '.', ' ') . ' ₴';
+            $title = (string) $p->name;
+            $price = formatCurrency($p->price);
             $imgUrl = $p->preview_url ?? optional($p->images()->orderByDesc('is_primary')->orderBy('id')->first())->url;
 
             $manager = new ImageManager(new Driver());

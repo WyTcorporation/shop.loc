@@ -4,11 +4,12 @@ namespace App\Filament\Mine\Resources\Coupons\Schemas;
 
 use App\Models\Coupon;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
+use function currencySymbol;
 
 class CouponForm
 {
@@ -35,14 +36,14 @@ class CouponForm
             TextInput::make('value')
                 ->required()
                 ->numeric()
-                ->prefix(fn ($state, callable $get) => $get('type') === Coupon::TYPE_PERCENT ? '%' : '₴'),
+                ->prefix(fn ($state, callable $get) => $get('type') === Coupon::TYPE_PERCENT ? '%' : currencySymbol()),
             TextInput::make('min_cart_total')
                 ->numeric()
                 ->default(0)
-                ->prefix('₴'),
+                ->prefix(currencySymbol()),
             TextInput::make('max_discount')
                 ->numeric()
-                ->prefix('₴'),
+                ->prefix(currencySymbol()),
             TextInput::make('usage_limit')
                 ->numeric()
                 ->minValue(0)
