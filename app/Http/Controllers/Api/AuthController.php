@@ -101,6 +101,43 @@ class AuthController extends Controller
         return response()->json($this->formatUser($user));
     }
 
+    public function update(Request $request): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $data = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (array_key_exists('name', $data)) {
+            $user->name = $data['name'];
+        }
+
+        if (array_key_exists('email', $data) && $data['email'] !== $user->email) {
+            $user->email = $data['email'];
+            $user->email_verified_at = null;
+        }
+
+        if (! empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        $user->save();
+        $user->refresh();
+        $user->loadMissing('twoFactorSecret');
+
+        return response()->json($this->formatUser($user));
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $token = $request->user()?->currentAccessToken();

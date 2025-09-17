@@ -285,6 +285,10 @@ export const AuthApi = {
         const { data } = await api.get<AuthUser>('/auth/me');
         return data;
     },
+    async update(payload: { name?: string; email?: string; password?: string | null; password_confirmation?: string | null }) {
+        const { data } = await api.put<AuthUser>('/auth/me', payload);
+        return data;
+    },
     async logout() {
         await api.post('/auth/logout');
     },

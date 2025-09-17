@@ -1,15 +1,24 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import ProfileNavigation from '../components/ProfileNavigation';
-import { TwoFactorApi, type TwoFactorSetup, type TwoFactorStatus } from '../api';
+import { AuthApi, TwoFactorApi, type TwoFactorSetup, type TwoFactorStatus } from '../api';
 import useAuth from '../hooks/useAuth';
 import { resolveErrorMessage } from '../lib/errors';
 
 export default function ProfilePage() {
     const { user, isAuthenticated, isReady, isLoading, logout, refresh } = useAuth();
     const location = useLocation();
-    const [error, setError] = React.useState<string | null>(null);
-    const [pending, setPending] = React.useState(false);
+    const [logoutError, setLogoutError] = React.useState<string | null>(null);
+    const [logoutPending, setLogoutPending] = React.useState(false);
+    const [profileError, setProfileError] = React.useState<string | null>(null);
+    const [profileMessage, setProfileMessage] = React.useState<string | null>(null);
+    const [profileSaving, setProfileSaving] = React.useState(false);
+    const [form, setForm] = React.useState({
+        name: user?.name ?? '',
+        email: user?.email ?? '',
+        password: '',
+        password_confirmation: '',
+    });
     const [twoFactorStatus, setTwoFactorStatus] = React.useState<TwoFactorStatus | null>(null);
     const [twoFactorSetup, setTwoFactorSetup] = React.useState<TwoFactorSetup | null>(null);
     const [twoFactorCode, setTwoFactorCode] = React.useState('');
@@ -56,6 +65,58 @@ export default function ProfilePage() {
         setTwoFactorError(null);
         setTwoFactorMessage(null);
     }, [isAuthenticated]);
+
+    React.useEffect(() => {
+        setForm((prev) => ({
+            ...prev,
+            name: user?.name ?? '',
+            email: user?.email ?? '',
+        }));
+    }, [user?.email, user?.name]);
+
+    const handleProfileSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (profileSaving) return;
+
+        setProfileError(null);
+        setProfileMessage(null);
+        setProfileSaving(true);
+
+        const payload: {
+            name?: string;
+            email?: string;
+            password?: string;
+            password_confirmation?: string;
+        } = {
+            name: form.name?.trim() ?? '',
+            email: form.email?.trim() ?? '',
+        };
+
+        if (!form.password) {
+            delete payload.password;
+            delete payload.password_confirmation;
+        } else {
+            payload.password = form.password;
+            payload.password_confirmation = form.password_confirmation;
+        }
+
+        try {
+            const updated = await AuthApi.update(payload);
+            setProfileMessage('Дані профілю оновлено.');
+            setForm((prev) => ({
+                ...prev,
+                name: updated?.name ?? prev.name,
+                email: updated?.email ?? prev.email,
+                password: '',
+                password_confirmation: '',
+            }));
+            await refresh().catch(() => undefined);
+        } catch (err) {
+            setProfileError(resolveErrorMessage(err, 'Не вдалося оновити профіль. Спробуйте ще раз.'));
+        } finally {
+            setProfileSaving(false);
+        }
+    };
 
     const handleStartTwoFactor = async () => {
         setTwoFactorError(null);
@@ -144,14 +205,14 @@ export default function ProfilePage() {
     }
 
     const handleLogout = async () => {
-        setError(null);
-        setPending(true);
+        setLogoutError(null);
+        setLogoutPending(true);
         try {
             await logout();
         } catch (err) {
-            setError(resolveErrorMessage(err, 'Не вдалося вийти. Спробуйте ще раз.'));
+            setLogoutError(resolveErrorMessage(err, 'Не вдалося вийти. Спробуйте ще раз.'));
         } finally {
-            setPending(false);
+            setLogoutPending(false);
         }
     };
 
@@ -167,34 +228,156 @@ export default function ProfilePage() {
             </div>
             <div className="mt-4 w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
                 <h2 className="mb-6 text-xl font-semibold">Особисті дані</h2>
-                {error && <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
-                <dl className="space-y-4 text-sm text-gray-700">
+                {profileError && (
+                    <div
+                        data-testid="profile-error"
+                        className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                    >
+                        {profileError}
+                    </div>
+                )}
+                {profileMessage && (
+                    <div
+                        data-testid="profile-success"
+                        className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
+                    >
+                        {profileMessage}
+                    </div>
+                )}
+                <form onSubmit={handleProfileSubmit} className="space-y-4" data-testid="profile-form">
+                    <div>
+                        <label htmlFor="profileName" className="block text-sm font-medium text-gray-700">
+                            Ім'я
+                        </label>
+                        <input
+                            id="profileName"
+                            type="text"
+                            value={form.name}
+                            onChange={(event) =>
+                                setForm((prev) => ({
+                                    ...prev,
+                                    name: event.target.value,
+                                }))
+                            }
+                            autoComplete="name"
+                            data-testid="profile-name"
+                            className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                            placeholder="Введіть ім'я"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="profileEmail" className="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <input
+                            id="profileEmail"
+                            type="email"
+                            value={form.email}
+                            onChange={(event) =>
+                                setForm((prev) => ({
+                                    ...prev,
+                                    email: event.target.value,
+                                }))
+                            }
+                            autoComplete="email"
+                            data-testid="profile-email"
+                            className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                            placeholder="your@email.com"
+                        />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label htmlFor="profilePassword" className="block text-sm font-medium text-gray-700">
+                                Новий пароль
+                            </label>
+                            <input
+                                id="profilePassword"
+                                type="password"
+                                value={form.password}
+                                onChange={(event) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        password: event.target.value,
+                                    }))
+                                }
+                                autoComplete="new-password"
+                                data-testid="profile-password"
+                                className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                                placeholder="Залиште порожнім, щоб не змінювати"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="profilePasswordConfirmation" className="block text-sm font-medium text-gray-700">
+                                Підтвердження пароля
+                            </label>
+                            <input
+                                id="profilePasswordConfirmation"
+                                type="password"
+                                value={form.password_confirmation}
+                                onChange={(event) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        password_confirmation: event.target.value,
+                                    }))
+                                }
+                                autoComplete="new-password"
+                                data-testid="profile-password-confirmation"
+                                className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                                placeholder="Повторіть новий пароль"
+                            />
+                        </div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                        Пароль можна не заповнювати, якщо ви не плануєте його змінювати. Email повинен бути унікальним.
+                    </p>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-xs text-gray-500">Зміни набувають чинності одразу після збереження.</p>
+                        <button
+                            type="submit"
+                            disabled={profileSaving || isLoading}
+                            data-testid="profile-save"
+                            className="inline-flex w-full items-center justify-center rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        >
+                            {profileSaving || isLoading ? 'Збереження…' : 'Зберегти зміни'}
+                        </button>
+                    </div>
+                </form>
+                <dl className="mt-8 space-y-4 text-sm text-gray-700">
                     <div>
                         <dt className="font-medium text-gray-900">ID</dt>
-                        <dd className="mt-1 text-gray-700">{user?.id ?? '—'}</dd>
+                        <dd className="mt-1 text-gray-700" data-testid="profile-id">
+                            {user?.id ?? '—'}
+                        </dd>
                     </div>
                     <div>
                         <dt className="font-medium text-gray-900">Ім'я</dt>
-                        <dd className="mt-1 text-gray-700">{user?.name ?? '—'}</dd>
+                        <dd className="mt-1 text-gray-700" data-testid="profile-name-display">
+                            {user?.name ?? '—'}
+                        </dd>
                     </div>
                     <div>
                         <dt className="font-medium text-gray-900">Email</dt>
-                        <dd className="mt-1 break-words text-gray-700">{user?.email ?? '—'}</dd>
+                        <dd className="mt-1 break-words text-gray-700" data-testid="profile-email-display">
+                            {user?.email ?? '—'}
+                        </dd>
                     </div>
                     <div>
                         <dt className="font-medium text-gray-900">Email підтверджено</dt>
                         <dd className="mt-1 text-gray-700">{user?.email_verified_at ? 'Так' : 'Ні'}</dd>
                     </div>
                 </dl>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {logoutError && (
+                    <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{logoutError}</div>
+                )}
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-gray-500">Токен Sanctum збережено локально для авторизованих запитів до API.</p>
                     <button
                         type="button"
                         onClick={handleLogout}
-                        disabled={pending || isLoading}
+                        disabled={logoutPending || isLoading}
                         className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
-                        {pending || isLoading ? 'Вихід…' : 'Вийти'}
+                        {logoutPending || isLoading ? 'Вихід…' : 'Вийти'}
                     </button>
                 </div>
             </div>
