@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\{AddressController,
     ReviewController,
     SearchController,
     TwoFactorController,
+    VerifyEmailController,
     WishlistController};
 
 Route::prefix('auth')->group(function () {
@@ -27,6 +28,10 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->post('email/resend', [AuthController::class, 'resendEmailVerification']);
+
+Route::get('email/verify/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('api.email.verify');
 
 //Categories
 Route::get('categories', [CategoryController::class,'index']);
