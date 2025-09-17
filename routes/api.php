@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\{AddressController,
     ProductController,
     CartController,
     OrderController,
+    ProfilePointsController,
     OrderMessageController,
     ReviewController,
     SearchController,
@@ -72,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('profile/wishlist', [WishlistController::class, 'index']);
     Route::post('profile/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('profile/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::get('profile/points', [ProfilePointsController::class, 'index']);
     Route::get('orders/{order}/messages', [OrderMessageController::class, 'index']);
     Route::post('orders/{order}/messages', [OrderMessageController::class, 'store']);
     Route::get('profile/two-factor', [TwoFactorController::class, 'show']);
