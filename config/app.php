@@ -53,6 +53,9 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
+    'frontend_verified_path' => env('FRONTEND_VERIFIED_PATH', '/profile?email_verified=1'),
+    'frontend_verified_already_path' => env('FRONTEND_VERIFIED_ALREADY_PATH', '/profile?email_verified=already'),
 
     /*
     |--------------------------------------------------------------------------

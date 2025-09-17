@@ -33,7 +33,12 @@ it('sends verification and welcome mails when registering', function () {
 
     Mail::assertQueued(WelcomeMail::class, function (WelcomeMail $mail) use ($user) {
         expect($mail->verificationUrl)->toBeString();
-        expect($mail->render())->toContain(e($mail->verificationUrl));
+
+        $rendered = $mail->render();
+        $escapedUrl = e($mail->verificationUrl);
+
+        expect($rendered)->toContain('href="' . $escapedUrl . '"');
+        expect($rendered)->toContain($escapedUrl);
 
         return $mail->hasTo($user->email);
     });
