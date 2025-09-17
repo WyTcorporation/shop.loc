@@ -100,6 +100,14 @@ export default function OrderConfirmation() {
               .replace(/^[a-zа-яіїєґ]/i, (c) => c.toUpperCase())
         : null;
     const currency = order.currency ?? 'EUR';
+    const billingAddress = order.billing_address ?? null;
+    const hasBillingDetails = billingAddress
+        ? Object.values(billingAddress).some((value) => {
+              if (value == null) return false;
+              if (typeof value === 'string') return value.trim().length > 0;
+              return Boolean(value);
+          })
+        : false;
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6">
@@ -149,29 +157,23 @@ export default function OrderConfirmation() {
                     </div>
                 )}
             </div>
-            <div className="rounded-xl border border-gray-200 p-4 space-y-2">
-                <h2 className="text-lg font-semibold">Платіжні дані</h2>
-                {order.billing_address ? (
+            {hasBillingDetails && billingAddress && (
+                <div className="rounded-xl border border-gray-200 p-4 space-y-2">
+                    <h2 className="text-lg font-semibold">Платіжні дані</h2>
                     <div className="text-sm text-gray-600">
-                        {order.billing_address.company && (
-                            <div className="font-medium text-gray-800">{order.billing_address.company}</div>
+                        {billingAddress.company && (
+                            <div className="font-medium text-gray-800">{billingAddress.company}</div>
                         )}
-                        {order.billing_address.name && <div>{order.billing_address.name}</div>}
-                        {order.billing_address.tax_id && (
-                            <div className="text-xs text-gray-500">
-                                Податковий номер: {order.billing_address.tax_id}
-                            </div>
+                        {billingAddress.name && <div>{billingAddress.name}</div>}
+                        {billingAddress.tax_id && (
+                            <div className="text-xs text-gray-500">Податковий номер: {billingAddress.tax_id}</div>
                         )}
-                        {order.billing_address.city && <div>{order.billing_address.city}</div>}
-                        {order.billing_address.addr && <div>{order.billing_address.addr}</div>}
-                        {order.billing_address.postal_code && <div>{order.billing_address.postal_code}</div>}
+                        {billingAddress.city && <div>{billingAddress.city}</div>}
+                        {billingAddress.addr && <div>{billingAddress.addr}</div>}
+                        {billingAddress.postal_code && <div>{billingAddress.postal_code}</div>}
                     </div>
-                ) : (
-                    <p className="text-sm text-gray-600">
-                        Реквізити для рахунку збігаються з адресою доставки.
-                    </p>
-                )}
-            </div>
+                </div>
+            )}
             <div className="border rounded-xl overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-gray-50 text-left text-sm">
