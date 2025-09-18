@@ -2,6 +2,7 @@
 
 use App\Mail\ResetPasswordMail;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -88,6 +89,31 @@ it('resets the password with a valid token', function () {
     ]);
 
     expect(Hash::check('new-secure-password', $user->fresh()->password))->toBeTrue();
+});
+
+it('returns localized error message when reset token is expired', function () {
+    app()->setLocale('uk');
+
+    $user = User::factory()->create([
+        'password' => Hash::make('initial-password'),
+    ]);
+
+    $token = Password::broker()->createToken($user);
+
+    DB::table(config('auth.passwords.users.table'))->where('email', $user->email)->update([
+        'created_at' => now()->subMinutes(config('auth.passwords.users.expire') + 1),
+    ]);
+
+    $response = $this->postJson('/api/password/reset', [
+        'token' => $token,
+        'email' => $user->email,
+        'password' => 'new-secure-password',
+        'password_confirmation' => 'new-secure-password',
+    ]);
+
+    $response->assertStatus(422)->assertJson([
+        'message' => trans('passwords.token'),
+    ]);
 });
 
 it('logs the user in and redirects to profile after resetting the password via web form', function () {
