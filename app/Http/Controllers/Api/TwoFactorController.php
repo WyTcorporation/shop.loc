@@ -51,13 +51,13 @@ class TwoFactorController extends Controller
 
         if (! $secret) {
             throw ValidationException::withMessages([
-                'code' => [__('Two-factor authentication is not initialized.')],
+                'code' => [__('shop.security.two_factor.not_initialized')],
             ]);
         }
 
         if (! $service->verify($secret->secret, $data['code'])) {
             throw ValidationException::withMessages([
-                'code' => [__('Invalid two-factor authentication code.')],
+                'code' => [__('shop.security.two_factor.invalid_code')],
             ]);
         }
 
@@ -66,7 +66,7 @@ class TwoFactorController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Двофакторну автентифікацію увімкнено.',
+            'message' => __('shop.security.two_factor.enabled'),
             'confirmed_at' => $secret->confirmed_at,
         ]);
     }

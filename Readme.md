@@ -332,7 +332,11 @@ App\Enums\OrderStatus:
 - Вибір локалі на бекенді: middleware SetLocaleFromRequest (префікс → cookie → Accept-Language).
 - Вибір локалі на фронті: LocaleProvider зберігає <html lang>, cookie lang; LanguageSwitcher міняє префікс і перезавантажує URL.
 - API: interceptor додає Accept-Language: uk|en.
-- Переклади PHP: resources/lang/{uk,en}/*.php (поки мінімум).
+- Переклади PHP: resources/lang/{en,uk,ru,pt}/*.php (повний набір базових файлів Laravel і shop.php).
+  - Нові або змінені ключі спочатку додаємо в `resources/lang/en`, після чого синхронізуємо переклади для `uk`, `ru` та `pt`.
+  - Для Blade-шаблонів і листів використовуємо структуровані ключі з `shop.php` (підрозділи `common`, `orders`, `auth`, `security`).
+  - Після оновлень запускаємо `php artisan test --filter=LocalizationTest`, щоб переконатися у наявності перекладів і fallback'у на англійську.
+  - Fallback локаль конфігурується через `APP_FALLBACK_LOCALE` у `.env` (за замовчуванням `en`).
 - Для контенту з БД — наступний етап (JSON-поля або translation-таблиці).
 
 11) Тестування

@@ -21,7 +21,9 @@ class WelcomeMail extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        return $this->subject('Ласкаво просимо до Shop')
+        $appName = config('app.name', 'Shop');
+
+        return $this->subject(__('shop.auth.welcome.subject', ['app' => $appName]))
             ->tag('auth-welcome')
             ->metadata(['type' => 'auth'])
             ->view('emails.auth.welcome', [

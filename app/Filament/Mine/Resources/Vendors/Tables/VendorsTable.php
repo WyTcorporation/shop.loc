@@ -32,13 +32,13 @@ class VendorsTable
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('user.name')
-                    ->label(__('Owner'))
+                    ->label(__('shop.common.owner'))
                     ->sortable(),
                 TextColumn::make('contact_email')
-                    ->label(__('Email'))
+                    ->label(__('shop.common.email'))
                     ->toggleable(),
                 TextColumn::make('contact_phone')
-                    ->label(__('Phone'))
+                    ->label(__('shop.common.phone'))
                     ->toggleable(),
                 TextColumn::make('created_at')
                     ->dateTime()

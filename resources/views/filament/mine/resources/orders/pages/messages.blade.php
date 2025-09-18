@@ -1,7 +1,7 @@
 <x-filament::page>
     <div class="space-y-6">
         <x-filament::section>
-            <x-slot name="heading">{{ __('Conversation') }}</x-slot>
+            <x-slot name="heading">{{ __('shop.conversation.heading') }}</x-slot>
             <div class="space-y-4">
                 @forelse($this->messages as $message)
                     <div class="rounded-xl border p-4 @class([
@@ -11,7 +11,7 @@
                         <div class="flex items-start justify-between gap-4">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">
-                                    {{ $message['user']->name ?? __('System') }}
+                                    {{ $message['user']->name ?? __('shop.conversation.system') }}
                                 </p>
                                 <p class="text-xs text-gray-500">
                                     {{ optional($message['created_at'])->diffForHumans() }}
@@ -23,18 +23,18 @@
                         </div>
                     </div>
                 @empty
-                    <p class="text-sm text-gray-500">{{ __('No messages yet.') }}</p>
+                    <p class="text-sm text-gray-500">{{ __('shop.conversation.empty') }}</p>
                 @endforelse
             </div>
         </x-filament::section>
 
         <x-filament::section>
-            <x-slot name="heading">{{ __('New message') }}</x-slot>
+            <x-slot name="heading">{{ __('shop.conversation.new') }}</x-slot>
             <form wire:submit.prevent="send" class="space-y-4">
                 {{ $this->form }}
 
                 <x-filament::button type="submit">
-                    {{ __('Send') }}
+                    {{ __('shop.conversation.send') }}
                 </x-filament::button>
             </form>
         </x-filament::section>

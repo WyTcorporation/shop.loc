@@ -9,11 +9,12 @@
 
 @php
     $introLines = is_string($introLines) ? [$introLines] : (array) $introLines;
-    $footerNote ??= __('Якщо виникли питання — просто відповідайте на цей лист.');
+    $footerNote ??= __('shop.common.footer_note');
+    $htmlLang = str_replace('_', '-', app()->getLocale());
 @endphp
 
 <!doctype html>
-<html lang="uk">
+<html lang="{{ $htmlLang }}">
 <head>
     <meta charset="utf-8">
     <title>{{ $title ?? config('app.name') }}</title>

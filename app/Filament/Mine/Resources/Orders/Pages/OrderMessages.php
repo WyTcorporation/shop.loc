@@ -45,7 +45,7 @@ class OrderMessages extends Page implements HasForms
         return $form
             ->schema([
                 Textarea::make('body')
-                    ->label('Message')
+                    ->label(__('shop.conversation.message'))
                     ->rows(4)
                     ->required()
                     ->maxLength(2000),
@@ -68,7 +68,7 @@ class OrderMessages extends Page implements HasForms
         $this->loadMessages();
 
         Notification::make()
-            ->title(__('Message sent'))
+            ->title(__('shop.conversation.sent'))
             ->success()
             ->send();
     }
