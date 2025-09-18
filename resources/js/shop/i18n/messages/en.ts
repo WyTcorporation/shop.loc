@@ -61,6 +61,34 @@ const messages = {
         },
         empty: 'Your cart is empty',
     },
+    orderChat: {
+        title: 'Chat with the seller',
+        orderLabel: ({ number }: { number: string | number }) => `Order ${number}`,
+        actions: {
+            refresh: 'Refresh',
+            send: 'Send',
+            sending: 'Sending…',
+        },
+        loading: 'Loading messages…',
+        empty: 'No messages yet. Be the first to write!',
+        you: 'You',
+        seller: 'Seller',
+        inputPlaceholder: 'Your message to the seller…',
+        inputHint: {
+            maxLength: ({ limit }: { limit: number }) => `Up to ${limit} characters`,
+        },
+        guestPrompt: {
+            prefix: 'To message the seller,',
+            login: 'sign in',
+            or: 'or',
+            register: 'sign up',
+            suffix: '.',
+        },
+        errors: {
+            load: 'Failed to load messages.',
+            send: 'Failed to send the message.',
+        },
+    },
     catalog: {
         seo: {
             listName: ({ category }: { category?: string }) => category ? `Catalog — ${category}` : 'Catalog',

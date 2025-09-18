@@ -5,6 +5,7 @@ import { OrdersApi, type OrderMessage } from '../api';
 import useAuth from '../hooks/useAuth';
 import { resolveErrorMessage } from '../lib/errors';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '../i18n/LocaleProvider';
 
 function formatTimestamp(value?: string | null) {
     if (!value) return '';
@@ -26,6 +27,7 @@ type OrderChatProps = {
 
 export default function OrderChat({ orderId, orderNumber, className }: OrderChatProps) {
     const { isAuthenticated, isReady, user } = useAuth();
+    const { t } = useLocale();
     const [messages, setMessages] = React.useState<OrderMessage[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [loadError, setLoadError] = React.useState<string | null>(null);
@@ -57,7 +59,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
             })
             .catch((error) => {
                 if (!ignore) {
-                    setLoadError(resolveErrorMessage(error, 'Не вдалося завантажити повідомлення.'));
+                    setLoadError(resolveErrorMessage(error, () => t('orderChat.errors.load')));
                 }
             })
             .finally(() => {
@@ -69,7 +71,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
         return () => {
             ignore = true;
         };
-    }, [isAuthenticated, isReady, orderId]);
+    }, [isAuthenticated, isReady, orderId, t]);
 
     const refreshMessages = React.useCallback(async () => {
         if (!isAuthenticated) {
@@ -82,11 +84,11 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
             const data = await OrdersApi.listMessages(orderId);
             setMessages(data);
         } catch (error) {
-            setLoadError(resolveErrorMessage(error, 'Не вдалося завантажити повідомлення.'));
+            setLoadError(resolveErrorMessage(error, () => t('orderChat.errors.load')));
         } finally {
             setLoading(false);
         }
-    }, [isAuthenticated, orderId]);
+    }, [isAuthenticated, orderId, t]);
 
     React.useEffect(() => {
         if (!listRef.current) return;
@@ -112,7 +114,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
                 }
             });
         } catch (error) {
-            setSendError(resolveErrorMessage(error, 'Не вдалося надіслати повідомлення.'));
+            setSendError(resolveErrorMessage(error, () => t('orderChat.errors.send')));
         } finally {
             setSending(false);
         }
@@ -124,9 +126,11 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
         <div className={clsx('space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm', className)}>
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-semibold">Чат з продавцем</h2>
+                    <h2 className="text-lg font-semibold">{t('orderChat.title')}</h2>
                     {orderNumber && (
-                        <p className="text-xs text-gray-500">Замовлення {orderNumber}</p>
+                        <p className="text-xs text-gray-500">
+                            {t('orderChat.orderLabel', { number: orderNumber })}
+                        </p>
                     )}
                 </div>
                 {isAuthenticated && (
@@ -137,7 +141,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
                         onClick={refreshMessages}
                         disabled={loading || sending}
                     >
-                        Оновити
+                        {t('orderChat.actions.refresh')}
                     </Button>
                 )}
             </div>
@@ -150,12 +154,12 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
 
             <div className="rounded-lg border bg-gray-50">
                 {loading ? (
-                    <div className="py-8 text-center text-sm text-gray-500">Завантаження повідомлень…</div>
+                    <div className="py-8 text-center text-sm text-gray-500">{t('orderChat.loading')}</div>
                 ) : (
                     <div ref={listRef} className="max-h-64 space-y-3 overflow-y-auto p-3">
                         {messages.length === 0 ? (
                             <div className="py-6 text-center text-sm text-gray-500">
-                                Повідомлень ще немає. Напишіть першим!
+                                {t('orderChat.empty')}
                             </div>
                         ) : (
                             messages.map((message) => {
@@ -172,7 +176,9 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
                                         )}
                                     >
                                         <div className="flex items-center justify-between gap-3 text-[0.7rem] opacity-80">
-                                            <span>{isAuthor ? 'Ви' : message.user?.name ?? 'Продавець'}</span>
+                                            <span>
+                                                {isAuthor ? t('orderChat.you') : message.user?.name ?? t('orderChat.seller')}
+                                            </span>
                                             {timestamp && <span>{timestamp}</span>}
                                         </div>
                                         <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">
@@ -195,27 +201,27 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
                         rows={3}
                         maxLength={2000}
                         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:opacity-60"
-                        placeholder="Ваше повідомлення продавцю…"
+                        placeholder={t('orderChat.inputPlaceholder')}
                         disabled={sending}
                     />
                     <div className="flex items-center justify-between gap-3 text-xs text-gray-500">
-                        <span>До 2000 символів</span>
+                        <span>{t('orderChat.inputHint.maxLength', { limit: 2000 })}</span>
                         <Button type="submit" disabled={!canSend}>
-                            {sending ? 'Надсилання…' : 'Надіслати'}
+                            {sending ? t('orderChat.actions.sending') : t('orderChat.actions.send')}
                         </Button>
                     </div>
                 </form>
             ) : (
                 <div className="rounded border border-dashed border-gray-300 bg-white px-4 py-5 text-sm text-gray-600">
-                    Щоб написати продавцю,{' '}
+                    {t('orderChat.guestPrompt.prefix')}{' '}
                     <Link to="/login" className="font-medium text-blue-600 hover:underline">
-                        увійдіть
+                        {t('orderChat.guestPrompt.login')}
                     </Link>{' '}
-                    або{' '}
+                    {t('orderChat.guestPrompt.or')}{' '}
                     <Link to="/register" className="font-medium text-blue-600 hover:underline">
-                        зареєструйтесь
+                        {t('orderChat.guestPrompt.register')}
                     </Link>
-                    .
+                    {t('orderChat.guestPrompt.suffix')}
                 </div>
             )}
         </div>

@@ -61,6 +61,34 @@ const messages = {
         },
         empty: 'Кошик порожній',
     },
+    orderChat: {
+        title: 'Чат з продавцем',
+        orderLabel: ({ number }: { number: string | number }) => `Замовлення ${number}`,
+        actions: {
+            refresh: 'Оновити',
+            send: 'Надіслати',
+            sending: 'Надсилання…',
+        },
+        loading: 'Завантаження повідомлень…',
+        empty: 'Повідомлень ще немає. Напишіть першим!',
+        you: 'Ви',
+        seller: 'Продавець',
+        inputPlaceholder: 'Ваше повідомлення продавцю…',
+        inputHint: {
+            maxLength: ({ limit }: { limit: number }) => `До ${limit} символів`,
+        },
+        guestPrompt: {
+            prefix: 'Щоб написати продавцю,',
+            login: 'увійдіть',
+            or: 'або',
+            register: 'зареєструйтесь',
+            suffix: '.',
+        },
+        errors: {
+            load: 'Не вдалося завантажити повідомлення.',
+            send: 'Не вдалося надіслати повідомлення.',
+        },
+    },
     catalog: {
         seo: {
             listName: ({ category }: { category?: string }) => category ? `Каталог — ${category}` : 'Каталог',
