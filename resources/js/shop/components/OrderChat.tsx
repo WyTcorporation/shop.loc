@@ -4,20 +4,9 @@ import { Link } from 'react-router-dom';
 import { OrdersApi, type OrderMessage } from '../api';
 import useAuth from '../hooks/useAuth';
 import { resolveErrorMessage } from '../lib/errors';
+import { formatDateTime } from '../lib/datetime';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '../i18n/LocaleProvider';
-
-function formatTimestamp(value?: string | null) {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleString('uk-UA', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
 
 type OrderChatProps = {
     orderId: number;
@@ -27,7 +16,7 @@ type OrderChatProps = {
 
 export default function OrderChat({ orderId, orderNumber, className }: OrderChatProps) {
     const { isAuthenticated, isReady, user } = useAuth();
-    const { t } = useLocale();
+    const { t, locale } = useLocale();
     const [messages, setMessages] = React.useState<OrderMessage[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [loadError, setLoadError] = React.useState<string | null>(null);
@@ -164,7 +153,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
                         ) : (
                             messages.map((message) => {
                                 const isAuthor = message.is_author ?? (message.user_id === user?.id);
-                                const timestamp = formatTimestamp(message.created_at);
+                                const timestamp = formatDateTime(locale, message.created_at);
                                 return (
                                     <div
                                         key={message.id}
@@ -179,7 +168,11 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
                                             <span>
                                                 {isAuthor ? t('orderChat.you') : message.user?.name ?? t('orderChat.seller')}
                                             </span>
-                                            {timestamp && <span>{timestamp}</span>}
+                                            {timestamp && (
+                                                <span data-testid={`order-chat-message-timestamp-${message.id}`}>
+                                                    {timestamp}
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">
                                             {message.body}
