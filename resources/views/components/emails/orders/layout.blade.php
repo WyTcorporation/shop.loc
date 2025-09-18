@@ -10,15 +10,15 @@
 
 @php
     $introLines = is_string($introLines) ? [$introLines] : (array) $introLines;
-    $footerNote ??= __('Якщо виникли питання — просто відповідайте на цей лист.');
+    $footerNote ??= __('shop.common.footer_note');
     $orderEmail = $order->email ?? null;
-
+    $htmlLang = str_replace('_', '-', app()->getLocale());
 @endphp
 <!doctype html>
-<html lang="uk">
+<html lang="{{ $htmlLang }}">
 <head>
     <meta charset="utf-8">
-    <title>{{ $title ?? (isset($order) ? __('Замовлення #:number', ['number' => $order->number ?? '']) : config('app.name')) }}</title>
+    <title>{{ $title ?? (isset($order) ? __('shop.common.order_title', ['number' => $order->number ?? '']) : config('app.name')) }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 </head>
 <body style="margin:0;padding:0;background:#f6f7f9;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
@@ -36,7 +36,7 @@
                         @endforeach
                         @if($orderEmail && empty($introLines))
                             <p style="margin:0 0 12px 0;color:#444;font-size:14px">
-                                {{ __('Ми надішлемо оновлення на :email.', ['email' => $orderEmail]) }}
+                                {{ __('shop.common.updates_email', ['email' => $orderEmail]) }}
                             </p>
                         @endif
                     </td>

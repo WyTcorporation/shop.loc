@@ -26,7 +26,7 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
     {
         $appName = config('app.name', 'Shop');
 
-        return $this->subject(__('Скидання пароля для :app', ['app' => $appName]))
+        return $this->subject(__('shop.auth.reset.subject', ['app' => $appName]))
             ->tag('auth-password-reset')
             ->metadata(['type' => 'auth'])
             ->view('emails.auth.reset-password', [

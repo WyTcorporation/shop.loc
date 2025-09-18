@@ -21,7 +21,9 @@ class VerifyEmailMail extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        return $this->subject('Підтвердіть електронну адресу для Shop')
+        $appName = config('app.name', 'Shop');
+
+        return $this->subject(__('shop.auth.verify.subject', ['app' => $appName]))
             ->tag('auth-verify-email')
             ->metadata(['type' => 'auth'])
             ->view('emails.auth.verify-email', [

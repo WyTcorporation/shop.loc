@@ -18,7 +18,9 @@ class PasswordChangedMail extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        return $this->subject('Ваш пароль до Shop змінено')
+        $appName = config('app.name', 'Shop');
+
+        return $this->subject(__('shop.auth.reset.changed_subject', ['app' => $appName]))
             ->tag('auth-password-changed')
             ->metadata(['type' => 'auth'])
             ->view('emails.auth.password-changed', [

@@ -22,21 +22,21 @@
     $loyaltyPointsUsed = (int) ($order->loyalty_points_used ?? 0);
     $loyaltyPointsValue = max(0, (float) ($order->loyalty_points_value ?? 0));
     $total = (float) ($order->total ?? $items->sum('sum'));
-    $heading = __('Дякуємо за замовлення!');
-    $introLines = [
-        __('Замовлення №:number оформлено.', ['number' => $order->number]),
-        __('Ми надішлемо оновлення на :email.', ['email' => $order->email]),
-    ];
+    $heading = __('shop.orders.placed.subject');
+    $introLines = array_filter([
+        __('shop.orders.placed.intro', ['number' => $order->number]),
+        filled($order->email ?? null) ? __('shop.common.updates_email', ['email' => $order->email]) : null,
+    ]);
 @endphp
 
 <x-emails.orders.layout :order="$order" :heading="$heading" :intro-lines="$introLines">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
         <thead>
         <tr>
-            <th align="left" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('Товар') }}</th>
-            <th align="center" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('К-сть') }}</th>
-            <th align="right" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('Ціна') }}</th>
-            <th align="right" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('Сума') }}</th>
+            <th align="left" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('shop.common.product') }}</th>
+            <th align="center" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('shop.common.quantity') }}</th>
+            <th align="right" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('shop.common.price') }}</th>
+            <th align="right" style="padding:8px 0;border-bottom:1px solid #eee;font-size:12px;color:#666">{{ __('shop.common.sum') }}</th>
         </tr>
         </thead>
         <tbody>
@@ -58,24 +58,24 @@
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Разом за товари') }}</td>
+            <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('shop.common.items_subtotal') }}</td>
             <td align="right" style="padding:12px 0;font-weight:700;color:#111">{{ \App\Support\OrderMailFormatter::money($order, $subtotal) }}</td>
         </tr>
         @if(!empty($order->coupon_code))
             <tr>
-                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Купон') }}</td>
+                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('shop.common.coupon') }}</td>
                 <td align="right" style="padding:12px 0;font-weight:700;color:#111">{{ $order->coupon_code }}</td>
             </tr>
         @endif
         @if($discountTotal > 0)
             <tr>
-                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Знижка') }}</td>
+                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('shop.common.discount') }}</td>
                 <td align="right" style="padding:12px 0;font-weight:700;color:#d20000;">−{{ \App\Support\OrderMailFormatter::money($order, $discountTotal) }}</td>
             </tr>
         @endif
         @if($loyaltyPointsUsed > 0)
             <tr>
-                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('Використані бали') }}</td>
+                <td colspan="3" align="right" style="padding:12px 0;font-weight:600;color:#111">{{ __('shop.common.used_points') }}</td>
                 <td align="right" style="padding:12px 0;font-weight:700;color:#111;">
                     {{ number_format($loyaltyPointsUsed, 0, ',', ' ') }}
                     @if($loyaltyPointsValue > 0)
@@ -85,7 +85,7 @@
             </tr>
         @endif
         <tr>
-            <td colspan="3" align="right" style="padding:14px 0;font-weight:600;color:#111">{{ __('До сплати') }}</td>
+            <td colspan="3" align="right" style="padding:14px 0;font-weight:600;color:#111">{{ __('shop.common.total_due') }}</td>
             <td align="right" style="padding:14px 0;font-weight:700;color:#111">{{ \App\Support\OrderMailFormatter::money($order, $total) }}</td>
         </tr>
         </tfoot>

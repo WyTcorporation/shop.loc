@@ -19,7 +19,7 @@ class OrderStatusUpdatedMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject("Ваше замовлення #{$this->order->number}: статус оновлено")
+        return $this->subject(__('shop.orders.status_updated.subject_line', ['number' => $this->order->number]))
             ->markdown('emails.orders.status-updated', [
                 'order'      => $this->order,
                 'fromStatus' => $this->fromStatus,

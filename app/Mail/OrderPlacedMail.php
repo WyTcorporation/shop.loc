@@ -19,7 +19,7 @@ class OrderPlacedMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject("Ваше замовлення #{$this->order->number} прийнято")
+        return $this->subject(__('shop.orders.placed.subject_line', ['number' => $this->order->number]))
             ->tag('order-placed')
             ->metadata(['type' => 'order'])
             ->view('emails.orders.placed', [

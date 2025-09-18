@@ -17,7 +17,7 @@ class VendorForm
         return $schema
             ->components([
                 Select::make('user_id')
-                    ->label(__('Owner'))
+                    ->label(__('shop.common.owner'))
                     ->relationship('user', 'name')
                     ->searchable()
                     ->preload()
@@ -32,9 +32,11 @@ class VendorForm
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
                 TextInput::make('contact_email')
+                    ->label(__('shop.common.email'))
                     ->email()
                     ->maxLength(255),
                 TextInput::make('contact_phone')
+                    ->label(__('shop.common.phone'))
                     ->maxLength(255),
                 Textarea::make('description')
                     ->rows(4)
