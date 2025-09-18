@@ -8,7 +8,7 @@ type Ctx = {
     items: WishItem[];
     has: (id: number) => boolean;
     add: (p: WishItem) => void;
-    remove: (id: number) => void;
+    remove: (id: number, options?: { sync?: boolean }) => void;
     toggle: (p: WishItem) => void;
     clear: () => void;
     isLoading: boolean;
@@ -187,9 +187,11 @@ export function WishlistProvider({children}: {children: React.ReactNode}) {
         syncAdd(p.id, p);
     }, [setList, syncAdd]);
 
-    const remove = React.useCallback((id: number) => {
+    const remove = React.useCallback((id: number, options?: { sync?: boolean }) => {
         setList(prev => prev.filter(x => x.id !== id));
-        syncRemove(id);
+        if (options?.sync ?? true) {
+            syncRemove(id);
+        }
     }, [setList, syncRemove]);
 
     const toggle = React.useCallback((p: WishItem) => {
