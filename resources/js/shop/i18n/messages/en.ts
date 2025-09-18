@@ -41,6 +41,186 @@ const messages = {
         },
         empty: 'Your cart is empty',
     },
+    profile: {
+        navigation: {
+            overview: 'Profile',
+            orders: 'My orders',
+            addresses: 'Saved addresses',
+            points: 'Loyalty points',
+        },
+        overview: {
+            loading: 'Loading profile…',
+            title: 'Profile',
+            welcome: ({ name }: { name: string }) =>
+                `Welcome, ${name}. Manage your details and explore other profile sections.`,
+            guestName: 'guest',
+            personalDataTitle: 'Personal details',
+            verification: {
+                title: 'Email not verified.',
+                description: 'Check your inbox or resend the confirmation email.',
+                resend: {
+                    sending: 'Sending…',
+                    action: 'Resend confirmation email',
+                },
+                successFallback: 'Confirmation email sent again.',
+                errorFallback: 'Failed to send the verification email. Please try again.',
+            },
+            form: {
+                labels: {
+                    name: 'Name',
+                    email: 'Email',
+                    newPassword: 'New password',
+                    confirmPassword: 'Confirm password',
+                },
+                placeholders: {
+                    name: 'Enter your name',
+                    email: 'your@email.com',
+                    newPassword: 'Leave blank to keep current',
+                    confirmPassword: 'Repeat the new password',
+                },
+                hintPasswordOptional:
+                    'You can leave the password blank if you do not plan to change it. The email must be unique.',
+                hintApplyImmediately: 'Changes take effect immediately after saving.',
+                submit: {
+                    saving: 'Saving…',
+                    save: 'Save changes',
+                },
+            },
+            info: {
+                id: 'ID',
+                name: 'Name',
+                email: 'Email',
+                verified: 'Email verified',
+                verifiedYes: 'Yes',
+                verifiedNo: 'No',
+            },
+            session: {
+                tokenNote: 'The Sanctum token is stored locally for authenticated API requests.',
+                logout: {
+                    processing: 'Signing out…',
+                    action: 'Sign out',
+                    error: 'Failed to sign out. Please try again.',
+                },
+            },
+            notifications: {
+                updateSuccess: 'Profile details updated.',
+            },
+            errors: {
+                update: 'Failed to update the profile. Please try again.',
+                loadTwoFactorStatus: 'Failed to load the two-factor authentication status.',
+                startTwoFactor: 'Failed to start the two-factor authentication setup.',
+                confirmTwoFactor: 'Failed to confirm the code. Please try again.',
+                disableTwoFactor: 'Failed to disable two-factor authentication.',
+                resendVerification: 'Failed to send the verification email. Please try again.',
+            },
+            twoFactor: {
+                title: 'Two-factor authentication',
+                statusLabel: 'Status:',
+                status: {
+                    enabled: 'Enabled',
+                    pending: 'Pending confirmation',
+                    disabled: 'Disabled',
+                },
+                confirmedAtLabel: 'Confirmed:',
+                description: 'Two-factor authentication adds an extra layer of security to your account.',
+                loadingStatus: 'Loading status…',
+                secret: {
+                    title: 'Secret key',
+                    instructions:
+                        'Add this key to your authenticator app (Google Authenticator, 1Password, Authy, etc.). You can also open the setup directly using the link below.',
+                    openApp: 'Open in the app',
+                },
+                confirm: {
+                    codeLabel: 'Confirmation code',
+                    codePlaceholder: 'Enter the app code',
+                    helper: 'Enter the six-digit code from your authenticator app to finish the setup.',
+                    submit: 'Confirm',
+                    submitting: 'Confirming…',
+                    cancel: 'Cancel',
+                },
+                callouts: {
+                    pendingSetup: 'The previous setup was not completed. You can generate a new secret key to start over.',
+                },
+                enable: {
+                    action: 'Enable 2FA',
+                    loading: 'Please wait…',
+                },
+                disable: {
+                    action: 'Disable 2FA',
+                    confirm: 'Are you sure you want to disable two-factor authentication?',
+                },
+                messages: {
+                    enabled: 'Two-factor authentication enabled.',
+                    disabled: 'Two-factor authentication disabled.',
+                    emptyCode: 'Enter the confirmation code from the app.',
+                },
+            },
+        },
+        orders: {
+            loading: 'Loading orders…',
+            title: 'My orders',
+            description: 'Review your purchase history, track order statuses, and open detailed information.',
+            error: 'Failed to load orders.',
+            table: {
+                loading: 'Loading…',
+                empty: {
+                    description: 'You have not placed any orders yet.',
+                    cta: 'Browse the catalog',
+                },
+                headers: {
+                    number: 'Number',
+                    date: 'Date',
+                    status: 'Status',
+                    total: 'Total',
+                    actions: 'Actions',
+                },
+                view: 'View order details',
+            },
+        },
+        addresses: {
+            loading: 'Loading addresses…',
+            title: 'Saved addresses',
+            description: 'Manage delivery addresses to speed up future checkouts.',
+            error: 'Failed to load addresses.',
+            list: {
+                loading: 'Loading…',
+                empty: 'You do not have any saved addresses yet. Add one during checkout.',
+                defaultName: 'Untitled',
+                fields: {
+                    city: 'City',
+                    address: 'Address',
+                    postalCode: 'Postal code',
+                    phone: 'Phone',
+                },
+            },
+        },
+        points: {
+            loading: 'Loading points…',
+            title: 'Loyalty points',
+            description: 'Track your available balance and loyalty point history.',
+            error: 'Failed to load loyalty information.',
+            stats: {
+                balance: 'Available',
+                earned: 'Earned',
+                spent: 'Redeemed',
+            },
+            table: {
+                loading: 'Loading…',
+                empty: 'No loyalty history yet. Use points during checkout to see the activity here.',
+                headers: {
+                    date: 'Date',
+                    description: 'Description',
+                    type: 'Type',
+                    amount: 'Amount',
+                },
+                type: {
+                    default: 'Transaction',
+                    earn: 'Earned',
+                    redeem: 'Redeemed',
+                },
+            },
+        },
+    },
     cart: {
         seoTitle: ({ brand }: { brand: string }) => `Cart — ${brand}`,
         title: 'Cart',
