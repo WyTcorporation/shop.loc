@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { useLocale } from '../i18n/LocaleProvider';
 import { formatPrice } from '../ui/format';
 
 type RVItem = {
@@ -27,9 +28,12 @@ function readFromStorage(): RVItem[] {
     }
 }
 
-export default function RecentlyViewed({ excludeSlug, limit = 4, title = 'Ви нещодавно переглядали' }: Props) {
+export default function RecentlyViewed({ excludeSlug, limit = 4, title }: Props) {
     const [items, setItems] = React.useState<RVItem[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const { t } = useLocale();
+
+    const heading = title ?? t('recentlyViewed.title');
 
     React.useEffect(() => {
         // миттєве читання з localStorage + мікрозатримка, щоб уникнути миготіння
@@ -42,7 +46,7 @@ export default function RecentlyViewed({ excludeSlug, limit = 4, title = 'Ви �
 
     return (
         <section className="mt-10" data-testid="recently-section">
-            <h2 className="mb-3 text-lg font-semibold">{title}</h2>
+            <h2 className="mb-3 text-lg font-semibold">{heading}</h2>
 
             {loading ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="recently-skel">
@@ -56,7 +60,7 @@ export default function RecentlyViewed({ excludeSlug, limit = 4, title = 'Ви �
                 </div>
             ) : items.length === 0 ? (
                 <div className="text-sm text-muted-foreground" data-testid="recently-empty">
-                    Ще не переглядали жодного товару.
+                    {t('recentlyViewed.empty')}
                 </div>
             ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -67,7 +71,9 @@ export default function RecentlyViewed({ excludeSlug, limit = 4, title = 'Ви �
                                     {p.preview_url ? (
                                         <img src={p.preview_url} alt={p.name} className="h-full w-full object-cover" />
                                     ) : (
-                                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                                            {t('recentlyViewed.noImage')}
+                                        </div>
                                     )}
                                 </div>
                                 <div className="p-3">

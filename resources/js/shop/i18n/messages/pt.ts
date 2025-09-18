@@ -61,6 +61,11 @@ const messages = {
         },
         empty: 'O carrinho está vazio',
     },
+    recentlyViewed: {
+        title: 'Vistos recentemente',
+        empty: 'Você ainda não visualizou nenhum produto.',
+        noImage: 'sem foto',
+    },
     orderChat: {
         title: 'Chat com o vendedor',
         orderLabel: ({ number }: { number: string | number }) => `Pedido ${number}`,

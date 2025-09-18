@@ -61,6 +61,11 @@ const messages = {
         },
         empty: 'Your cart is empty',
     },
+    recentlyViewed: {
+        title: 'Recently viewed',
+        empty: 'You haven’t viewed any products yet.',
+        noImage: 'No photo',
+    },
     orderChat: {
         title: 'Chat with the seller',
         orderLabel: ({ number }: { number: string | number }) => `Order ${number}`,
