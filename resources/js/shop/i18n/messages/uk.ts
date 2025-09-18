@@ -61,6 +61,11 @@ const messages = {
         },
         empty: 'Кошик порожній',
     },
+    recentlyViewed: {
+        title: 'Ви нещодавно переглядали',
+        empty: 'Ще не переглядали жодного товару.',
+        noImage: 'без фото',
+    },
     orderChat: {
         title: 'Чат з продавцем',
         orderLabel: ({ number }: { number: string | number }) => `Замовлення ${number}`,
