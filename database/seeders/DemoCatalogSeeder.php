@@ -4,10 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\Vendor;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class DemoCatalogSeeder extends Seeder
@@ -17,6 +18,17 @@ class DemoCatalogSeeder extends Seeder
 
     public function run(): void
     {
+        Schema::disableForeignKeyConstraints();
+
+        ProductImage::withoutEvents(fn () => ProductImage::truncate());
+        Product::withoutEvents(fn () => Product::truncate());
+        Vendor::withoutEvents(fn () => Vendor::truncate());
+        Category::withoutEvents(fn () => Category::truncate());
+
+        Schema::enableForeignKeyConstraints();
+
+        Product::query()->unsearchable();
+
         // 5 категорій
         $cats = Category::factory()->count(5)->create();
 
@@ -51,6 +63,8 @@ class DemoCatalogSeeder extends Seeder
                 ]);
             }
         });
+
+        Product::query()->searchable();
     }
 
 //    /**
