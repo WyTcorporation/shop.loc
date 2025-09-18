@@ -11,6 +11,7 @@ import {
 import { useDebounce } from '../hooks/useDebounce';
 import { SUPPORTED_LANGS } from '../i18n/config';
 import { formatPrice } from '../ui/format';
+import { useLocale } from '../i18n/LocaleProvider';
 
 const MIN_QUERY_LENGTH = 2;
 
@@ -25,6 +26,7 @@ export default function MainSearch() {
     const debouncedQuery = useDebounce(query, 250);
     const navigate = useNavigate();
     const location = useLocation();
+    const { t } = useLocale();
 
     const inputRef = useRef<HTMLInputElement | null>(null);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,14 +78,14 @@ export default function MainSearch() {
                 }
                 console.error('Failed to fetch search suggestions', err);
                 setSuggestions([]);
-                setError('Не вдалося завантажити підказки');
+                setError(t('search.panel.loadError'));
             })
             .finally(() => {
                 if (requestIdRef.current === requestId) {
                     setLoading(false);
                 }
             });
-    }, [debouncedQuery, retryTick]);
+    }, [debouncedQuery, retryTick, t]);
 
     const showPanel = isFocused && (
         trimmedQuery.length > 0 ||
@@ -158,7 +160,7 @@ export default function MainSearch() {
                         onChange={(event) => setQuery(event.target.value)}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
-                        placeholder="Пошук товарів…"
+                        placeholder={t('search.placeholder')}
                         className="pl-9"
                         aria-autocomplete="list"
                         aria-expanded={showPanel}
@@ -171,12 +173,12 @@ export default function MainSearch() {
                 <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-lg border bg-white shadow-xl">
                     {trimmedQuery.length < MIN_QUERY_LENGTH ? (
                         <div className="px-4 py-3 text-sm text-gray-500">
-                            Введіть щонайменше {MIN_QUERY_LENGTH} символи для пошуку.
+                            {t('search.panel.minQuery', { min: MIN_QUERY_LENGTH })}
                         </div>
                     ) : loading ? (
                         <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-500">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Завантаження…
+                            {t('common.loading')}
                         </div>
                     ) : error ? (
                         <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
@@ -187,7 +189,7 @@ export default function MainSearch() {
                                 onClick={handleRetry}
                                 className="text-sm font-medium text-blue-600 hover:text-blue-700"
                             >
-                                Повторити
+                                {t('common.actions.retry')}
                             </button>
                         </div>
                     ) : suggestions.length > 0 ? (
@@ -240,12 +242,12 @@ export default function MainSearch() {
                                     }}
                                     className="flex w-full items-center justify-between gap-3 bg-gray-50 px-4 py-3 text-left text-sm font-medium text-blue-600 hover:bg-gray-100"
                                 >
-                                    Показати всі результати для “{trimmedQuery}”
+                                    {t('search.panel.showAll', { query: trimmedQuery })}
                                 </button>
                             </li>
                         </ul>
                     ) : (
-                        <div className="px-4 py-3 text-sm text-gray-500">Нічого не знайдено</div>
+                        <div className="px-4 py-3 text-sm text-gray-500">{t('search.panel.empty')}</div>
                     )}
                 </div>
             )}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import useCart from '../useCart'
 import SeoHead from '../components/SeoHead';
 import { GA } from '../ui/ga';
+import { useLocale } from '../i18n/LocaleProvider';
 
 function money(v: unknown) {
     return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })
@@ -11,8 +12,11 @@ function money(v: unknown) {
 
 export default function CartPage() {
     const { cart, total, update, remove } = useCart()
+    const { t } = useLocale();
 
-    if (!cart) return <div className="max-w-4xl mx-auto p-6">Loading…</div>
+    const brand = t('header.brand');
+
+    if (!cart) return <div className="max-w-4xl mx-auto p-6">{t('cart.loading')}</div>
 
     useEffect(() => {
         GA.view_cart(cart);
@@ -20,11 +24,14 @@ export default function CartPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
-            <SeoHead title="Кошик — Shop" robots="noindex,nofollow" canonical />
-            <h1 className="text-2xl font-semibold">Cart</h1>
+            <SeoHead title={t('cart.seoTitle', { brand })} robots="noindex,nofollow" canonical />
+            <h1 className="text-2xl font-semibold">{t('cart.title')}</h1>
 
             {cart.items.length === 0 && (
-                <div className="text-gray-600">Cart is empty. <Link to="/" className="underline">Go shopping</Link></div>
+                <div className="text-gray-600">
+                    {t('cart.empty.message')}{' '}
+                    <Link to="/" className="underline">{t('cart.empty.cta')}</Link>
+                </div>
             )}
 
             <div className="space-y-3">
@@ -63,10 +70,10 @@ export default function CartPage() {
                                 )}
                                 {vendor && (
                                     <div className="text-xs text-gray-500 mt-1">
-                                        Продавець: {vendor.name ?? '—'}{' '}
+                                        {t('cart.vendor.label')}: {vendor.name ?? '—'}{' '}
                                         {vendor.id && (
                                             <Link className="text-blue-600 hover:underline" to={`/seller/${vendor.id}`}>
-                                                Написати продавцю
+                                                {t('cart.vendor.contact')}
                                             </Link>
                                         )}
                                     </div>
@@ -80,14 +87,14 @@ export default function CartPage() {
                                 className="border rounded px-2 py-1 w-20"
                             />
                             <div className="w-24 text-right font-medium">{money(line)}</div>
-                            <button onClick={()=>remove(it.id)} className="px-2 py-1 text-sm rounded border">Remove</button>
+                            <button onClick={()=>remove(it.id)} className="px-2 py-1 text-sm rounded border">{t('cart.line.remove')}</button>
                         </div>
                     );
                 })}
             </div>
 
             <div className="flex justify-between items-center border-t pt-4">
-                <div className="text-lg">Total:</div>
+                <div className="text-lg">{t('cart.summary.totalLabel')}:</div>
                 <div className="text-xl font-semibold">{money(total)}</div>
             </div>
 
@@ -99,7 +106,7 @@ export default function CartPage() {
                     aria-disabled={cart.items.length===0}
                     onClick={e=>{ if(cart.items.length===0){e.preventDefault()} }}
                 >
-                    Checkout
+                    {t('cart.summary.checkout')}
                 </Link>
             </div>
         </div>

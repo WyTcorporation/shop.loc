@@ -7,6 +7,7 @@ import WishlistBadge from '../components/WishlistBadge';
 import { openCookiePreferences } from '../ui/analytics';
 import LanguageSwitcher from '@/shop/components/LanguageSwitcher';
 import MainSearch from './MainSearch';
+import { useLocale } from '../i18n/LocaleProvider';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,13 +19,14 @@ import {
 
 export default function Header() {
     const { isAuthenticated, user, logout, isReady } = useAuth();
+    const { t } = useLocale();
 
-    const displayName = user?.name?.trim() || user?.email?.trim() || 'Мій профіль';
+    const displayName = user?.name?.trim() || user?.email?.trim() || t('header.account.defaultName');
 
     return (
         <header className="sticky top-0 z-30 border-b bg-white/80 backdrop-blur">
             <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
-                <Link to="/" className="shrink-0 font-semibold tracking-tight">3D-Print Shop</Link>
+                <Link to="/" className="shrink-0 font-semibold tracking-tight">{t('header.brand')}</Link>
                 <div className="flex flex-1 items-center gap-4">
                     <div className="hidden flex-1 md:block">
                         <MainSearch />
@@ -36,15 +38,15 @@ export default function Header() {
                                 isActive ? 'font-medium' : 'text-gray-600 hover:text-black'
                             }
                         >
-                            Каталог
+                            {t('header.nav.catalog')}
                         </NavLink>
                         <MiniCart />
                         <WishlistBadge />
                         <button onClick={openCookiePreferences} className="text-xs underline">
-                            Налаштувати cookies
+                            {t('header.nav.cookies')}
                         </button>
                         {!isReady ? (
-                            <span className="text-xs text-gray-500">Завантаження…</span>
+                            <span className="text-xs text-gray-500">{t('common.loading')}</span>
                         ) : isAuthenticated ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -63,25 +65,25 @@ export default function Header() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
                                         <Link to="/profile" className="block w-full">
-                                            Мій профіль
+                                            {t('header.account.profile')}
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onSelect={() => void logout()}>
-                                        Вийти
+                                        {t('header.account.logout')}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
                             <div className="flex items-center gap-3">
                                 <Link to="/login" className="text-sm font-medium text-gray-700 transition-colors hover:text-black">
-                                    Увійти
+                                    {t('header.account.login')}
                                 </Link>
                                 <Link
                                     to="/register"
                                     className="rounded border border-black px-3 py-1 text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-black hover:text-white"
                                 >
-                                    Зареєструватися
+                                    {t('header.account.register')}
                                 </Link>
                             </div>
                         )}
