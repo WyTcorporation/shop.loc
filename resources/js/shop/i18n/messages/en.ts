@@ -675,6 +675,11 @@ const messages = {
         clear: 'Clear',
         loading: 'Refreshing your wishlist…',
         errorTitle: 'Could not update the list',
+        errors: {
+            auth: 'Sign in to sync your wishlist.',
+            sync: 'Could not sync your wishlist.',
+            partialSync: 'Some items could not be synced with the wishlist.',
+        },
         empty: 'Nothing here yet.',
         button: {
             add: 'Add to wishlist',

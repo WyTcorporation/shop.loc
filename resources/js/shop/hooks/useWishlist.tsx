@@ -1,6 +1,7 @@
 import React from 'react';
 import type {AxiosError} from 'axios';
 import {WishlistApi} from '../api';
+import {useLocale} from '../i18n/LocaleProvider';
 import {getWishlist, setWishlist, type WishItem} from '../ui/wishlist';
 import useAuth from './useAuth';
 
@@ -30,6 +31,7 @@ function dedupe(items: WishItem[]): WishItem[] {
 
 export function WishlistProvider({children}: {children: React.ReactNode}) {
     const {isAuthenticated, isReady, user, token} = useAuth();
+    const {t} = useLocale();
     const [items, setItems] = React.useState<WishItem[]>(() => dedupe(getWishlist()));
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -50,14 +52,14 @@ export function WishlistProvider({children}: {children: React.ReactNode}) {
         const status = err?.response?.status;
         const fallback =
             status === 401
-                ? 'Увійдіть, щоб синхронізувати обране.'
-                : 'Не вдалося синхронізувати список бажаного.';
+                ? t('wishlist.errors.auth')
+                : t('wishlist.errors.sync');
         const message = err?.response?.data?.message ?? err?.message ?? fallback;
         console.error('Wishlist API error', error);
         syncMode.current = status === 401 ? 'local' : 'unknown';
         setError(message);
         return status;
-    }, []);
+    }, [t]);
 
     React.useEffect(() => {
         itemsRef.current = items;
@@ -115,7 +117,7 @@ export function WishlistProvider({children}: {children: React.ReactNode}) {
                     });
 
                     if (hadFailures) {
-                        setError('Деякі товари не вдалося синхронізувати зі списком бажаного.');
+                        setError(t('wishlist.errors.partialSync'));
                     }
                 }
 
@@ -140,7 +142,7 @@ export function WishlistProvider({children}: {children: React.ReactNode}) {
         return () => {
             cancelled = true;
         };
-    }, [authUserId, handleApiError, isAuthenticated, isReady, setList, token]);
+    }, [authUserId, handleApiError, isAuthenticated, isReady, setList, t, token]);
 
     React.useEffect(() => {
         const onStorage = (e: StorageEvent) => {
