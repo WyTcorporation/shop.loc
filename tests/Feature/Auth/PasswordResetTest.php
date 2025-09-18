@@ -5,6 +5,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Session;
 
 beforeEach(function () {
     config(['auth.guards.sanctum' => [
@@ -61,5 +62,29 @@ it('resets the password with a valid token', function () {
         'message' => trans(Password::PASSWORD_RESET),
     ]);
 
+    expect(Hash::check('new-secure-password', $user->fresh()->password))->toBeTrue();
+});
+
+it('logs the user in and redirects to profile after resetting the password via web form', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('initial-password'),
+    ]);
+
+    $token = Password::broker()->createToken($user);
+
+    Session::start();
+
+    $response = $this->post('/reset-password', [
+        '_token' => Session::token(),
+        'token' => $token,
+        'email' => $user->email,
+        'password' => 'new-secure-password',
+        'password_confirmation' => 'new-secure-password',
+    ]);
+
+    $response->assertRedirect('/profile');
+    $response->assertSessionHas('status', trans(Password::PASSWORD_RESET));
+
+    $this->assertAuthenticatedAs($user);
     expect(Hash::check('new-secure-password', $user->fresh()->password))->toBeTrue();
 });
