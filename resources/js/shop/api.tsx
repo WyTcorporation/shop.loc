@@ -296,6 +296,14 @@ export const AuthApi = {
         const { data } = await api.post<{ message?: string }>('/email/resend');
         return data;
     },
+    async requestPasswordReset(payload: { email: string }) {
+        const { data } = await api.post<{ message?: string }>('/password/email', payload);
+        return data;
+    },
+    async resetPassword(payload: { token: string; email: string; password: string; password_confirmation: string }) {
+        const { data } = await api.post<{ message?: string }>('/password/reset', payload);
+        return data;
+    },
 };
 
 export const TwoFactorApi = {

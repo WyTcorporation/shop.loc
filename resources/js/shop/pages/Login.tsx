@@ -104,6 +104,11 @@ export default function LoginPage() {
                             onChange={event => setPassword(event.target.value)}
                             className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
                         />
+                        <div className="flex justify-end">
+                            <Link to="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-500">
+                                Забули пароль?
+                            </Link>
+                        </div>
                     </div>
                     {needsOtp && (
                         <div className="space-y-1">
