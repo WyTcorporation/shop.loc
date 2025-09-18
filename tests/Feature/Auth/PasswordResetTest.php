@@ -1,9 +1,9 @@
 <?php
 
+use App\Mail\ResetPasswordMail;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Session;
 
@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 it('sends a password reset link to an existing user', function () {
-    Notification::fake();
+    Mail::fake();
 
     $user = User::factory()->create();
 
@@ -27,11 +27,15 @@ it('sends a password reset link to an existing user', function () {
         'message' => trans(Password::RESET_LINK_SENT),
     ]);
 
-    Notification::assertSentTo($user, ResetPassword::class);
+    Mail::assertQueued(ResetPasswordMail::class, function (ResetPasswordMail $mail) use ($user) {
+        expect($mail->hasTo($user->email))->toBeTrue();
+
+        return true;
+    });
 });
 
 it('returns validation error when email is not found', function () {
-    Notification::fake();
+    Mail::fake();
 
     $response = $this->postJson('/api/password/email', [
         'email' => 'missing@example.com',
@@ -39,12 +43,33 @@ it('returns validation error when email is not found', function () {
 
     $response->assertStatus(422)->assertJsonValidationErrors(['email']);
 
-    Notification::assertNothingSent();
+    Mail::assertNothingQueued();
+});
+
+it('queues branded password reset mail when sending reset link directly', function () {
+    Mail::fake();
+
+    $user = User::factory()->create();
+
+    $status = Password::sendResetLink([
+        'email' => $user->email,
+    ]);
+
+    expect($status)->toBe(Password::RESET_LINK_SENT);
+
+    Mail::assertQueued(ResetPasswordMail::class, function (ResetPasswordMail $mail) use ($user) {
+        expect($mail->hasTo($user->email))->toBeTrue();
+
+        $html = $mail->render();
+
+        expect($html)->toContain('Скинути пароль');
+        expect($html)->toContain(config('app.name', 'Shop'));
+
+        return true;
+    });
 });
 
 it('resets the password with a valid token', function () {
-    Notification::fake();
-
     $user = User::factory()->create([
         'password' => Hash::make('initial-password'),
     ]);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Mail\ResetPasswordMail;
 use App\Models\TwoFactorSecret;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\HasApiTokens;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -115,5 +117,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function getTwoFactorConfirmedAtAttribute(): ?string
     {
         return $this->twoFactorSecret?->confirmed_at?->toISOString();
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        Mail::to($this)->queue(new ResetPasswordMail($this, $token));
     }
 }
