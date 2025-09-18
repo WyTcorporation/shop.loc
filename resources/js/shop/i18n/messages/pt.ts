@@ -552,6 +552,75 @@ const messages = {
         noImage: 'sem imagem',
     },
     product: {
+        seo: {
+            pageTitle: ({ name, price, brand }: { name: string; price: string; brand: string }) => `${name} — ${price} — ${brand}`,
+            fallbackTitle: ({ brand }: { brand: string }) => `Produto — ${brand}`,
+            description: ({ name, price, inStock }: { name: string; price: string; inStock: boolean }) =>
+                `Compre ${name} por ${price}. ${inStock ? 'Disponível.' : 'Sem stock.'} Faça o pedido online.`,
+            fallbackDescription: 'Página do produto na loja.',
+            breadcrumbHome: 'Início',
+            breadcrumbCatalog: 'Catálogo',
+        },
+        gallery: {
+            noImage: 'sem foto',
+            openImage: ({ index }: { index: number }) => `Abrir imagem ${index}`,
+        },
+        reviews: {
+            ariaLabel: 'Avaliações',
+            title: 'Avaliações',
+            summary: {
+                loading: 'A carregar a classificação…',
+                label: 'Classificação média:',
+                of: ({ max }: { max: number }) => `de ${max}`,
+                empty: 'Ainda não há avaliações',
+            },
+            loading: 'A carregar avaliações…',
+            empty: 'Ainda não há avaliações. Seja o primeiro!',
+            anonymous: 'Cliente',
+            ratingLabel: ({ value, max }: { value: number; max: number }) => `${value} de ${max}`,
+            pending: 'A avaliação aguarda moderação. Avisaremos após a publicação.',
+        },
+        stock: {
+            available: ({ count }: { count: number }) => `Disponível: ${count} un.`,
+            unavailable: 'Sem stock',
+        },
+        actions: {
+            addToCart: 'Adicionar ao carrinho',
+            backToCatalog: '← Voltar ao catálogo',
+        },
+        toasts: {
+            added: {
+                title: 'Adicionado ao carrinho',
+                action: 'Abrir carrinho',
+                error: 'Não foi possível adicionar ao carrinho',
+            },
+        },
+        tabs: {
+            description: 'Descrição',
+            specs: 'Especificações',
+            delivery: 'Entrega',
+        },
+        description: {
+            empty: 'A descrição ainda não está disponível.',
+        },
+        specs: {
+            empty: 'As especificações ainda não foram adicionadas.',
+        },
+        delivery: {
+            items: {
+                novaPoshta: 'Nova Poshta na Ucrânia — 1–3 dias.',
+                courier: 'Entrega por correio nas grandes cidades — 1–2 dias.',
+                payment: 'Pagamento: cartão online ou pagamento na entrega.',
+                returns: 'Devolução/troca — 14 dias (de acordo com a lei de defesa do consumidor).',
+            },
+        },
+        ratingStars: {
+            option: ({ value, max }: { value: number; max: number }) => `Classificação ${value} de ${max}`,
+            hint: ({ value, max }: { value: number; max: number }) => `${value} de ${max}`,
+        },
+        similar: {
+            count: ({ count }: { count: number }) => `Encontrados semelhantes: ${count}`,
+        },
         reviewForm: {
             ariaLabel: 'Formulário de avaliação',
             title: 'Deixar uma avaliação',

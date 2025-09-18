@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { GA } from '../ui/ga';
 import ReviewList from '../components/ReviewList';
 import ReviewForm from '../components/ReviewForm';
+import { useLocale } from '../i18n/LocaleProvider';
 
 export default function ProductPage() {
     const { slug } = useParams();
@@ -32,6 +33,7 @@ export default function ProductPage() {
     const { success, error } = useNotify();
     const navigate = useNavigate();
     const hreflangs = useHreflangs('uk');
+    const { t } = useLocale();
 
     // fetch product
     useEffect(() => {
@@ -137,17 +139,22 @@ export default function ProductPage() {
         return p.images?.[0] ? { url: p.images[0].url, alt: p.images[0].alt } : undefined;
     }, [p]);
 
+    const brand = t('common.brand');
+
     const pageTitle = useMemo(
-        () => (p ? `${p.name} — ${formatPrice(p.price)} — Shop` : 'Товар — Shop'),
-        [p]
+        () => (p
+            ? t('product.seo.pageTitle', { name: p.name, price: formatPrice(p.price), brand })
+            : t('product.seo.fallbackTitle', { brand })
+        ),
+        [p, t, brand]
     );
 
     const pageDescription = useMemo(
         () => (p
-                ? `Купити ${p.name} за ${formatPrice(p.price)}. ${canBuy ? 'В наявності.' : 'Немає в наявності.'} Замовити онлайн.`
-                : 'Картка товару в магазині.'
+            ? t('product.seo.description', { name: p.name, price: formatPrice(p.price), inStock: canBuy })
+            : t('product.seo.fallbackDescription')
         ),
-        [p, canBuy]
+        [p, canBuy, t]
     );
 
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
@@ -194,15 +201,15 @@ export default function ProductPage() {
             '@context': 'https://schema.org',
             '@type': 'BreadcrumbList',
             itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Головна', item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
-                { '@type': 'ListItem', position: 2, name: 'Каталог', item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
+                { '@type': 'ListItem', position: 1, name: t('product.seo.breadcrumbHome'), item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
+                { '@type': 'ListItem', position: 2, name: t('product.seo.breadcrumbCatalog'), item: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
                 { '@type': 'ListItem', position: 3, name: p.name, item: canonicalUrl }
             ]
         };
     }, [p, canonicalUrl]);
     // -----------------------------------------------
 
-    if (!p) return <div className="max-w-6xl mx-auto p-6">Loading…</div>;
+    if (!p) return <div className="max-w-6xl mx-auto p-6">{t('common.loading')}</div>;
 
     const clampQty = (raw: number) =>
         Math.max(1, Math.min(stock || 1, Number.isFinite(raw) ? raw : 1));
@@ -212,12 +219,13 @@ export default function ProductPage() {
             await add(p.id, qty);
             GA.add_to_cart(p, qty);
             success({
-                title: 'Додано до кошика',
-                action: { label: 'Відкрити кошик', onClick: () => navigate('/cart') },
+                title: t('product.toasts.added.title'),
+                action: { label: t('product.toasts.added.action'), onClick: () => navigate('/cart') },
             });
         } catch (e: any) {
-            const message = e?.response?.data?.message || 'Не вдалося додати';
-            error({ title: message });
+            const fallbackMessage = t('product.toasts.added.error');
+            const description = e?.response?.data?.message;
+            error({ title: fallbackMessage, description });
         }
     }
 
@@ -256,7 +264,9 @@ export default function ProductPage() {
                         {primaryImg ? (
                             <img src={primaryImg.url} alt={primaryImg.alt ?? p.name} className="h-full w-full object-cover" />
                         ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                                {t('product.gallery.noImage')}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -269,7 +279,7 @@ export default function ProductPage() {
                                 type="button"
                                 className="aspect-square overflow-hidden rounded border hover:opacity-90"
                                 onClick={() => setLightboxIndex(i)}
-                                aria-label={`Відкрити зображення ${i + 1}`}
+                                aria-label={t('product.gallery.openImage', { index: i + 1 })}
                             >
                                 <img src={g.url} alt={g.alt ?? ''} className="h-full w-full object-cover" />
                             </button>
@@ -289,20 +299,22 @@ export default function ProductPage() {
 
                 <div className="text-sm text-muted-foreground">
                     {loadingReviews
-                        ? 'Завантаження рейтингу…'
+                        ? t('product.reviews.summary.loading')
                         : averageRating != null
                             ? (
                                 <>
-                                    Середній рейтинг: <span className="font-medium">{averageRating.toFixed(1)}</span> із 5
+                                    {t('product.reviews.summary.label')}{' '}
+                                    <span className="font-medium">{averageRating.toFixed(1)}</span>{' '}
+                                    {t('product.reviews.summary.of', { max: 5 })}
                                 </>
                             )
-                            : 'Ще немає відгуків'}
+                            : t('product.reviews.summary.empty')}
                 </div>
 
                 {canBuy ? (
-                    <div className="text-sm text-green-700">В наявності: {stock} шт.</div>
+                    <div className="text-sm text-green-700">{t('product.stock.available', { count: stock })}</div>
                 ) : (
-                    <div className="text-sm text-red-600">Немає в наявності</div>
+                    <div className="text-sm text-red-600">{t('product.stock.unavailable')}</div>
                 )}
 
                 <div className="flex items-center gap-2">
@@ -321,27 +333,27 @@ export default function ProductPage() {
                         className="h-9 px-4 rounded-md bg-black text-white disabled:opacity-50"
                         data-testid="add-to-cart"
                     >
-                        Додати в кошик
+                        {t('product.actions.addToCart')}
                     </button>
                 </div>
 
                 {/* TABS: Опис / Характеристики / Доставка */}
                 <Tabs defaultValue="desc" className="mt-6">
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="desc">Опис</TabsTrigger>
-                        <TabsTrigger value="specs">Характеристики</TabsTrigger>
-                        <TabsTrigger value="delivery">Доставка</TabsTrigger>
+                        <TabsTrigger value="desc">{t('product.tabs.description')}</TabsTrigger>
+                        <TabsTrigger value="specs">{t('product.tabs.specs')}</TabsTrigger>
+                        <TabsTrigger value="delivery">{t('product.tabs.delivery')}</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="desc" className="mt-3 text-sm leading-relaxed">
                         {((p as any).description && String((p as any).description).trim().length)
                             ? <div dangerouslySetInnerHTML={{ __html: String((p as any).description) }} />
-                            : <div className="text-muted-foreground">Опис поки відсутній.</div>}
+                            : <div className="text-muted-foreground">{t('product.description.empty')}</div>}
                     </TabsContent>
 
                     <TabsContent value="specs" className="mt-3">
                         {specs.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">Характеристики ще не додані.</div>
+                            <div className="text-sm text-muted-foreground">{t('product.specs.empty')}</div>
                         ) : (
                             <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
                                 {specs.map((s, i) => (
@@ -356,10 +368,10 @@ export default function ProductPage() {
 
                     <TabsContent value="delivery" className="mt-3 text-sm">
                         <ul className="list-disc pl-5 space-y-1">
-                            <li>Нова Пошта по Україні — 1–3 дні.</li>
-                            <li>Курʼєр у великих містах — 1–2 дні.</li>
-                            <li>Оплата: карткою онлайн або накладений платіж.</li>
-                            <li>Повернення/обмін — 14 днів (згідно ЗУ «Про захист прав споживачів»).</li>
+                            <li>{t('product.delivery.items.novaPoshta')}</li>
+                            <li>{t('product.delivery.items.courier')}</li>
+                            <li>{t('product.delivery.items.payment')}</li>
+                            <li>{t('product.delivery.items.returns')}</li>
                         </ul>
                     </TabsContent>
                 </Tabs>
@@ -370,12 +382,12 @@ export default function ProductPage() {
                 </div>
 
                 <div>
-                    <Link to="/" className="text-sm text-gray-600 hover:underline">← До каталогу</Link>
+                    <Link to="/" className="text-sm text-gray-600 hover:underline">{t('product.actions.backToCatalog')}</Link>
                 </div>
 
                 {related.length > 0 && (
                     <div className="text-xs text-muted-foreground mb-2">
-                        Знайдено схожих: {related.length}
+                        {t('product.similar.count', { count: related.length })}
                     </div>
                 )}
                 <SimilarProducts categoryId={p.category_id} currentSlug={p.slug} />
