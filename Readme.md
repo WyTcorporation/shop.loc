@@ -82,6 +82,12 @@ VITE_GA_ID=G-XXXXXXXXXX
 VITE_COOKIE_DEFAULT=granted|denied
 ```
 
+2.4 DemoCatalogSeeder (демо-каталог)
+
+- `php artisan db:seed --class=DemoCatalogSeeder`
+- Сидер перед створенням даних очищає таблиці `categories`, `vendors`, `products`, `product_images` без тригерів подій, а також скидає Meilisearch-індекс продуктів, тому його можна запускати повторно без дублювання.
+- Після повторного запуску API `/api/products?with_facets=1` і фронтовий список категорій показують назви категорій, а не резервний формат `#ID`.
+
 3) База даних та доменна модель
 
 3.1 Основні таблиці (скорочено)
