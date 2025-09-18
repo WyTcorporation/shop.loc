@@ -85,7 +85,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('profile/addresses', AddressController::class);
     Route::get('profile/wishlist', [WishlistController::class, 'index']);
     Route::post('profile/wishlist/{product}', [WishlistController::class, 'store']);
-    Route::delete('profile/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::delete('profile/wishlist/{productId}', [WishlistController::class, 'destroy'])
+        ->whereNumber('productId');
     Route::get('profile/points', [ProfilePointsController::class, 'index']);
     Route::get('orders/{order}/messages', [OrderMessageController::class, 'index']);
     Route::post('orders/{order}/messages', [OrderMessageController::class, 'store']);
