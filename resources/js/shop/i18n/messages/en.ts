@@ -35,6 +35,13 @@ const messages = {
             register: 'Sign up',
         },
     },
+    consent: {
+        ariaLabel: 'Cookie preferences',
+        message: 'We use cookies for analytics (GA4). Click “Allow” to enable them. You can change your choice anytime.',
+        decline: 'Decline',
+        accept: 'Allow',
+        note: 'Required cookies do not track you. Analytics is enabled only with consent.',
+    },
     search: {
         placeholder: 'Search products…',
         panel: {
