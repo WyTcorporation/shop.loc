@@ -158,6 +158,43 @@ const messages = {
             pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Страница ${page} из ${lastPage}`,
         },
     },
+    sellerPage: {
+        pageTitle: ({ name }: { name?: string }) => name ? `${name} — Продавец` : 'Продавец',
+        documentTitle: ({ name, brand }: { name?: string; brand: string }) =>
+            name ? `${name} — Продавец — ${brand}` : `Продавец — ${brand}`,
+        productsTitle: 'Товары продавца',
+        loadingVendor: 'Загрузка информации о продавце…',
+        notFound: 'Продавец не найден.',
+        noProducts: 'У этого продавца пока нет доступных товаров.',
+        noImage: 'без фото',
+        contact: {
+            email: ({ email }: { email: string }) => `Email: ${email}`,
+            phone: ({ phone }: { phone: string }) => `Телефон: ${phone}`,
+        },
+        seo: {
+            title: ({ name, brand }: { name?: string; brand: string }) =>
+                name ? `${name} — Продавец — ${brand}` : `Продавец — ${brand}`,
+            description: ({ description, email, phone }: { description?: string; email?: string; phone?: string }) => {
+                const parts = [
+                    description?.trim() ?? '',
+                    email ? `Email: ${email}` : '',
+                    phone ? `Телефон: ${phone}` : '',
+                ].filter(Boolean);
+                return parts.length ? parts.join(' ') : 'Страница продавца. Контакты и товары.';
+            },
+        },
+        pagination: {
+            prev: 'Назад',
+            next: 'Далее',
+            status: ({ page, lastPage }: { page: number; lastPage: number }) => `Страница ${page} из ${lastPage}`,
+        },
+        errors: {
+            loadProducts: 'Не удалось загрузить товары продавца.',
+        },
+        ga: {
+            listName: ({ name }: { name: string }) => `Продавец ${name}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Профиль',
@@ -631,6 +668,7 @@ const messages = {
         },
     },
     wishlist: {
+        badge: 'Избранное',
         title: 'Избранное',
         clear: 'Очистить',
         loading: 'Обновляем список желаний...',
