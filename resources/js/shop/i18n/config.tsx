@@ -1,4 +1,4 @@
-export const SUPPORTED_LANGS = ['uk','en'] as const;
+export const SUPPORTED_LANGS = ['uk', 'en', 'ru', 'pt'] as const;
 export type Lang = typeof SUPPORTED_LANGS[number];
 export const DEFAULT_LANG: Lang = 'uk';
 
