@@ -100,6 +100,7 @@ describe('Catalog page', () => {
             slug: 'test-product',
             price: 1999,
             images: [],
+            stock: 5,
         };
 
         fetchCategoriesMock.mockResolvedValue([]);
@@ -150,6 +151,7 @@ describe('Catalog page', () => {
             slug: 'another-product',
             price: 2599,
             images: [],
+            stock: 4,
         };
 
         fetchCategoriesMock.mockResolvedValueOnce([
@@ -190,5 +192,42 @@ describe('Catalog page', () => {
         expect(colorButtons).toHaveLength(1);
         expect(colorButtons[0]).toHaveTextContent('Black');
         expect(colorButtons[0]).toHaveTextContent('(7)');
+    });
+
+    it('disables buying for products with zero stock', async () => {
+        const user = userEvent.setup();
+        fetchProductsMock.mockResolvedValueOnce({
+            data: [
+                {
+                    id: 303,
+                    name: 'Товар без залишків',
+                    slug: 'out-of-stock-product',
+                    price: 1499,
+                    images: [],
+                    stock: 0,
+                },
+            ],
+            current_page: 1,
+            last_page: 1,
+            per_page: 12,
+            total: 1,
+            from: 1,
+            to: 1,
+            facets: {},
+        });
+
+        render(
+            <MemoryRouter>
+                <Catalog />
+            </MemoryRouter>
+        );
+
+        const outOfStockButton = await screen.findByRole('button', { name: 'Немає в наявності' });
+        expect(outOfStockButton).toBeDisabled();
+
+        await user.click(outOfStockButton);
+        expect(cartApiMock.add).not.toHaveBeenCalled();
+
+        expect(screen.getAllByText('Немає в наявності')[0]).toBeInTheDocument();
     });
 });

@@ -540,6 +540,7 @@ export default function Catalog() {
                         const primary =
                             p.images?.find((img) => img.is_primary) ??
                             (p.images && p.images.length > 0 ? p.images[0] : undefined);
+                        const inStock = Number(p.stock ?? 0) > 0;
 
                         return (
                             <Card key={p.id} className="flex h-full flex-col overflow-hidden">
@@ -565,6 +566,9 @@ export default function Catalog() {
                                     <div className="p-3">
                                         <div className="line-clamp-2 text-sm font-medium">{p.name}</div>
                                         <div className="mt-1 text-sm text-muted-foreground">{formatPrice(p.price)}</div>
+                                        {!inStock && (
+                                            <div className="mt-1 text-xs text-red-600">Немає в наявності</div>
+                                        )}
                                     </div>
                                 </Link>
                                 <div className="flex flex-wrap items-center gap-2 border-t px-3 py-3">
@@ -572,8 +576,9 @@ export default function Catalog() {
                                     <Button
                                         type="button"
                                         className="flex-1"
-                                        disabled={addingId === p.id}
+                                        disabled={!inStock || addingId === p.id}
                                         onClick={async () => {
+                                            if (!inStock) return;
                                             setAddingId(p.id);
                                             try {
                                                 await add(p.id);
@@ -582,13 +587,19 @@ export default function Catalog() {
                                             }
                                         }}
                                     >
-                                        {addingId === p.id ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                                                <span>Купуємо…</span>
-                                            </>
+                                        {inStock ? (
+                                            addingId === p.id ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                                    <span>Купуємо…</span>
+                                                </>
+                                            ) : (
+                                                'Купити'
+                                            )
                                         ) : (
-                                            'Купити'
+                                            <>
+                                                <span>Немає в наявності</span>
+                                            </>
                                         )}
                                     </Button>
                                 </div>
