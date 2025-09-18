@@ -2,6 +2,7 @@ import React from 'react';
 import {Link, Navigate, useLocation} from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import {resolveErrorMessage} from '../lib/errors';
+import { useLocale } from '../i18n/LocaleProvider';
 
 export default function RegisterPage() {
     const {register: registerUser, isAuthenticated, isReady, isLoading} = useAuth();
@@ -12,6 +13,7 @@ export default function RegisterPage() {
     const [passwordConfirmation, setPasswordConfirmation] = React.useState('');
     const [error, setError] = React.useState<string | null>(null);
     const [submitting, setSubmitting] = React.useState(false);
+    const { t } = useLocale();
 
     const from = React.useMemo(() => {
         const state = location.state as { from?: string } | null;
@@ -22,7 +24,7 @@ export default function RegisterPage() {
         event.preventDefault();
         if (submitting) return;
         if (password !== passwordConfirmation) {
-            setError('Паролі не співпадають.');
+            setError(t('auth.register.passwordMismatch'));
             return;
         }
         setError(null);
@@ -35,7 +37,7 @@ export default function RegisterPage() {
                 password_confirmation: passwordConfirmation,
             });
         } catch (err) {
-            setError(resolveErrorMessage(err, 'Не вдалося зареєструватися. Спробуйте ще раз.'));
+            setError(resolveErrorMessage(err, t('auth.register.errorFallback')));
         } finally {
             setSubmitting(false);
         }
@@ -44,7 +46,7 @@ export default function RegisterPage() {
     if (!isReady && isLoading) {
         return (
             <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-16">
-                <p className="text-sm text-gray-500">Завантаження...</p>
+                <p className="text-sm text-gray-500">{t('auth.shared.loading')}</p>
             </div>
         );
     }
@@ -56,7 +58,7 @@ export default function RegisterPage() {
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-16">
             <div className="w-full max-w-md rounded-lg border bg-white p-8 shadow-sm">
-                <h1 className="mb-6 text-2xl font-semibold">Реєстрація</h1>
+                <h1 className="mb-6 text-2xl font-semibold">{t('auth.register.title')}</h1>
                 {error && (
                     <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                         {error}
@@ -65,7 +67,7 @@ export default function RegisterPage() {
                 <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="space-y-1">
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                            Ім'я
+                            {t('auth.register.nameLabel')}
                         </label>
                         <input
                             id="name"
@@ -79,7 +81,7 @@ export default function RegisterPage() {
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email
+                            {t('auth.register.emailLabel')}
                         </label>
                         <input
                             id="email"
@@ -93,7 +95,7 @@ export default function RegisterPage() {
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Пароль
+                            {t('auth.register.passwordLabel')}
                         </label>
                         <input
                             id="password"
@@ -107,7 +109,7 @@ export default function RegisterPage() {
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
-                            Підтвердження пароля
+                            {t('auth.register.passwordConfirmationLabel')}
                         </label>
                         <input
                             id="password_confirmation"
@@ -124,13 +126,13 @@ export default function RegisterPage() {
                         disabled={submitting || isLoading}
                         className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting || isLoading ? 'Зачекайте…' : 'Створити акаунт'}
+                        {submitting || isLoading ? t('auth.shared.processing') : t('auth.register.submit')}
                     </button>
                 </form>
                 <p className="mt-6 text-sm text-gray-600">
-                    Вже є акаунт?{' '}
+                    {t('auth.register.haveAccount')}{' '}
                     <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                        Увійти
+                        {t('auth.register.signInLink')}
                     </Link>
                 </p>
             </div>

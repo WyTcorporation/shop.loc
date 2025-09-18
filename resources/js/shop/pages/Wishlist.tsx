@@ -8,11 +8,13 @@ import {Skeleton} from '@/components/ui/skeleton';
 import {formatPrice} from '../ui/format';
 import {WishlistApi} from '../api';
 import {Loader2, X} from 'lucide-react';
+import { useLocale } from '../i18n/LocaleProvider';
 
 export default function WishlistPage() {
     const {items, clear, isLoading, error, remove} = useWishlist();
     const [removingIds, setRemovingIds] = React.useState<Record<number, boolean>>({});
     const hasItems = items.length > 0;
+    const { t } = useLocale();
 
     const handleRemove = React.useCallback(
         async (productId: number) => {
@@ -35,23 +37,23 @@ export default function WishlistPage() {
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-6" data-testid="wishlist-page">
             <div className="mb-4 flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Обране</h1>
+                <h1 className="text-2xl font-semibold">{t('wishlist.title')}</h1>
                 {hasItems && (
                     <Button variant="outline" onClick={() => clear()} disabled={isLoading}>
-                        Очистити
+                        {t('wishlist.clear')}
                     </Button>
                 )}
             </div>
 
             {isLoading && (
                 <div className="mb-4 text-sm text-muted-foreground" data-testid="wishlist-loading">
-                    Оновлюємо список бажаного...
+                    {t('wishlist.loading')}
                 </div>
             )}
 
             {error && (
                 <Alert variant="destructive" className="mb-4" data-testid="wishlist-error">
-                    <AlertTitle>Не вдалося оновити список</AlertTitle>
+                    <AlertTitle>{t('wishlist.errorTitle')}</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
@@ -88,7 +90,7 @@ export default function WishlistPage() {
                                     className="absolute right-2 top-2 z-10"
                                     disabled={isRemoving || isLoading}
                                     onClick={() => void handleRemove(p.id)}
-                                    aria-label={`Прибрати «${p.name}» зі списку бажаного`}
+                                    aria-label={t('wishlist.removeAria', { name: p.name })}
                                     data-testid="wishlist-remove-button"
                                 >
                                     {isRemoving ? (
@@ -103,7 +105,7 @@ export default function WishlistPage() {
                                             <img src={p.preview_url} alt={p.name} className="h-full w-full object-cover" />
                                     ) : (
                                         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                                            без фото
+                                            {t('wishlist.noImage')}
                                         </div>
                                     )}
                                 </div>
@@ -118,7 +120,7 @@ export default function WishlistPage() {
                 </div>
             ) : (
                 <div className="text-muted-foreground" data-testid="wishlist-empty">
-                    Поки що порожньо.
+                    {t('wishlist.empty')}
                 </div>
             )}
         </div>

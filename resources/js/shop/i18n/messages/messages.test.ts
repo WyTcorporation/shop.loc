@@ -1,0 +1,105 @@
+import { describe, expect, it } from 'vitest';
+import { createTranslator, localeMessages, type TranslationKey } from './index';
+
+const keys: Array<{ key: TranslationKey; params?: Record<string, any> }> = [
+    { key: 'order.confirmation.loading' },
+    { key: 'order.confirmation.notFound' },
+    { key: 'order.confirmation.seoTitle', params: { number: '123', brand: 'Shop' } },
+    { key: 'order.confirmation.title', params: { number: '123' } },
+    { key: 'order.confirmation.confirmationNotice', params: { email: 'test@example.com' } },
+    { key: 'order.confirmation.paymentPending' },
+    { key: 'order.confirmation.chat.open' },
+    { key: 'order.confirmation.chat.close' },
+    { key: 'order.confirmation.shipping.title' },
+    { key: 'order.confirmation.shipping.trackingNumber' },
+    { key: 'order.confirmation.shipping.pending' },
+    { key: 'order.confirmation.billing.title' },
+    { key: 'order.confirmation.billing.taxIdLabel' },
+    { key: 'order.confirmation.table.product' },
+    { key: 'order.confirmation.table.quantity' },
+    { key: 'order.confirmation.table.price' },
+    { key: 'order.confirmation.table.total' },
+    { key: 'order.confirmation.table.viewProduct' },
+    { key: 'order.confirmation.table.vendor' },
+    { key: 'order.confirmation.table.contactSeller' },
+    { key: 'order.confirmation.table.subtotal' },
+    { key: 'order.confirmation.table.coupon' },
+    { key: 'order.confirmation.table.discount' },
+    { key: 'order.confirmation.table.loyalty' },
+    { key: 'order.confirmation.table.loyaltyValue', params: { amount: '€10' } },
+    { key: 'order.confirmation.table.amountDue' },
+    { key: 'order.confirmation.cta.continue' },
+    { key: 'order.confirmation.payment.title' },
+    { key: 'order.confirmation.payment.description' },
+    { key: 'auth.shared.loading' },
+    { key: 'auth.shared.processing' },
+    { key: 'auth.register.title' },
+    { key: 'auth.register.nameLabel' },
+    { key: 'auth.register.emailLabel' },
+    { key: 'auth.register.passwordLabel' },
+    { key: 'auth.register.passwordConfirmationLabel' },
+    { key: 'auth.register.submit' },
+    { key: 'auth.register.haveAccount' },
+    { key: 'auth.register.signInLink' },
+    { key: 'auth.register.passwordMismatch' },
+    { key: 'auth.register.errorFallback' },
+    { key: 'auth.login.title' },
+    { key: 'auth.login.emailLabel' },
+    { key: 'auth.login.passwordLabel' },
+    { key: 'auth.login.forgotPassword' },
+    { key: 'auth.login.submit' },
+    { key: 'auth.login.noAccount' },
+    { key: 'auth.login.registerLink' },
+    { key: 'auth.login.errorFallback' },
+    { key: 'auth.login.otpRequired' },
+    { key: 'auth.login.otpLabel' },
+    { key: 'auth.login.otpPlaceholder' },
+    { key: 'auth.login.otpHelp' },
+    { key: 'wishlist.title' },
+    { key: 'wishlist.clear' },
+    { key: 'wishlist.loading' },
+    { key: 'wishlist.errorTitle' },
+    { key: 'wishlist.empty' },
+    { key: 'wishlist.removeAria', params: { name: 'Widget' } },
+    { key: 'wishlist.noImage' },
+    { key: 'product.reviewForm.ariaLabel' },
+    { key: 'product.reviewForm.title' },
+    { key: 'product.reviewForm.authPromptPrefix' },
+    { key: 'product.reviewForm.authPromptLogin' },
+    { key: 'product.reviewForm.authPromptMiddle' },
+    { key: 'product.reviewForm.authPromptRegister' },
+    { key: 'product.reviewForm.authPromptSuffix' },
+    { key: 'product.reviewForm.formErrorUnauthenticated' },
+    { key: 'product.reviewForm.successTitle' },
+    { key: 'product.reviewForm.successDescription' },
+    { key: 'product.reviewForm.errorFallback' },
+    { key: 'product.reviewForm.errorTitle' },
+    { key: 'product.reviewForm.ratingLabel' },
+    { key: 'product.reviewForm.commentLabel' },
+    { key: 'product.reviewForm.commentPlaceholder' },
+    { key: 'product.reviewForm.submitting' },
+    { key: 'product.reviewForm.submit' },
+    { key: 'notify.cart.add.success' },
+    { key: 'notify.cart.add.action' },
+    { key: 'notify.cart.add.outOfStock' },
+    { key: 'notify.cart.add.error' },
+    { key: 'notify.cart.update.success' },
+    { key: 'notify.cart.update.outOfStock' },
+    { key: 'notify.cart.update.error' },
+    { key: 'notify.cart.remove.success' },
+];
+
+describe('i18n new keys', () => {
+    for (const [lang, messages] of Object.entries(localeMessages)) {
+        const translator = createTranslator(messages);
+        describe(`lang ${lang}`, () => {
+            for (const { key, params } of keys) {
+                it(`provides translation for ${key}`, () => {
+                    const result = params ? translator(key as any, params) : translator(key as any);
+                    expect(result).toBeTypeOf('string');
+                    expect(result.length).toBeGreaterThan(0);
+                });
+            }
+        });
+    }
+});

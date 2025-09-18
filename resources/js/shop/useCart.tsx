@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {CartApi, type Cart, resetCartCache} from './api';
 import { useNotify } from './ui/notify';
+import { useLocale } from './i18n/LocaleProvider';
 
 type Ctx = {
     cart: Cart | null;
@@ -17,6 +18,7 @@ const CartCtx = createContext<Ctx | null>(null);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const notify = useNotify();
     const [cart, setCart] = useState<Cart | null>(null);
+    const { t } = useLocale();
 
     const total = useMemo(() => {
         if (!cart) return 0;
@@ -37,43 +39,42 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const c = await CartApi.add(product_id, qty);
             setCart(c);
-            notify.success('Додано до кошика', {
-                key: 'cart-add',
-                action: { label: 'Відкрити кошик', onClick: () => location.assign('/cart') },
-                ttl: 3000,
+            notify.success({
+                title: t('notify.cart.add.success'),
+                action: { label: t('notify.cart.add.action'), onClick: () => location.assign('/cart') },
             });
         } catch (e: any) {
             const msg = e?.response?.data?.message;
             if (e?.response?.status === 422 && msg === 'Not enough stock') {
-                notify.error('Недостатньо на складі', { key: 'cart-add', ttl: 5000 });
+                notify.error(t('notify.cart.add.outOfStock'));
             } else {
-                notify.error('Не вдалося додати до кошика', { key: 'cart-add', ttl: 4000 });
+                notify.error(t('notify.cart.add.error'));
             }
             throw e;
         }
-    }, [notify]);
+    }, [notify, t]);
 
     const update = useCallback(async (item_id: number, qty: number) => {
         try {
             const c = await CartApi.update(item_id, qty);
             setCart(c);
-            notify.success('Кількість оновлено', { key: 'cart-update', ttl: 2000 });
+            notify.success(t('notify.cart.update.success'));
         } catch (e: any) {
             const msg = e?.response?.data?.message;
             if (e?.response?.status === 422 && msg === 'Not enough stock') {
-                notify.error('Недостатньо на складі', { key: 'cart-update', ttl: 4000 });
+                notify.error(t('notify.cart.update.outOfStock'));
             } else {
-                notify.error('Помилка оновлення кошика', { key: 'cart-update', ttl: 4000 });
+                notify.error(t('notify.cart.update.error'));
             }
             throw e;
         }
-    }, [notify]);
+    }, [notify, t]);
 
     const remove = useCallback(async (item_id: number) => {
         const c = await CartApi.remove(item_id);
         setCart(c);
-        notify.success('Видалено з кошика', { key: 'cart-remove', ttl: 2000 });
-    }, [notify]);
+        notify.success(t('notify.cart.remove.success'));
+    }, [notify, t]);
 
     /** Після успішного замовлення просто рефрешимо — бек створить новий активний кошик і виставить нову cookie */
     const clear = useCallback(async () => {
