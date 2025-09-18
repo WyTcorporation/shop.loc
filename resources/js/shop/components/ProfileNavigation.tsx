@@ -1,13 +1,15 @@
 import { NavLink } from 'react-router-dom';
-
-const links = [
-    { to: '/profile', label: 'Профіль', end: true },
-    { to: '/profile/orders', label: 'Мої замовлення' },
-    { to: '/profile/addresses', label: 'Збережені адреси' },
-    { to: '/profile/points', label: 'Бонусні бали' },
-] as const;
+import { useLocale } from '../i18n/LocaleProvider';
 
 export default function ProfileNavigation() {
+    const { t } = useLocale();
+    const links = [
+        { to: '/profile', label: t('profile.navigation.overview'), end: true },
+        { to: '/profile/orders', label: t('profile.navigation.orders') },
+        { to: '/profile/addresses', label: t('profile.navigation.addresses') },
+        { to: '/profile/points', label: t('profile.navigation.points') },
+    ] as const;
+
     return (
         <nav className="mb-6 w-full overflow-x-auto">
             <ul className="flex gap-2 text-sm">

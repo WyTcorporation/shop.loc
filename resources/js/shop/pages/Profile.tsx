@@ -3,9 +3,11 @@ import { Navigate, useLocation } from 'react-router-dom';
 import ProfileNavigation from '../components/ProfileNavigation';
 import { AuthApi, TwoFactorApi, type TwoFactorSetup, type TwoFactorStatus } from '../api';
 import useAuth from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
 
 export default function ProfilePage() {
+    const { t, lang } = useLocale();
     const { user, isAuthenticated, isReady, isLoading, logout, refresh } = useAuth();
     const location = useLocation();
     const [logoutError, setLogoutError] = React.useState<string | null>(null);
@@ -35,6 +37,19 @@ export default function ProfilePage() {
         return path || '/profile';
     }, [location.hash, location.pathname, location.search]);
 
+    const dateLocale = React.useMemo(() => {
+        switch (lang) {
+            case 'uk':
+                return 'uk-UA';
+            case 'ru':
+                return 'ru-RU';
+            case 'pt':
+                return 'pt-PT';
+            default:
+                return 'en-US';
+        }
+    }, [lang]);
+
     const loadTwoFactorStatus = React.useCallback(async () => {
         if (!isAuthenticated) {
             setTwoFactorStatus(null);
@@ -49,11 +64,13 @@ export default function ProfilePage() {
             const status = await TwoFactorApi.status();
             setTwoFactorStatus(status);
         } catch (err) {
-            setTwoFactorError(resolveErrorMessage(err, 'Не вдалося завантажити статус двофакторної автентифікації.'));
+            setTwoFactorError(
+                resolveErrorMessage(err, t('profile.overview.errors.loadTwoFactorStatus')),
+            );
         } finally {
             setTwoFactorFetching(false);
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, t]);
 
     React.useEffect(() => {
         if (!isAuthenticated) return;
@@ -105,7 +122,7 @@ export default function ProfilePage() {
 
         try {
             const updated = await AuthApi.update(payload);
-            setProfileMessage('Дані профілю оновлено.');
+            setProfileMessage(t('profile.overview.notifications.updateSuccess'));
             setForm((prev) => ({
                 ...prev,
                 name: updated?.name ?? prev.name,
@@ -115,7 +132,7 @@ export default function ProfilePage() {
             }));
             await refresh().catch(() => undefined);
         } catch (err) {
-            setProfileError(resolveErrorMessage(err, 'Не вдалося оновити профіль. Спробуйте ще раз.'));
+            setProfileError(resolveErrorMessage(err, t('profile.overview.errors.update')));
         } finally {
             setProfileSaving(false);
         }
@@ -131,7 +148,7 @@ export default function ProfilePage() {
             setTwoFactorCode('');
             setTwoFactorStatus({ enabled: false, pending: true, confirmed_at: null });
         } catch (err) {
-            setTwoFactorError(resolveErrorMessage(err, 'Не вдалося розпочати налаштування двофакторної автентифікації.'));
+            setTwoFactorError(resolveErrorMessage(err, t('profile.overview.errors.startTwoFactor')));
         } finally {
             setTwoFactorLoading(false);
         }
@@ -143,7 +160,7 @@ export default function ProfilePage() {
 
         const code = twoFactorCode.trim();
         if (!code) {
-            setTwoFactorError('Введіть код підтвердження з застосунку.');
+            setTwoFactorError(t('profile.overview.twoFactor.messages.emptyCode'));
             return;
         }
 
@@ -152,20 +169,22 @@ export default function ProfilePage() {
         setTwoFactorLoading(true);
         try {
             const response = await TwoFactorApi.confirm({ code });
-            setTwoFactorMessage(response?.message ?? 'Двофакторну автентифікацію увімкнено.');
+            setTwoFactorMessage(
+                response?.message ?? t('profile.overview.twoFactor.messages.enabled'),
+            );
             setTwoFactorSetup(null);
             setTwoFactorCode('');
             await loadTwoFactorStatus();
             await refresh().catch(() => undefined);
         } catch (err) {
-            setTwoFactorError(resolveErrorMessage(err, 'Не вдалося підтвердити код. Спробуйте ще раз.'));
+            setTwoFactorError(resolveErrorMessage(err, t('profile.overview.errors.confirmTwoFactor')));
         } finally {
             setTwoFactorLoading(false);
         }
     };
 
     const handleDisableTwoFactor = async () => {
-        if (!window.confirm('Ви впевнені, що хочете вимкнути двофакторну автентифікацію?')) {
+        if (!window.confirm(t('profile.overview.twoFactor.disable.confirm'))) {
             return;
         }
 
@@ -176,11 +195,11 @@ export default function ProfilePage() {
             await TwoFactorApi.disable();
             setTwoFactorSetup(null);
             setTwoFactorCode('');
-            setTwoFactorMessage('Двофакторну автентифікацію вимкнено.');
+            setTwoFactorMessage(t('profile.overview.twoFactor.messages.disabled'));
             await loadTwoFactorStatus();
             await refresh().catch(() => undefined);
         } catch (err) {
-            setTwoFactorError(resolveErrorMessage(err, 'Не вдалося вимкнути двофакторну автентифікацію.'));
+            setTwoFactorError(resolveErrorMessage(err, t('profile.overview.errors.disableTwoFactor')));
         } finally {
             setTwoFactorLoading(false);
         }
@@ -189,16 +208,16 @@ export default function ProfilePage() {
     const confirmedAtText = React.useMemo(() => {
         if (!twoFactorStatus?.confirmed_at) return null;
         try {
-            return new Date(twoFactorStatus.confirmed_at).toLocaleString('uk-UA');
+            return new Date(twoFactorStatus.confirmed_at).toLocaleString(dateLocale);
         } catch {
             return twoFactorStatus.confirmed_at;
         }
-    }, [twoFactorStatus?.confirmed_at]);
+    }, [dateLocale, twoFactorStatus?.confirmed_at]);
 
     if (!isReady) {
         return (
             <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-16">
-                <p className="text-sm text-gray-500">Завантаження профілю…</p>
+                <p className="text-sm text-gray-500">{t('profile.overview.loading')}</p>
             </div>
         );
     }
@@ -213,7 +232,7 @@ export default function ProfilePage() {
         try {
             await logout();
         } catch (err) {
-            setLogoutError(resolveErrorMessage(err, 'Не вдалося вийти. Спробуйте ще раз.'));
+            setLogoutError(resolveErrorMessage(err, t('profile.overview.session.logout.error')));
         } finally {
             setLogoutPending(false);
         }
@@ -227,28 +246,60 @@ export default function ProfilePage() {
         setVerificationSending(true);
         try {
             const response = await AuthApi.resendVerification();
-            setVerificationMessage(response?.message ?? 'Лист для підтвердження повторно надіслано.');
+            setVerificationMessage(
+                response?.message ?? t('profile.overview.verification.successFallback'),
+            );
         } catch (err) {
             setVerificationError(
-                resolveErrorMessage(err, 'Не вдалося надіслати лист підтвердження. Спробуйте ще раз.'),
+                resolveErrorMessage(err, t('profile.overview.errors.resendVerification')),
             );
         } finally {
             setVerificationSending(false);
         }
     };
 
+    const welcomeName = user?.name ?? t('profile.overview.guestName');
+    const welcomeMessage = React.useMemo(
+        () => t('profile.overview.welcome', { name: welcomeName }),
+        [t, welcomeName],
+    );
+    const [welcomePrefix, welcomeSuffix, welcomeHasName] = React.useMemo(() => {
+        const index = welcomeMessage.indexOf(welcomeName);
+        if (index < 0) {
+            return [welcomeMessage, '', false] as const;
+        }
+        return [
+            welcomeMessage.slice(0, index),
+            welcomeMessage.slice(index + welcomeName.length),
+            true,
+        ] as const;
+    }, [welcomeMessage, welcomeName]);
+
+    const twoFactorStatusText = twoFactorStatus?.enabled
+        ? t('profile.overview.twoFactor.status.enabled')
+        : twoFactorStatus?.pending
+            ? t('profile.overview.twoFactor.status.pending')
+            : t('profile.overview.twoFactor.status.disabled');
+
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col px-4 py-16">
             <div className="w-full lg:w-3/4 xl:w-2/3">
-                <h1 className="mb-4 text-2xl font-semibold">Профіль</h1>
+                <h1 className="mb-4 text-2xl font-semibold">{t('profile.overview.title')}</h1>
                 <p className="mb-6 text-sm text-gray-600">
-                    Ласкаво просимо, <span className="font-medium text-gray-900">{user?.name ?? 'користувачу'}</span>. Керуйте своїми даними та
-                    перейдіть до інших розділів профілю.
+                    {welcomeHasName ? (
+                        <>
+                            {welcomePrefix}
+                            <span className="font-medium text-gray-900">{welcomeName}</span>
+                            {welcomeSuffix}
+                        </>
+                    ) : (
+                        welcomeMessage
+                    )}
                 </p>
                 <ProfileNavigation />
             </div>
             <div className="mt-4 w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
-                <h2 className="mb-6 text-xl font-semibold">Особисті дані</h2>
+                <h2 className="mb-6 text-xl font-semibold">{t('profile.overview.personalDataTitle')}</h2>
                 {profileError && (
                     <div
                         data-testid="profile-error"
@@ -270,10 +321,8 @@ export default function ProfilePage() {
                         data-testid="email-verification-alert"
                         className="mb-4 rounded border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800"
                     >
-                        <p className="font-medium">Електронну пошту не підтверджено.</p>
-                        <p className="mt-1 text-yellow-700">
-                            Перевірте поштову скриньку або надішліть лист із підтвердженням повторно.
-                        </p>
+                        <p className="font-medium">{t('profile.overview.verification.title')}</p>
+                        <p className="mt-1 text-yellow-700">{t('profile.overview.verification.description')}</p>
                         {verificationError && (
                             <p data-testid="email-verification-error" className="mt-2 text-red-600">
                                 {verificationError}
@@ -312,10 +361,10 @@ export default function ProfilePage() {
                                             d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                                         />
                                     </svg>
-                                    Надсилання…
+                                    {t('profile.overview.verification.resend.sending')}
                                 </>
                             ) : (
-                                'Надіслати лист повторно'
+                                t('profile.overview.verification.resend.action')
                             )}
                         </button>
                     </div>
@@ -323,7 +372,7 @@ export default function ProfilePage() {
                 <form onSubmit={handleProfileSubmit} className="space-y-4" data-testid="profile-form">
                     <div>
                         <label htmlFor="profileName" className="block text-sm font-medium text-gray-700">
-                            Ім'я
+                            {t('profile.overview.form.labels.name')}
                         </label>
                         <input
                             id="profileName"
@@ -338,12 +387,12 @@ export default function ProfilePage() {
                             autoComplete="name"
                             data-testid="profile-name"
                             className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                            placeholder="Введіть ім'я"
+                            placeholder={t('profile.overview.form.placeholders.name')}
                         />
                     </div>
                     <div>
                         <label htmlFor="profileEmail" className="block text-sm font-medium text-gray-700">
-                            Email
+                            {t('profile.overview.form.labels.email')}
                         </label>
                         <input
                             id="profileEmail"
@@ -358,13 +407,13 @@ export default function ProfilePage() {
                             autoComplete="email"
                             data-testid="profile-email"
                             className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                            placeholder="your@email.com"
+                            placeholder={t('profile.overview.form.placeholders.email')}
                         />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label htmlFor="profilePassword" className="block text-sm font-medium text-gray-700">
-                                Новий пароль
+                                {t('profile.overview.form.labels.newPassword')}
                             </label>
                             <input
                                 id="profilePassword"
@@ -379,12 +428,12 @@ export default function ProfilePage() {
                                 autoComplete="new-password"
                                 data-testid="profile-password"
                                 className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                                placeholder="Залиште порожнім, щоб не змінювати"
+                                placeholder={t('profile.overview.form.placeholders.newPassword')}
                             />
                         </div>
                         <div>
                             <label htmlFor="profilePasswordConfirmation" className="block text-sm font-medium text-gray-700">
-                                Підтвердження пароля
+                                {t('profile.overview.form.labels.confirmPassword')}
                             </label>
                             <input
                                 id="profilePasswordConfirmation"
@@ -399,66 +448,72 @@ export default function ProfilePage() {
                                 autoComplete="new-password"
                                 data-testid="profile-password-confirmation"
                                 className="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                                placeholder="Повторіть новий пароль"
+                                placeholder={t('profile.overview.form.placeholders.confirmPassword')}
                             />
                         </div>
                     </div>
-                    <p className="text-xs text-gray-500">
-                        Пароль можна не заповнювати, якщо ви не плануєте його змінювати. Email повинен бути унікальним.
-                    </p>
+                    <p className="text-xs text-gray-500">{t('profile.overview.form.hintPasswordOptional')}</p>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-xs text-gray-500">Зміни набувають чинності одразу після збереження.</p>
+                        <p className="text-xs text-gray-500">{t('profile.overview.form.hintApplyImmediately')}</p>
                         <button
                             type="submit"
                             disabled={profileSaving || isLoading}
                             data-testid="profile-save"
                             className="inline-flex w-full items-center justify-center rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
-                            {profileSaving || isLoading ? 'Збереження…' : 'Зберегти зміни'}
+                            {profileSaving || isLoading
+                                ? t('profile.overview.form.submit.saving')
+                                : t('profile.overview.form.submit.save')}
                         </button>
                     </div>
                 </form>
                 <dl className="mt-8 space-y-4 text-sm text-gray-700">
                     <div>
-                        <dt className="font-medium text-gray-900">ID</dt>
+                        <dt className="font-medium text-gray-900">{t('profile.overview.info.id')}</dt>
                         <dd className="mt-1 text-gray-700" data-testid="profile-id">
                             {user?.id ?? '—'}
                         </dd>
                     </div>
                     <div>
-                        <dt className="font-medium text-gray-900">Ім'я</dt>
+                        <dt className="font-medium text-gray-900">{t('profile.overview.info.name')}</dt>
                         <dd className="mt-1 text-gray-700" data-testid="profile-name-display">
                             {user?.name ?? '—'}
                         </dd>
                     </div>
                     <div>
-                        <dt className="font-medium text-gray-900">Email</dt>
+                        <dt className="font-medium text-gray-900">{t('profile.overview.info.email')}</dt>
                         <dd className="mt-1 break-words text-gray-700" data-testid="profile-email-display">
                             {user?.email ?? '—'}
                         </dd>
                     </div>
                     <div>
-                        <dt className="font-medium text-gray-900">Email підтверджено</dt>
-                        <dd className="mt-1 text-gray-700">{user?.email_verified_at ? 'Так' : 'Ні'}</dd>
+                        <dt className="font-medium text-gray-900">{t('profile.overview.info.verified')}</dt>
+                        <dd className="mt-1 text-gray-700">
+                            {user?.email_verified_at
+                                ? t('profile.overview.info.verifiedYes')
+                                : t('profile.overview.info.verifiedNo')}
+                        </dd>
                     </div>
                 </dl>
                 {logoutError && (
                     <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{logoutError}</div>
                 )}
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-xs text-gray-500">Токен Sanctum збережено локально для авторизованих запитів до API.</p>
+                    <p className="text-xs text-gray-500">{t('profile.overview.session.tokenNote')}</p>
                     <button
                         type="button"
                         onClick={handleLogout}
                         disabled={logoutPending || isLoading}
                         className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
-                        {logoutPending || isLoading ? 'Вихід…' : 'Вийти'}
+                        {logoutPending || isLoading
+                            ? t('profile.overview.session.logout.processing')
+                            : t('profile.overview.session.logout.action')}
                     </button>
                 </div>
             </div>
             <div className="mt-4 w-full max-w-2xl rounded-lg border bg-white p-8 shadow-sm">
-                <h2 className="mb-6 text-xl font-semibold">Двофакторна автентифікація</h2>
+                <h2 className="mb-6 text-xl font-semibold">{t('profile.overview.twoFactor.title')}</h2>
                 {twoFactorError && (
                     <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{twoFactorError}</div>
                 )}
@@ -467,49 +522,42 @@ export default function ProfilePage() {
                 )}
                 <div className="space-y-2 text-sm text-gray-700">
                     <p>
-                        Статус:{' '}
+                        {t('profile.overview.twoFactor.statusLabel')}{' '}
                         <span className="font-medium text-gray-900">
-                            {twoFactorStatus?.enabled
-                                ? 'Увімкнено'
-                                : twoFactorStatus?.pending
-                                    ? 'Очікує підтвердження'
-                                    : 'Вимкнено'}
+                            {twoFactorStatusText}
                         </span>
                     </p>
                     {confirmedAtText && (
                         <p>
-                            Підтверджено:{' '}
+                            {t('profile.overview.twoFactor.confirmedAtLabel')}{' '}
                             <span className="font-medium text-gray-900">{confirmedAtText}</span>
                         </p>
                     )}
-                    <p className="text-xs text-gray-500">
-                        Двофакторна автентифікація додає додатковий рівень безпеки для вашого облікового запису.
-                    </p>
+                    <p className="text-xs text-gray-500">{t('profile.overview.twoFactor.description')}</p>
                 </div>
                 {twoFactorFetching ? (
-                    <p className="mt-6 text-sm text-gray-500">Завантаження статусу…</p>
+                    <p className="mt-6 text-sm text-gray-500">{t('profile.overview.twoFactor.loadingStatus')}</p>
                 ) : (
                     <div className="mt-6 space-y-6">
                         {twoFactorSetup ? (
                             <div className="space-y-4">
                                 <div className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                                    <p className="font-medium text-gray-900">Секретний ключ</p>
+                                    <p className="font-medium text-gray-900">{t('profile.overview.twoFactor.secret.title')}</p>
                                     <p className="mt-1 break-all font-mono text-xs text-gray-900">{twoFactorSetup.secret}</p>
                                     <p className="mt-3 text-xs text-gray-500">
-                                        Додайте цей ключ у застосунок автентифікації (Google Authenticator, 1Password, Authy тощо).
-                                        Ви також можете відкрити налаштування безпосередньо за посиланням нижче.
+                                        {t('profile.overview.twoFactor.secret.instructions')}
                                     </p>
                                     <a
                                         href={twoFactorSetup.otpauth_url}
                                         className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-blue-600 hover:text-blue-500"
                                     >
-                                        Відкрити в застосунку
+                                        {t('profile.overview.twoFactor.secret.openApp')}
                                     </a>
                                 </div>
                                 <form onSubmit={handleConfirmTwoFactor} className="space-y-3">
                                     <div className="space-y-1">
                                         <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-700">
-                                            Код підтвердження
+                                            {t('profile.overview.twoFactor.confirm.codeLabel')}
                                         </label>
                                         <input
                                             id="twoFactorCode"
@@ -519,10 +567,10 @@ export default function ProfilePage() {
                                             onChange={event => setTwoFactorCode(event.target.value)}
                                             autoComplete="one-time-code"
                                             className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                                            placeholder="Введіть код з застосунку"
+                                            placeholder={t('profile.overview.twoFactor.confirm.codePlaceholder')}
                                         />
                                         <p className="text-xs text-gray-500">
-                                            Введіть шестизначний код з вашого застосунку автентифікації, щоб завершити налаштування.
+                                            {t('profile.overview.twoFactor.confirm.helper')}
                                         </p>
                                     </div>
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -531,7 +579,9 @@ export default function ProfilePage() {
                                             disabled={twoFactorLoading || twoFactorFetching || isLoading}
                                             className="inline-flex w-full items-center justify-center rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                                         >
-                                            {twoFactorLoading ? 'Підтвердження…' : 'Підтвердити'}
+                                            {twoFactorLoading
+                                                ? t('profile.overview.twoFactor.confirm.submitting')
+                                                : t('profile.overview.twoFactor.confirm.submit')}
                                         </button>
                                         <button
                                             type="button"
@@ -539,7 +589,7 @@ export default function ProfilePage() {
                                             disabled={twoFactorLoading || twoFactorFetching || isLoading}
                                             className="inline-flex w-full items-center justify-center rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                                         >
-                                            Скасувати
+                                            {t('profile.overview.twoFactor.confirm.cancel')}
                                         </button>
                                     </div>
                                 </form>
@@ -552,14 +602,14 @@ export default function ProfilePage() {
                                     disabled={twoFactorLoading || twoFactorFetching || isLoading}
                                     className="inline-flex w-full items-center justify-center rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                                 >
-                                    Вимкнути 2FA
+                                    {t('profile.overview.twoFactor.disable.action')}
                                 </button>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {twoFactorStatus?.pending && (
                                     <p className="text-xs text-gray-500">
-                                        Попереднє налаштування не завершено. Ви можете згенерувати новий секретний ключ, щоб почати знову.
+                                        {t('profile.overview.twoFactor.callouts.pendingSetup')}
                                     </p>
                                 )}
                                 <button
@@ -568,7 +618,9 @@ export default function ProfilePage() {
                                     disabled={twoFactorLoading || twoFactorFetching || isLoading}
                                     className="inline-flex items-center justify-center rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    {twoFactorLoading ? 'Зачекайте…' : 'Увімкнути 2FA'}
+                                    {twoFactorLoading
+                                        ? t('profile.overview.twoFactor.enable.loading')
+                                        : t('profile.overview.twoFactor.enable.action')}
                                 </button>
                             </div>
                         )}

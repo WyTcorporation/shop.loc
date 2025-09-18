@@ -3,36 +3,20 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { ProfileApi, type LoyaltyPointTransaction, type LoyaltyPointsResponse } from '../api';
 import ProfileNavigation from '../components/ProfileNavigation';
 import useAuth from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
 
-function formatDate(dateString?: string | null) {
+function formatDate(dateString?: string | null, locale?: string) {
     if (!dateString) return '—';
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) {
         return dateString;
     }
-    return date.toLocaleDateString('uk-UA', {
+    return date.toLocaleDateString(locale ?? 'en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
     });
-}
-
-function getTransactionTypeLabel(type?: string | null) {
-    if (!type) {
-        return 'Операція';
-    }
-
-    switch (type) {
-        case 'earn':
-        case 'earned':
-            return 'Нарахування';
-        case 'redeem':
-        case 'spent':
-            return 'Списання';
-        default:
-            return type;
-    }
 }
 
 function normalizePoints(value: number | string) {
@@ -44,12 +28,26 @@ function normalizePoints(value: number | string) {
 }
 
 export default function ProfilePointsPage() {
+    const { t, lang } = useLocale();
     const { isAuthenticated, isReady } = useAuth();
     const location = useLocation();
     const redirectTo = React.useMemo(() => {
         const path = `${location.pathname ?? ''}${location.search ?? ''}${location.hash ?? ''}`;
         return path || '/profile/points';
     }, [location.hash, location.pathname, location.search]);
+
+    const dateLocale = React.useMemo(() => {
+        switch (lang) {
+            case 'uk':
+                return 'uk-UA';
+            case 'ru':
+                return 'ru-RU';
+            case 'pt':
+                return 'pt-PT';
+            default:
+                return 'en-US';
+        }
+    }, [lang]);
 
     const [data, setData] = React.useState<LoyaltyPointsResponse | null>(null);
     const [loading, setLoading] = React.useState(false);
@@ -72,7 +70,7 @@ export default function ProfilePointsPage() {
             })
             .catch((err) => {
                 if (!ignore) {
-                    setError(resolveErrorMessage(err, 'Не вдалося завантажити інформацію про бали.'));
+                    setError(resolveErrorMessage(err, t('profile.points.error')));
                 }
             })
             .finally(() => {
@@ -84,12 +82,12 @@ export default function ProfilePointsPage() {
         return () => {
             ignore = true;
         };
-    }, [isAuthenticated, isReady]);
+    }, [isAuthenticated, isReady, t]);
 
     if (!isReady) {
         return (
             <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-16">
-                <p className="text-sm text-gray-500">Завантаження балів…</p>
+                <p className="text-sm text-gray-500">{t('profile.points.loading')}</p>
             </div>
         );
     }
@@ -106,23 +104,23 @@ export default function ProfilePointsPage() {
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col px-4 py-16">
             <div className="w-full">
-                <h1 className="mb-4 text-2xl font-semibold">Бонусні бали</h1>
-                <p className="mb-8 text-sm text-gray-600">Відстежуйте доступний баланс та історію використання бонусних балів.</p>
+                <h1 className="mb-4 text-2xl font-semibold">{t('profile.points.title')}</h1>
+                <p className="mb-8 text-sm text-gray-600">{t('profile.points.description')}</p>
                 <ProfileNavigation />
                 {error && <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
                 <div className="mb-6 grid gap-4 rounded-lg border bg-white p-6 shadow-sm sm:grid-cols-3">
                     <div>
-                        <p className="text-xs text-gray-500 uppercase">Доступно</p>
+                        <p className="text-xs text-gray-500 uppercase">{t('profile.points.stats.balance')}</p>
                         <p className="mt-2 text-3xl font-semibold text-gray-900">{balance}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 uppercase">Нараховано</p>
+                        <p className="text-xs text-gray-500 uppercase">{t('profile.points.stats.earned')}</p>
                         <p className="mt-2 text-lg font-medium text-gray-900">
                             {typeof totalEarned === 'number' || typeof totalEarned === 'string' ? normalizePoints(totalEarned) : '—'}
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 uppercase">Використано</p>
+                        <p className="text-xs text-gray-500 uppercase">{t('profile.points.stats.spent')}</p>
                         <p className="mt-2 text-lg font-medium text-gray-900">
                             {typeof totalSpent === 'number' || typeof totalSpent === 'string' ? normalizePoints(totalSpent) : '—'}
                         </p>
@@ -130,30 +128,42 @@ export default function ProfilePointsPage() {
                 </div>
                 <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
                     {loading ? (
-                        <div className="flex items-center justify-center px-6 py-16 text-sm text-gray-500">Завантаження…</div>
+                        <div className="flex items-center justify-center px-6 py-16 text-sm text-gray-500">
+                            {t('profile.points.table.loading')}
+                        </div>
                     ) : transactions.length === 0 ? (
                         <div className="px-6 py-16 text-center text-sm text-gray-600">
-                            Історія балів порожня. Використовуйте бали під час оформлення замовлень, щоб побачити рух коштів.
+                            {t('profile.points.table.empty')}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 text-sm">
                                 <thead className="bg-gray-50">
                                     <tr className="text-left text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                                        <th className="px-4 py-3">Дата</th>
-                                        <th className="px-4 py-3">Опис</th>
-                                        <th className="px-4 py-3">Тип</th>
-                                        <th className="px-4 py-3">Кількість</th>
+                                        <th className="px-4 py-3">{t('profile.points.table.headers.date')}</th>
+                                        <th className="px-4 py-3">{t('profile.points.table.headers.description')}</th>
+                                        <th className="px-4 py-3">{t('profile.points.table.headers.type')}</th>
+                                        <th className="px-4 py-3">{t('profile.points.table.headers.amount')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                     {transactions.map((transaction) => {
                                         const pointsValue = normalizePoints(transaction.points);
+                                        const rawType = transaction.type ?? '';
+                                        const normalizedType = rawType.toLowerCase();
+                                        let transactionType = t('profile.points.table.type.default');
+                                        if (normalizedType === 'earn' || normalizedType === 'earned') {
+                                            transactionType = t('profile.points.table.type.earn');
+                                        } else if (normalizedType === 'redeem' || normalizedType === 'spent') {
+                                            transactionType = t('profile.points.table.type.redeem');
+                                        } else if (rawType) {
+                                            transactionType = rawType;
+                                        }
                                         return (
                                             <tr key={transaction.id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-4 text-gray-700">{formatDate(transaction.created_at)}</td>
+                                                <td className="px-4 py-4 text-gray-700">{formatDate(transaction.created_at, dateLocale)}</td>
                                                 <td className="px-4 py-4 text-gray-700">{transaction.description ?? '—'}</td>
-                                                <td className="px-4 py-4 text-gray-700">{getTransactionTypeLabel(transaction.type)}</td>
+                                                <td className="px-4 py-4 text-gray-700">{transactionType}</td>
                                                 <td className="px-4 py-4 font-medium text-gray-900">{pointsValue}</td>
                                             </tr>
                                         );

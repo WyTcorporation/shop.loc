@@ -41,6 +41,187 @@ const messages = {
         },
         empty: 'O carrinho está vazio',
     },
+    profile: {
+        navigation: {
+            overview: 'Perfil',
+            orders: 'As minhas encomendas',
+            addresses: 'Endereços guardados',
+            points: 'Pontos de fidelidade',
+        },
+        overview: {
+            loading: 'A carregar o perfil…',
+            title: 'Perfil',
+            welcome: ({ name }: { name: string }) =>
+                `Bem-vindo, ${name}. Gere os seus dados e explore as outras secções do perfil.`,
+            guestName: 'utilizador',
+            personalDataTitle: 'Dados pessoais',
+            verification: {
+                title: 'O email não está verificado.',
+                description: 'Verifique a sua caixa de entrada ou volte a enviar o email de confirmação.',
+                resend: {
+                    sending: 'A enviar…',
+                    action: 'Reenviar email de confirmação',
+                },
+                successFallback: 'Email de confirmação reenviado.',
+                errorFallback: 'Não foi possível enviar o email de confirmação. Tente novamente.',
+            },
+            form: {
+                labels: {
+                    name: 'Nome',
+                    email: 'Email',
+                    newPassword: 'Nova palavra-passe',
+                    confirmPassword: 'Confirmar palavra-passe',
+                },
+                placeholders: {
+                    name: 'Introduza o nome',
+                    email: 'your@email.com',
+                    newPassword: 'Deixe em branco para manter',
+                    confirmPassword: 'Repita a nova palavra-passe',
+                },
+                hintPasswordOptional:
+                    'Pode deixar a palavra-passe em branco se não a quiser alterar. O email deve ser único.',
+                hintApplyImmediately: 'As alterações entram em vigor imediatamente após guardar.',
+                submit: {
+                    saving: 'A guardar…',
+                    save: 'Guardar alterações',
+                },
+            },
+            info: {
+                id: 'ID',
+                name: 'Nome',
+                email: 'Email',
+                verified: 'Email verificado',
+                verifiedYes: 'Sim',
+                verifiedNo: 'Não',
+            },
+            session: {
+                tokenNote: 'O token Sanctum é guardado localmente para pedidos autenticados à API.',
+                logout: {
+                    processing: 'A terminar sessão…',
+                    action: 'Terminar sessão',
+                    error: 'Não foi possível terminar a sessão. Tente novamente.',
+                },
+            },
+            notifications: {
+                updateSuccess: 'Dados do perfil atualizados.',
+            },
+            errors: {
+                update: 'Não foi possível atualizar o perfil. Tente novamente.',
+                loadTwoFactorStatus: 'Não foi possível carregar o estado da autenticação de dois fatores.',
+                startTwoFactor: 'Não foi possível iniciar a configuração da autenticação de dois fatores.',
+                confirmTwoFactor: 'Não foi possível confirmar o código. Tente novamente.',
+                disableTwoFactor: 'Não foi possível desativar a autenticação de dois fatores.',
+                resendVerification: 'Não foi possível enviar o email de confirmação. Tente novamente.',
+            },
+            twoFactor: {
+                title: 'Autenticação de dois fatores',
+                statusLabel: 'Estado:',
+                status: {
+                    enabled: 'Ativa',
+                    pending: 'A aguardar confirmação',
+                    disabled: 'Desativada',
+                },
+                confirmedAtLabel: 'Confirmado:',
+                description: 'A autenticação de dois fatores adiciona uma camada extra de segurança à sua conta.',
+                loadingStatus: 'A carregar estado…',
+                secret: {
+                    title: 'Chave secreta',
+                    instructions:
+                        'Adicione esta chave à sua aplicação de autenticação (Google Authenticator, 1Password, Authy, etc.). Também pode abrir a configuração diretamente através da ligação abaixo.',
+                    openApp: 'Abrir na aplicação',
+                },
+                confirm: {
+                    codeLabel: 'Código de confirmação',
+                    codePlaceholder: 'Introduza o código da aplicação',
+                    helper: 'Introduza o código de seis dígitos da aplicação de autenticação para concluir a configuração.',
+                    submit: 'Confirmar',
+                    submitting: 'A confirmar…',
+                    cancel: 'Cancelar',
+                },
+                callouts: {
+                    pendingSetup: 'A configuração anterior não foi concluída. Pode gerar uma nova chave secreta para recomeçar.',
+                },
+                enable: {
+                    action: 'Ativar 2FA',
+                    loading: 'Aguarde…',
+                },
+                disable: {
+                    action: 'Desativar 2FA',
+                    confirm: 'Tem a certeza de que pretende desativar a autenticação de dois fatores?',
+                },
+                messages: {
+                    enabled: 'Autenticação de dois fatores ativada.',
+                    disabled: 'Autenticação de dois fatores desativada.',
+                    emptyCode: 'Introduza o código de confirmação da aplicação.',
+                },
+            },
+        },
+        orders: {
+            loading: 'A carregar encomendas…',
+            title: 'As minhas encomendas',
+            description: 'Consulte o histórico de compras, acompanhe o estado das encomendas e abra os detalhes.',
+            error: 'Não foi possível carregar as encomendas.',
+            table: {
+                loading: 'A carregar…',
+                empty: {
+                    description: 'Ainda não efetuou nenhuma encomenda.',
+                    cta: 'Ver o catálogo',
+                },
+                headers: {
+                    number: 'Número',
+                    date: 'Data',
+                    status: 'Estado',
+                    total: 'Total',
+                    actions: 'Ações',
+                },
+                view: 'Ver detalhes da encomenda',
+            },
+        },
+        addresses: {
+            loading: 'A carregar endereços…',
+            title: 'Endereços guardados',
+            description: 'Gira os endereços de entrega para acelerar as próximas compras.',
+            error: 'Não foi possível carregar os endereços.',
+            list: {
+                loading: 'A carregar…',
+                empty: 'Ainda não tem endereços guardados. Adicione um durante a finalização da compra.',
+                defaultName: 'Sem título',
+                fields: {
+                    city: 'Cidade',
+                    address: 'Endereço',
+                    postalCode: 'Código postal',
+                    phone: 'Telefone',
+                },
+            },
+        },
+        points: {
+            loading: 'A carregar pontos…',
+            title: 'Pontos de fidelidade',
+            description: 'Acompanhe o saldo disponível e o histórico de utilização dos pontos.',
+            error: 'Não foi possível carregar a informação de pontos.',
+            stats: {
+                balance: 'Disponível',
+                earned: 'Acumulado',
+                spent: 'Utilizado',
+            },
+            table: {
+                loading: 'A carregar…',
+                empty:
+                    'Ainda não existe histórico de pontos. Utilize-os durante a compra para ver aqui a atividade.',
+                headers: {
+                    date: 'Data',
+                    description: 'Descrição',
+                    type: 'Tipo',
+                    amount: 'Quantidade',
+                },
+                type: {
+                    default: 'Movimento',
+                    earn: 'Acumulação',
+                    redeem: 'Utilização',
+                },
+            },
+        },
+    },
     cart: {
         seoTitle: ({ brand }: { brand: string }) => `Carrinho — ${brand}`,
         title: 'Carrinho',
