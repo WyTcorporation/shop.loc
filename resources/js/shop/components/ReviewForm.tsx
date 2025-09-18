@@ -5,6 +5,7 @@ import RatingStars from './RatingStars';
 import useAuth from '../hooks/useAuth';
 import { useNotify } from '../ui/notify';
 import { resolveErrorMessage } from '../lib/errors';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type ReviewFormProps = {
     productId: number;
@@ -15,6 +16,7 @@ type ReviewFormProps = {
 export default function ReviewForm({ productId, onSubmitted, className }: ReviewFormProps) {
     const { isAuthenticated } = useAuth();
     const { success, error } = useNotify();
+    const { t } = useLocale();
 
     const [rating, setRating] = React.useState<number>(5);
     const [text, setText] = React.useState('');
@@ -25,7 +27,7 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
         event.preventDefault();
         if (submitting) return;
         if (!isAuthenticated) {
-            setFormError('Щоб залишити відгук, будь ласка, увійдіть у свій акаунт.');
+            setFormError(t('product.reviewForm.formErrorUnauthenticated'));
             return;
         }
 
@@ -41,13 +43,13 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
             setRating(5);
             onSubmitted?.(review);
             success({
-                title: 'Дякуємо за відгук!',
-                description: 'Ваш відгук буде опубліковано після модерації.',
+                title: t('product.reviewForm.successTitle'),
+                description: t('product.reviewForm.successDescription'),
             });
         } catch (err) {
-            const message = resolveErrorMessage(err, 'Не вдалося надіслати відгук. Спробуйте пізніше.');
+            const message = resolveErrorMessage(err, t('product.reviewForm.errorFallback'));
             setFormError(message);
-            error({ title: 'Не вдалося надіслати відгук', description: message });
+            error({ title: t('product.reviewForm.errorTitle'), description: message });
         } finally {
             setSubmitting(false);
         }
@@ -59,19 +61,19 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
     const ratingLabelId = React.useId();
 
     return (
-        <section className={containerClassName} aria-label="Форма відгуку">
-            <h3 className="text-lg font-semibold">Залишити відгук</h3>
+        <section className={containerClassName} aria-label={t('product.reviewForm.ariaLabel')}>
+            <h3 className="text-lg font-semibold">{t('product.reviewForm.title')}</h3>
             {!isAuthenticated ? (
                 <p className="text-sm text-muted-foreground">
-                    Щоб поділитися враженнями,{' '}
+                    {t('product.reviewForm.authPromptPrefix')}{' '}
                     <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                        увійдіть
+                        {t('product.reviewForm.authPromptLogin')}
                     </Link>{' '}
-                    або{' '}
+                    {t('product.reviewForm.authPromptMiddle')}{' '}
                     <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                        зареєструйтеся
+                        {t('product.reviewForm.authPromptRegister')}
                     </Link>
-                    .
+                    {t('product.reviewForm.authPromptSuffix')}
                 </p>
             ) : null}
             {formError ? (
@@ -81,7 +83,7 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
                 <fieldset className="space-y-4" disabled={fieldsetDisabled}>
                     <div className="space-y-1">
                         <span id={ratingLabelId} className="block text-sm font-medium text-gray-700">
-                            Оцінка
+                            {t('product.reviewForm.ratingLabel')}
                         </span>
                         <RatingStars
                             value={rating}
@@ -91,7 +93,7 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="review-text" className="block text-sm font-medium text-gray-700">
-                            Коментар (необов'язково)
+                            {t('product.reviewForm.commentLabel')}
                         </label>
                         <textarea
                             id="review-text"
@@ -100,7 +102,7 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
                             rows={4}
                             maxLength={2000}
                             className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                            placeholder="Поділіться своїми враженнями про товар"
+                            placeholder={t('product.reviewForm.commentPlaceholder')}
                         />
                         <div className="text-right text-xs text-muted-foreground">{text.length}/2000</div>
                     </div>
@@ -108,7 +110,7 @@ export default function ReviewForm({ productId, onSubmitted, className }: Review
                         type="submit"
                         className="inline-flex items-center justify-center rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting ? 'Надсилання…' : 'Надіслати відгук'}
+                        {submitting ? t('product.reviewForm.submitting') : t('product.reviewForm.submit')}
                     </button>
                 </fieldset>
             </form>

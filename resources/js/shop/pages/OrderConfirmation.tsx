@@ -7,6 +7,7 @@ import { GA } from '../ui/ga';
 import PayOrder from "@/shop/components/PayOrder";
 import OrderChat from '../components/OrderChat';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type OrderItem = {
     id: number;
@@ -59,6 +60,7 @@ export default function OrderConfirmation() {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [chatOpen, setChatOpen] = useState(false);
+    const { t } = useLocale();
 
     const [sp] = useSearchParams();
     const payment_intent = sp.get('payment_intent') ?? undefined;
@@ -88,8 +90,8 @@ export default function OrderConfirmation() {
         return () => { on = false; };
     }, [number, payment_intent, redirect_status]);
 
-    if (loading) return <div className="max-w-6xl mx-auto p-4">Завантаження…</div>;
-    if (!order) return <div className="max-w-6xl mx-auto p-4">Замовлення не знайдено.</div>;
+    if (loading) return <div className="max-w-6xl mx-auto p-4">{t('order.confirmation.loading')}</div>;
+    if (!order) return <div className="max-w-6xl mx-auto p-4">{t('order.confirmation.notFound')}</div>;
 
     const items = order.items ?? [];
     const toNumber = (value: number | string | null | undefined) => {
@@ -136,14 +138,18 @@ export default function OrderConfirmation() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6">
-            <SeoHead title={`Замовлення ${order.number} — Shop`} robots="noindex,nofollow" canonical />
+            <SeoHead
+                title={t('order.confirmation.seoTitle', { number: order.number, brand: t('common.brand') })}
+                robots="noindex,nofollow"
+                canonical
+            />
             <h1 className="text-2xl font-semibold" data-testid="order-confirmed">
-                Дякуємо! Замовлення {order.number} оформлено
+                {t('order.confirmation.title', { number: order.number })}
             </h1>
             <div className="flex flex-wrap items-center gap-3">
                 <p className="text-gray-600">
-                    Підтвердження надіслано на {order.email}.
-                    {!isPaid && ' — Оплата очікується.'}
+                    {t('order.confirmation.confirmationNotice', { email: order.email })}
+                    {!isPaid && <span> {t('order.confirmation.paymentPending')}</span>}
                 </p>
                 {order.id && (
                     <Button
@@ -152,7 +158,7 @@ export default function OrderConfirmation() {
                         size="sm"
                         onClick={() => setChatOpen((open) => !open)}
                     >
-                        {chatOpen ? 'Сховати чат' : 'Написати продавцю'}
+                        {chatOpen ? t('order.confirmation.chat.close') : t('order.confirmation.chat.open')}
                     </Button>
                 )}
             </div>
@@ -160,11 +166,11 @@ export default function OrderConfirmation() {
                 <OrderChat orderId={order.id} orderNumber={order.number} />
             )}
             <div className="rounded-xl border border-gray-200 p-4 space-y-2">
-                <h2 className="text-lg font-semibold">Доставка та відстеження</h2>
+                <h2 className="text-lg font-semibold">{t('order.confirmation.shipping.title')}</h2>
                 <p className="text-sm text-gray-600">
-                    Номер відстеження:{' '}
+                    {t('order.confirmation.shipping.trackingNumber')}{' '}
                     <span className="font-medium text-gray-900">
-                        {trackingNumber || 'Очікується'}
+                        {trackingNumber || t('order.confirmation.shipping.pending')}
                     </span>
                     {shipmentStatus && (
                         <span className="ml-2 text-xs uppercase tracking-wide text-gray-500">
@@ -184,14 +190,14 @@ export default function OrderConfirmation() {
             </div>
             {hasBillingDetails && billingAddress && (
                 <div className="rounded-xl border border-gray-200 p-4 space-y-2">
-                    <h2 className="text-lg font-semibold">Платіжні дані</h2>
+                    <h2 className="text-lg font-semibold">{t('order.confirmation.billing.title')}</h2>
                     <div className="text-sm text-gray-600">
                         {billingAddress.company && (
                             <div className="font-medium text-gray-800">{billingAddress.company}</div>
                         )}
                         {billingAddress.name && <div>{billingAddress.name}</div>}
                         {billingAddress.tax_id && (
-                            <div className="text-xs text-gray-500">Податковий номер: {billingAddress.tax_id}</div>
+                            <div className="text-xs text-gray-500">{t('order.confirmation.billing.taxIdLabel')} {billingAddress.tax_id}</div>
                         )}
                         {billingAddress.city && <div>{billingAddress.city}</div>}
                         {billingAddress.addr && <div>{billingAddress.addr}</div>}
@@ -203,10 +209,10 @@ export default function OrderConfirmation() {
                 <table className="w-full">
                     <thead className="bg-gray-50 text-left text-sm">
                     <tr>
-                        <th className="p-3">Товар</th>
-                        <th className="p-3 w-24">К-сть</th>
-                        <th className="p-3 w-36">Ціна</th>
-                        <th className="p-3 w-36">Сума</th>
+                        <th className="p-3">{t('order.confirmation.table.product')}</th>
+                        <th className="p-3 w-24">{t('order.confirmation.table.quantity')}</th>
+                        <th className="p-3 w-36">{t('order.confirmation.table.price')}</th>
+                        <th className="p-3 w-36">{t('order.confirmation.table.total')}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -221,18 +227,18 @@ export default function OrderConfirmation() {
                                         <div className="font-medium">{it.product?.name ?? `#${it.product_id}`}</div>
                                         {it.product?.slug && (
                                             <Link to={`/product/${it.product.slug}`} className="text-xs text-gray-500 hover:underline">
-                                                Переглянути товар
+                                                {t('order.confirmation.table.viewProduct')}
                                             </Link>
                                         )}
                                         {it.product?.vendor && (
                                             <div className="mt-1 text-xs text-gray-500">
-                                                Продавець: {it.product.vendor.name ?? `#${it.product.vendor.id}`}{' '}
+                                                {t('order.confirmation.table.vendor')} {it.product.vendor.name ?? `#${it.product.vendor.id}`}{' '}
                                                 {it.product.vendor.id && (
                                                     <Link
                                                         to={`/seller/${it.product.vendor.id}`}
                                                         className="text-blue-600 hover:underline"
                                                     >
-                                                        Написати продавцю
+                                                        {t('order.confirmation.table.contactSeller')}
                                                     </Link>
                                                 )}
                                             </div>
@@ -248,36 +254,38 @@ export default function OrderConfirmation() {
                     </tbody>
                     <tfoot className="border-t bg-gray-50 text-sm">
                     <tr>
-                        <td className="p-3 text-right font-medium" colSpan={3}>Разом за товари</td>
+                        <td className="p-3 text-right font-medium" colSpan={3}>{t('order.confirmation.table.subtotal')}</td>
                         <td className="p-3 font-semibold">{formatPrice(subtotal, currency)}</td>
                     </tr>
                     {hasCouponCode && (
                         <tr>
-                            <td className="p-3 text-right font-medium" colSpan={3}>Купон</td>
+                            <td className="p-3 text-right font-medium" colSpan={3}>{t('order.confirmation.table.coupon')}</td>
                             <td className="p-3 font-semibold">{couponCode}</td>
                         </tr>
                     )}
                     {hasDiscount && (
                         <tr>
-                            <td className="p-3 text-right font-medium" colSpan={3}>Знижка</td>
+                            <td className="p-3 text-right font-medium" colSpan={3}>{t('order.confirmation.table.discount')}</td>
                             <td className="p-3 font-semibold text-red-600">−{formatPrice(discountTotal, currency)}</td>
                         </tr>
                     )}
                     {hasLoyaltyPoints && (
                         <tr>
-                            <td className="p-3 text-right font-medium" colSpan={3}>Використані бали</td>
+                            <td className="p-3 text-right font-medium" colSpan={3}>{t('order.confirmation.table.loyalty')}</td>
                             <td className="p-3 font-semibold">
                                 {loyaltyPointsDisplay}
                                 {loyaltyPointsValue > 0 && (
                                     <span className="ml-1 text-gray-500">
-                                        (−{formatPrice(loyaltyPointsValue, currency)})
+                                        {t('order.confirmation.table.loyaltyValue', {
+                                            amount: formatPrice(loyaltyPointsValue, currency),
+                                        })}
                                     </span>
                                 )}
                             </td>
                         </tr>
                     )}
                     <tr>
-                        <td className="p-3 text-right font-semibold" colSpan={3}>До сплати</td>
+                        <td className="p-3 text-right font-semibold" colSpan={3}>{t('order.confirmation.table.amountDue')}</td>
                         <td className="p-3 text-lg font-semibold">{formatPrice(order.total, currency)}</td>
                     </tr>
                     </tfoot>
@@ -285,13 +293,13 @@ export default function OrderConfirmation() {
             </div>
 
             <div className="flex gap-3">
-                <Link to="/" className="px-4 py-2 rounded-lg border hover:bg-gray-50">Продовжити покупки</Link>
+                <Link to="/" className="px-4 py-2 rounded-lg border hover:bg-gray-50">{t('order.confirmation.cta.continue')}</Link>
             </div>
 
             {!isPaid && (
                 <div className="border rounded-xl p-4">
-                    <h2 className="font-semibold mb-2">Оплата замовлення</h2>
-                    <p className="text-sm text-gray-600 mb-3">Безпечно через Stripe. Доступні картки та локальні методи (EU).</p>
+                    <h2 className="font-semibold mb-2">{t('order.confirmation.payment.title')}</h2>
+                    <p className="text-sm text-gray-600 mb-3">{t('order.confirmation.payment.description')}</p>
                     <PayOrder number={order.number} onPaid={() => window.location.reload()} />
                 </div>
             )}

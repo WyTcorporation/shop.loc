@@ -2,6 +2,7 @@ import React from 'react';
 import {Link, Navigate, useLocation} from 'react-router-dom';
 import useAuth, {type LoginPayload} from '../hooks/useAuth';
 import {resolveErrorMessage} from '../lib/errors';
+import { useLocale } from '../i18n/LocaleProvider';
 
 export default function LoginPage() {
     const {login, isAuthenticated, isReady, isLoading} = useAuth();
@@ -13,6 +14,7 @@ export default function LoginPage() {
     const [submitting, setSubmitting] = React.useState(false);
     const [needsOtp, setNeedsOtp] = React.useState(false);
     const otpInputRef = React.useRef<HTMLInputElement | null>(null);
+    const { t } = useLocale();
 
     const from = React.useMemo(() => {
         const state = location.state as { from?: string } | null;
@@ -40,9 +42,9 @@ export default function LoginPage() {
             if (response?.two_factor_required) {
                 setNeedsOtp(true);
                 setOtp('');
-                setError('Потрібен одноразовий код. Введіть код з застосунку автентифікації.');
+                setError(t('auth.login.otpRequired'));
             } else {
-                setError(resolveErrorMessage(err, 'Не вдалося увійти. Спробуйте ще раз.'));
+                setError(resolveErrorMessage(err, t('auth.login.errorFallback')));
             }
         } finally {
             setSubmitting(false);
@@ -58,7 +60,7 @@ export default function LoginPage() {
     if (!isReady && isLoading) {
         return (
             <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-16">
-                <p className="text-sm text-gray-500">Завантаження...</p>
+                <p className="text-sm text-gray-500">{t('auth.shared.loading')}</p>
             </div>
         );
     }
@@ -70,7 +72,7 @@ export default function LoginPage() {
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-16">
             <div className="w-full max-w-md rounded-lg border bg-white p-8 shadow-sm">
-                <h1 className="mb-6 text-2xl font-semibold">Вхід</h1>
+                <h1 className="mb-6 text-2xl font-semibold">{t('auth.login.title')}</h1>
                 {error && (
                     <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                         {error}
@@ -79,7 +81,7 @@ export default function LoginPage() {
                 <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="space-y-1">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email
+                            {t('auth.login.emailLabel')}
                         </label>
                         <input
                             id="email"
@@ -93,7 +95,7 @@ export default function LoginPage() {
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Пароль
+                            {t('auth.login.passwordLabel')}
                         </label>
                         <input
                             id="password"
@@ -106,14 +108,14 @@ export default function LoginPage() {
                         />
                         <div className="flex justify-end">
                             <Link to="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-500">
-                                Забули пароль?
+                                {t('auth.login.forgotPassword')}
                             </Link>
                         </div>
                     </div>
                     {needsOtp && (
                         <div className="space-y-1">
                             <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
-                                Код підтвердження
+                                {t('auth.login.otpLabel')}
                             </label>
                             <input
                                 id="otp"
@@ -124,9 +126,9 @@ export default function LoginPage() {
                                 onChange={event => setOtp(event.target.value)}
                                 ref={otpInputRef}
                                 className="w-full rounded border px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                                placeholder="Наприклад, 123456"
+                                placeholder={t('auth.login.otpPlaceholder')}
                             />
-                            <p className="text-xs text-gray-500">Використайте застосунок автентифікації, щоб отримати шестизначний код.</p>
+                            <p className="text-xs text-gray-500">{t('auth.login.otpHelp')}</p>
                         </div>
                     )}
                     <button
@@ -134,13 +136,13 @@ export default function LoginPage() {
                         disabled={submitting || isLoading}
                         className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting || isLoading ? 'Зачекайте…' : 'Увійти'}
+                        {submitting || isLoading ? t('auth.shared.processing') : t('auth.login.submit')}
                     </button>
                 </form>
                 <p className="mt-6 text-sm text-gray-600">
-                    Немає акаунта?{' '}
+                    {t('auth.login.noAccount')}{' '}
                     <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                        Зареєструватися
+                        {t('auth.login.registerLink')}
                     </Link>
                 </p>
             </div>
