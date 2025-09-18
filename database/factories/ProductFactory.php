@@ -41,6 +41,21 @@ class ProductFactory extends Factory
         $name = ucfirst($this->faker->unique()->words(3, true));
         $price = $this->faker->randomFloat(2, 10, 500);
 
+        $colors = [
+            'чорний',
+            'білий',
+            'синій',
+            'червоний',
+            'зелений',
+            'жовтий',
+            'помаранчевий',
+            'фіолетовий',
+            'рожевий',
+            'сірий',
+            'коричневий',
+            'бірюзовий',
+        ];
+
         return [
             'name' => $name,
             'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
@@ -49,7 +64,7 @@ class ProductFactory extends Factory
             'vendor_id' => Vendor::factory(),
             'attributes' => [
                 'size' => $this->faker->randomElement(['S','M','L']),
-                'color' => $this->faker->safeColorName(),
+                'color' => $this->faker->randomElement($colors),
             ],
             'stock' => $this->faker->numberBetween(0, 100),
             'price' => $price,
