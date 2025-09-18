@@ -286,7 +286,6 @@ export default function OrderConfirmation() {
 
             <div className="flex gap-3">
                 <Link to="/" className="px-4 py-2 rounded-lg border hover:bg-gray-50">Продовжити покупки</Link>
-                <Link to="/cart" className="px-4 py-2 rounded-lg border hover:bg-gray-50">Відкрити кошик</Link>
             </div>
 
             {!isPaid && (
