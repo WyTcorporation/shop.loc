@@ -1,7 +1,8 @@
 import React from 'react';
-import useWishlist from '../hooks/useWishlist';
 import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import useWishlist from '../hooks/useWishlist';
+import { useLocale } from '../i18n/LocaleProvider';
 
 export default function WishlistButton({
                                            product,
@@ -13,6 +14,7 @@ export default function WishlistButton({
     'data-testid'?: string;
 }) {
     const { has, toggle } = useWishlist();
+    const { t } = useLocale();
     const active = has(product.id);
 
     const preview =
@@ -24,7 +26,7 @@ export default function WishlistButton({
     return (
         <button
             type="button"
-            aria-label={active ? 'remove from wishlist' : 'add to wishlist'}
+            aria-label={active ? t('wishlist.button.removeAria') : t('wishlist.button.addAria')}
             data-testid={testId ?? 'wishlist-toggle'}
             onClick={(e) => { e.preventDefault(); toggle({
                 id: product.id, slug: product.slug ?? null, name: product.name, price: product.price, preview_url: preview
@@ -34,10 +36,10 @@ export default function WishlistButton({
                 active ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-700 hover:bg-gray-50',
                 className
             )}
-            title={active ? 'Усунути з обраного' : 'Додати в обране'}
+            title={active ? t('wishlist.button.removeAria') : t('wishlist.button.addAria')}
         >
             <Heart className={cn('h-4 w-4 mr-1', active ? 'fill-current' : '')} />
-            {active ? 'В обраному' : 'В обране'}
+            {active ? t('wishlist.button.remove') : t('wishlist.button.add')}
         </button>
     );
 }

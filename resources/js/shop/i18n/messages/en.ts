@@ -676,6 +676,12 @@ const messages = {
         loading: 'Refreshing your wishlist…',
         errorTitle: 'Could not update the list',
         empty: 'Nothing here yet.',
+        button: {
+            add: 'Add to wishlist',
+            remove: 'In wishlist',
+            addAria: 'Add to wishlist',
+            removeAria: 'Remove from wishlist',
+        },
         removeAria: ({ name }: { name: string }) => `Remove “${name}” from wishlist`,
         noImage: 'no image',
     },
