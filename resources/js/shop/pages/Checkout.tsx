@@ -17,26 +17,32 @@ import { formatPrice } from '../ui/format';
 import { resolveErrorMessage } from '../lib/errors';
 import PayOrder from '../components/PayOrder';
 import useAuth from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleProvider';
+import type { TranslationKey } from '../i18n/messages';
 
-const deliveryOptions = [
+const deliveryOptionDefinitions = [
     {
-        id: 'nova' as const,
-        title: 'Нова пошта',
-        description: 'Доставка протягом 2–3 днів по Україні.',
+        id: 'nova',
+        titleKey: 'checkout.delivery.options.nova.title',
+        descriptionKey: 'checkout.delivery.options.nova.description',
     },
     {
-        id: 'ukr' as const,
-        title: 'Укрпошта',
-        description: 'Економна доставка 3–5 днів до відділення.',
+        id: 'ukr',
+        titleKey: 'checkout.delivery.options.ukr.title',
+        descriptionKey: 'checkout.delivery.options.ukr.description',
     },
     {
-        id: 'pickup' as const,
-        title: 'Самовивіз',
-        description: 'Заберіть замовлення сьогодні у нашій майстерні (Київ).',
+        id: 'pickup',
+        titleKey: 'checkout.delivery.options.pickup.title',
+        descriptionKey: 'checkout.delivery.options.pickup.description',
     },
-];
+] as const satisfies readonly {
+    id: 'nova' | 'ukr' | 'pickup';
+    titleKey: TranslationKey;
+    descriptionKey: TranslationKey;
+}[];
 
-type DeliveryOptionId = typeof deliveryOptions[number]['id'];
+type DeliveryOptionId = typeof deliveryOptionDefinitions[number]['id'];
 
 type CheckoutStep = 'address' | 'delivery' | 'payment';
 
@@ -62,13 +68,8 @@ type BillingFormState = {
 type BillingErrors = Partial<Record<keyof BillingFormState, string>>;
 
 const stepOrder: CheckoutStep[] = ['address', 'delivery', 'payment'];
-const stepLabels: Record<CheckoutStep, string> = {
-    address: 'Адреса',
-    delivery: 'Доставка',
-    payment: 'Оплата',
-};
 
-function StepIndicator({ current }: { current: CheckoutStep }) {
+function StepIndicator({ current, labels }: { current: CheckoutStep; labels: Record<CheckoutStep, string> }) {
     return (
         <ol className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             {stepOrder.map((key, index) => {
@@ -92,7 +93,7 @@ function StepIndicator({ current }: { current: CheckoutStep }) {
                                 active ? 'text-black' : completed ? 'text-gray-700' : 'text-gray-500'
                             }`}
                         >
-                            {stepLabels[key]}
+                            {labels[key]}
                         </span>
                     </li>
                 );
@@ -134,6 +135,26 @@ export default function CheckoutPage() {
     const { error: notifyError, success: notifySuccess } = useNotify();
     const { user, isAuthenticated } = useAuth();
     const { cart, reload, clear } = useCart();
+    const { t } = useLocale();
+
+    const brand = t('header.brand');
+    const stepLabels = useMemo(
+        () => ({
+            address: t('checkout.steps.address'),
+            delivery: t('checkout.steps.delivery'),
+            payment: t('checkout.steps.payment'),
+        }),
+        [t],
+    );
+    const deliveryOptions = useMemo(
+        () =>
+            deliveryOptionDefinitions.map((option) => ({
+                id: option.id as DeliveryOptionId,
+                title: t(option.titleKey),
+                description: t(option.descriptionKey),
+            })),
+        [t],
+    );
 
     const [step, setStep] = useState<CheckoutStep>('address');
     const [email, setEmail] = useState('');
@@ -146,7 +167,7 @@ export default function CheckoutPage() {
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [addressesError, setAddressesError] = useState<string | null>(null);
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
-    const [deliveryMethod, setDeliveryMethod] = useState<DeliveryOptionId>(deliveryOptions[0].id);
+    const [deliveryMethod, setDeliveryMethod] = useState<DeliveryOptionId>(deliveryOptionDefinitions[0].id);
     const [deliveryComment, setDeliveryComment] = useState('');
     const [couponCode, setCouponCode] = useState('');
     const [couponError, setCouponError] = useState<string | null>(null);
@@ -165,15 +186,15 @@ export default function CheckoutPage() {
                 const current = await CartApi.get();
                 const itemsCount = current?.items?.length ?? 0;
                 if (!current || current.status !== 'active' || itemsCount === 0) {
-                    notifyError({ title: 'Кошик порожній або вже оформлено.' });
+                    notifyError({ title: t('checkout.notifications.cartUnavailable') });
                     nav('/cart', { replace: true });
                 }
             } catch {
-                notifyError({ title: 'Не вдалося перевірити кошик.' });
+                notifyError({ title: t('checkout.notifications.cartCheckFailed') });
                 nav('/cart', { replace: true });
             }
         })();
-    }, [nav, notifyError]);
+    }, [nav, notifyError, t]);
 
     useEffect(() => {
         GA.begin_checkout(cart);
@@ -218,7 +239,7 @@ export default function CheckoutPage() {
             })
             .catch((error) => {
                 if (ignore) return;
-                setAddressesError(resolveErrorMessage(error, 'Не вдалося завантажити адреси.'));
+                setAddressesError(resolveErrorMessage(error, t('checkout.notifications.addressesLoadFailed')));
             })
             .finally(() => {
                 if (!ignore) setAddressesLoading(false);
@@ -227,7 +248,7 @@ export default function CheckoutPage() {
         return () => {
             ignore = true;
         };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, t]);
 
     useEffect(() => {
         const applied = cart?.discounts?.coupon?.code;
@@ -317,20 +338,20 @@ export default function CheckoutPage() {
         const billingIssues: BillingErrors = {};
         const trimmedEmail = email.trim();
         if (!trimmedEmail) {
-            errors.email = 'Вкажіть email для підтвердження.';
+            errors.email = t('checkout.errors.emailRequired');
         } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmedEmail)) {
-            errors.email = 'Некоректний email.';
+            errors.email = t('checkout.errors.emailInvalid');
         }
-        if (!addressForm.name.trim()) errors.name = 'Вкажіть імʼя одержувача.';
-        if (!addressForm.city.trim()) errors.city = 'Вкажіть місто доставки.';
-        if (!addressForm.addr.trim()) errors.addr = 'Вкажіть адресу доставки.';
+        if (!addressForm.name.trim()) errors.name = t('checkout.errors.shippingNameRequired');
+        if (!addressForm.city.trim()) errors.city = t('checkout.errors.shippingCityRequired');
+        if (!addressForm.addr.trim()) errors.addr = t('checkout.errors.shippingAddrRequired');
 
         if (billingEnabled) {
-            if (!billingForm.name.trim()) billingIssues.name = 'Вкажіть імʼя платника.';
-            if (!billingForm.city.trim()) billingIssues.city = 'Вкажіть місто платника.';
-            if (!billingForm.addr.trim()) billingIssues.addr = 'Вкажіть адресу платника.';
+            if (!billingForm.name.trim()) billingIssues.name = t('checkout.errors.billingNameRequired');
+            if (!billingForm.city.trim()) billingIssues.city = t('checkout.errors.billingCityRequired');
+            if (!billingForm.addr.trim()) billingIssues.addr = t('checkout.errors.billingAddrRequired');
             if (billingForm.company.trim() && !billingForm.tax_id.trim()) {
-                billingIssues.tax_id = 'Вкажіть податковий номер компанії.';
+                billingIssues.tax_id = t('checkout.errors.billingTaxRequired');
             }
         }
 
@@ -350,9 +371,13 @@ export default function CheckoutPage() {
             const normalized = couponCode.trim();
             await CartApi.applyCoupon(normalized ? normalized : null);
             await reload();
-            notifySuccess({ title: normalized ? 'Купон застосовано.' : 'Купон скасовано.' });
+            notifySuccess({
+                title: normalized
+                    ? t('checkout.notifications.couponApplied')
+                    : t('checkout.notifications.couponRemoved'),
+            });
         } catch (error) {
-            setCouponError(resolveErrorMessage(error, 'Не вдалося застосувати купон.'));
+            setCouponError(resolveErrorMessage(error, t('checkout.notifications.couponApplyFailed')));
         } finally {
             setCouponLoading(false);
         }
@@ -388,9 +413,9 @@ export default function CheckoutPage() {
                   }
                 : null;
             const delivery = deliveryOptions.find((opt) => opt.id === deliveryMethod);
-            const noteParts = [delivery ? `Доставка: ${delivery.title}` : null];
+            const noteParts = [delivery ? t('checkout.notes.delivery', { method: delivery.title }) : null];
             if (deliveryComment.trim()) {
-                noteParts.push(`Коментар: ${deliveryComment.trim()}`);
+                noteParts.push(t('checkout.notes.comment', { comment: deliveryComment.trim() }));
             }
             const payload = {
                 email: trimmedEmail,
@@ -400,7 +425,7 @@ export default function CheckoutPage() {
             };
             const created = await OrdersApi.create(payload);
             setOrder(created);
-            notifySuccess({ title: 'Замовлення створено. Завершіть оплату.' });
+            notifySuccess({ title: t('checkout.notifications.orderCreateSuccess') });
             try {
                 await clear();
             } catch {
@@ -408,7 +433,7 @@ export default function CheckoutPage() {
             }
             setStep('payment');
         } catch (error) {
-            const message = resolveErrorMessage(error, 'Не вдалося створити замовлення.');
+            const message = resolveErrorMessage(error, t('checkout.notifications.orderCreateFailed'));
             setCreateError(message);
             notifyError({ title: message });
         } finally {
@@ -439,21 +464,21 @@ export default function CheckoutPage() {
 
     const selectedDelivery = useMemo(
         () => deliveryOptions.find((opt) => opt.id === deliveryMethod) ?? deliveryOptions[0],
-        [deliveryMethod],
+        [deliveryMethod, deliveryOptions],
     );
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
-            <SeoHead title="Оформлення замовлення — Shop" robots="noindex,nofollow" canonical />
-            <h1 className="text-2xl font-semibold">Оформлення замовлення</h1>
+            <SeoHead title={t('checkout.seoTitle', { brand })} robots="noindex,nofollow" canonical />
+            <h1 className="text-2xl font-semibold">{t('checkout.title')}</h1>
 
-            <StepIndicator current={step} />
+            <StepIndicator current={step} labels={stepLabels} />
 
             {step === 'address' && (
                 <form onSubmit={handleAddressSubmit} className="space-y-6">
                     <div className="grid gap-3">
                         <label className="text-sm font-medium text-gray-700" htmlFor="checkout-email">
-                            Контактний email
+                            {t('checkout.address.emailLabel')}
                         </label>
                         <input
                             id="checkout-email"
@@ -461,7 +486,7 @@ export default function CheckoutPage() {
                             className={`w-full rounded-lg border px-3 py-2 ${
                                 addressErrors.email ? 'border-red-500' : 'border-gray-300'
                             }`}
-                            placeholder="you@example.com"
+                            placeholder={t('checkout.address.emailPlaceholder')}
                             value={email}
                             onChange={handleEmailChange}
                             data-testid="email"
@@ -474,8 +499,8 @@ export default function CheckoutPage() {
 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">Збережені адреси</h2>
-                            {addressesLoading && <span className="text-sm text-gray-500">Завантаження…</span>}
+                            <h2 className="text-lg font-semibold">{t('checkout.address.saved.title')}</h2>
+                            {addressesLoading && <span className="text-sm text-gray-500">{t('common.loading')}</span>}
                         </div>
                         {addressesError && (
                             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -485,8 +510,8 @@ export default function CheckoutPage() {
                         {addresses.length === 0 && !addressesLoading && (
                             <p className="text-sm text-gray-600">
                                 {isAuthenticated
-                                    ? 'У вас ще немає збережених адрес.'
-                                    : 'Увійдіть, щоб використовувати збережені адреси.'}
+                                    ? t('checkout.address.saved.emptyAuthenticated')
+                                    : t('checkout.address.saved.emptyGuest')}
                             </p>
                         )}
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -521,7 +546,7 @@ export default function CheckoutPage() {
                     <div className="grid gap-4">
                         <div>
                             <label className="text-sm font-medium text-gray-700" htmlFor="shipping-name">
-                                Імʼя одержувача
+                                {t('checkout.address.fields.name.label')}
                             </label>
                             <input
                                 id="shipping-name"
@@ -530,7 +555,7 @@ export default function CheckoutPage() {
                                 }`}
                                 value={addressForm.name}
                                 onChange={handleAddressInputChange('name')}
-                                placeholder="Імʼя Прізвище"
+                                placeholder={t('checkout.address.fields.name.placeholder')}
                                 data-testid="shipping-name"
                                 aria-invalid={addressErrors.name ? 'true' : 'false'}
                             />
@@ -540,7 +565,7 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                             <label className="text-sm font-medium text-gray-700" htmlFor="shipping-city">
-                                Місто
+                                {t('checkout.address.fields.city.label')}
                             </label>
                             <input
                                 id="shipping-city"
@@ -549,7 +574,7 @@ export default function CheckoutPage() {
                                 }`}
                                 value={addressForm.city}
                                 onChange={handleAddressInputChange('city')}
-                                placeholder="Київ"
+                                placeholder={t('checkout.address.fields.city.placeholder')}
                                 data-testid="shipping-city"
                                 aria-invalid={addressErrors.city ? 'true' : 'false'}
                             />
@@ -559,7 +584,7 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                             <label className="text-sm font-medium text-gray-700" htmlFor="shipping-addr">
-                                Адреса доставки
+                                {t('checkout.address.fields.addr.label')}
                             </label>
                             <input
                                 id="shipping-addr"
@@ -568,7 +593,7 @@ export default function CheckoutPage() {
                                 }`}
                                 value={addressForm.addr}
                                 onChange={handleAddressInputChange('addr')}
-                                placeholder="вул. Шевченка, 1"
+                                placeholder={t('checkout.address.fields.addr.placeholder')}
                                 data-testid="shipping-addr"
                                 aria-invalid={addressErrors.addr ? 'true' : 'false'}
                             />
@@ -579,26 +604,26 @@ export default function CheckoutPage() {
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div>
                                 <label className="text-sm font-medium text-gray-700" htmlFor="shipping-postal">
-                                    Поштовий індекс (необовʼязково)
+                                    {t('checkout.address.fields.postal.optionalLabel')}
                                 </label>
                                 <input
                                     id="shipping-postal"
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                     value={addressForm.postal_code}
                                     onChange={handleAddressInputChange('postal_code')}
-                                    placeholder="01001"
+                                    placeholder={t('checkout.address.fields.postal.placeholder')}
                                 />
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700" htmlFor="shipping-phone">
-                                    Телефон (необовʼязково)
+                                    {t('checkout.address.fields.phone.optionalLabel')}
                                 </label>
                                 <input
                                     id="shipping-phone"
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                     value={addressForm.phone}
                                     onChange={handleAddressInputChange('phone')}
-                                    placeholder="+380 00 000 0000"
+                                    placeholder={t('checkout.address.fields.phone.placeholder')}
                                 />
                             </div>
                         </div>
@@ -612,27 +637,27 @@ export default function CheckoutPage() {
                                 checked={billingEnabled}
                                 onChange={handleToggleBilling}
                             />
-                            Потрібні реквізити для рахунку
+                            {t('checkout.billing.toggle')}
                         </label>
 
                         {billingEnabled && (
                             <div className="space-y-4">
                                 <div className="flex flex-wrap items-center gap-3">
                                     <p className="text-sm text-gray-600 flex-1">
-                                        Вкажіть платіжні дані для рахунку та документів.
+                                        {t('checkout.billing.description')}
                                     </p>
                                     <button
                                         type="button"
                                         onClick={handleCopyShippingToBilling}
                                         className="text-sm font-medium text-blue-600 hover:underline"
                                     >
-                                        Заповнити як для доставки
+                                        {t('checkout.billing.copyFromShipping')}
                                     </button>
                                 </div>
                                 <div className="grid gap-4">
                                     <div>
                                         <label className="text-sm font-medium text-gray-700" htmlFor="billing-name">
-                                            Імʼя / відповідальна особа
+                                            {t('checkout.billing.fields.name.label')}
                                         </label>
                                         <input
                                             id="billing-name"
@@ -641,7 +666,7 @@ export default function CheckoutPage() {
                                             }`}
                                             value={billingForm.name}
                                             onChange={handleBillingInputChange('name')}
-                                            placeholder="Імʼя Прізвище"
+                                            placeholder={t('checkout.billing.fields.name.placeholder')}
                                             aria-invalid={billingErrors.name ? 'true' : 'false'}
                                         />
                                         {billingErrors.name && (
@@ -650,19 +675,19 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-700" htmlFor="billing-company">
-                                            Компанія (необовʼязково)
+                                            {t('checkout.billing.fields.company.label')}
                                         </label>
                                         <input
                                             id="billing-company"
                                             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                             value={billingForm.company}
                                             onChange={handleBillingInputChange('company')}
-                                            placeholder="ТОВ «Приклад»"
+                                            placeholder={t('checkout.billing.fields.company.placeholder')}
                                         />
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-700" htmlFor="billing-tax">
-                                            Податковий номер (ІПН / VAT)
+                                            {t('checkout.billing.fields.taxId.label')}
                                         </label>
                                         <input
                                             id="billing-tax"
@@ -671,7 +696,7 @@ export default function CheckoutPage() {
                                             }`}
                                             value={billingForm.tax_id}
                                             onChange={handleBillingInputChange('tax_id')}
-                                            placeholder="1234567890"
+                                            placeholder={t('checkout.billing.fields.taxId.placeholder')}
                                             aria-invalid={billingErrors.tax_id ? 'true' : 'false'}
                                         />
                                         {billingErrors.tax_id && (
@@ -680,7 +705,7 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-700" htmlFor="billing-city">
-                                            Місто
+                                            {t('checkout.billing.fields.city.label')}
                                         </label>
                                         <input
                                             id="billing-city"
@@ -689,7 +714,7 @@ export default function CheckoutPage() {
                                             }`}
                                             value={billingForm.city}
                                             onChange={handleBillingInputChange('city')}
-                                            placeholder="Київ"
+                                            placeholder={t('checkout.billing.fields.city.placeholder')}
                                             aria-invalid={billingErrors.city ? 'true' : 'false'}
                                         />
                                         {billingErrors.city && (
@@ -698,7 +723,7 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-700" htmlFor="billing-addr">
-                                            Адреса платника
+                                            {t('checkout.billing.fields.addr.label')}
                                         </label>
                                         <input
                                             id="billing-addr"
@@ -707,7 +732,7 @@ export default function CheckoutPage() {
                                             }`}
                                             value={billingForm.addr}
                                             onChange={handleBillingInputChange('addr')}
-                                            placeholder="вул. Шевченка, 1"
+                                            placeholder={t('checkout.billing.fields.addr.placeholder')}
                                             aria-invalid={billingErrors.addr ? 'true' : 'false'}
                                         />
                                         {billingErrors.addr && (
@@ -716,14 +741,14 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-700" htmlFor="billing-postal">
-                                            Поштовий індекс (необовʼязково)
+                                            {t('checkout.billing.fields.postal.optionalLabel')}
                                         </label>
                                         <input
                                             id="billing-postal"
                                             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                             value={billingForm.postal_code}
                                             onChange={handleBillingInputChange('postal_code')}
-                                            placeholder="01001"
+                                            placeholder={t('checkout.billing.fields.postal.placeholder')}
                                         />
                                         {billingErrors.postal_code && (
                                             <p className="text-sm text-red-600">{billingErrors.postal_code}</p>
@@ -739,7 +764,7 @@ export default function CheckoutPage() {
                             type="submit"
                             className="rounded-lg bg-black px-5 py-2 text-white transition hover:bg-black/90"
                         >
-                            До доставки
+                            {t('checkout.address.next')}
                         </button>
                     </div>
                 </form>
@@ -748,7 +773,7 @@ export default function CheckoutPage() {
             {step === 'delivery' && (
                 <div className="space-y-6">
                     <div className="space-y-3">
-                        <h2 className="text-lg font-semibold">Спосіб доставки</h2>
+                        <h2 className="text-lg font-semibold">{t('checkout.delivery.title')}</h2>
                         <div className="grid gap-3 sm:grid-cols-3">
                             {deliveryOptions.map((option) => {
                                 const active = option.id === deliveryMethod;
@@ -771,7 +796,7 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                             <label className="text-sm font-medium text-gray-700" htmlFor="delivery-comment">
-                                Коментар курʼєру (необовʼязково)
+                                {t('checkout.delivery.commentLabel')}
                             </label>
                             <textarea
                                 id="delivery-comment"
@@ -779,13 +804,13 @@ export default function CheckoutPage() {
                                 rows={3}
                                 value={deliveryComment}
                                 onChange={(event) => setDeliveryComment(event.target.value)}
-                                placeholder="Наприклад, дзвоніть за 30 хвилин до доставки"
+                                placeholder={t('checkout.delivery.commentPlaceholder')}
                             />
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <h2 className="text-lg font-semibold">Купон</h2>
+                        <h2 className="text-lg font-semibold">{t('checkout.coupon.title')}</h2>
                         <form onSubmit={handleApplyCoupon} className="flex flex-col gap-3 sm:flex-row">
                             <input
                                 className={`w-full rounded-lg border px-3 py-2 ${
@@ -793,7 +818,7 @@ export default function CheckoutPage() {
                                 }`}
                                 value={couponCode}
                                 onChange={(event) => setCouponCode(event.target.value)}
-                                placeholder="Введіть код купона"
+                                placeholder={t('checkout.coupon.placeholder')}
                                 aria-invalid={couponError ? 'true' : 'false'}
                             />
                             <button
@@ -801,7 +826,7 @@ export default function CheckoutPage() {
                                 disabled={couponLoading}
                                 className="rounded-lg bg-black px-4 py-2 text-white transition hover:bg-black/90 disabled:opacity-60"
                             >
-                                {couponLoading ? 'Застосування…' : 'Застосувати'}
+                                {couponLoading ? t('checkout.coupon.applying') : t('checkout.coupon.apply')}
                             </button>
                         </form>
                         {couponError && (
@@ -809,13 +834,13 @@ export default function CheckoutPage() {
                         )}
                         {cart?.discounts?.coupon?.code && (
                             <p className="text-sm text-green-600">
-                                Застосовано купон: {cart.discounts.coupon.code}
+                                {t('checkout.coupon.applied', { code: cart.discounts.coupon.code })}
                             </p>
                         )}
                     </div>
 
                     <div className="space-y-3">
-                        <h2 className="text-lg font-semibold">Ваше замовлення</h2>
+                        <h2 className="text-lg font-semibold">{t('checkout.summary.title')}</h2>
                         <div className="divide-y rounded-xl border border-gray-200">
                             {(cart?.items ?? []).map((item) => {
                                 const lineTotal = item.line_total ?? Number(item.price ?? 0) * Number(item.qty ?? 0);
@@ -825,7 +850,7 @@ export default function CheckoutPage() {
                                             <div className="font-medium">
                                                 {item.name ?? item.product?.name ?? `#${item.product_id}`}
                                             </div>
-                                            <div className="text-xs text-gray-500">Кількість: {item.qty}</div>
+                                            <div className="text-xs text-gray-500">{t('checkout.summary.quantity', { count: Number(item.qty ?? 0) })}</div>
                                         </div>
                                         <div className="text-right text-sm text-gray-500">
                                             {formatPrice(lineTotal)}
@@ -836,17 +861,17 @@ export default function CheckoutPage() {
                         </div>
                         <div className="space-y-1 rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm">
                             <div className="flex justify-between">
-                                <span>Сума товарів</span>
+                                <span>{t('checkout.summary.subtotal')}</span>
                                 <span className="font-medium">{formatPrice(subtotal)}</span>
                             </div>
                             {discountValue > 0 && (
                                 <div className="flex justify-between text-green-600">
-                                    <span>Знижка</span>
+                                    <span>{t('checkout.summary.discount')}</span>
                                     <span>-{formatPrice(discountValue)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-base font-semibold">
-                                <span>До оплати</span>
+                                <span>{t('checkout.summary.total')}</span>
                                 <span>{formatPrice(cartTotal)}</span>
                             </div>
                         </div>
@@ -859,8 +884,7 @@ export default function CheckoutPage() {
                     )}
 
                     <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-                        Після переходу до оплати змінити адресу або доставку буде неможливо без
-                        створення нового замовлення.
+                        {t('checkout.summary.notice')}
                     </div>
 
                     <div className="flex items-center justify-between gap-3">
@@ -869,7 +893,7 @@ export default function CheckoutPage() {
                             onClick={() => setStep('address')}
                             className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-50"
                         >
-                            Назад
+                            {t('common.actions.back')}
                         </button>
                         <button
                             type="button"
@@ -878,7 +902,7 @@ export default function CheckoutPage() {
                             className="rounded-lg bg-black px-5 py-2 text-white transition hover:bg-black/90 disabled:opacity-60"
                             data-testid="place-order"
                         >
-                            {creatingOrder ? 'Створення…' : 'До оплати'}
+                            {creatingOrder ? t('checkout.summary.creating') : t('checkout.summary.goToPayment')}
                         </button>
                     </div>
                 </div>
@@ -888,33 +912,30 @@ export default function CheckoutPage() {
                 <div className="space-y-6">
                     {!order && (
                         <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-700">
-                            Підготовка оплати…
+                            {t('checkout.payment.preparing')}
                         </div>
                     )}
                     {order && (
                         <>
                             <div className="space-y-2 rounded-xl border border-gray-200 p-4">
-                                <div className="text-sm text-gray-500">Номер замовлення</div>
+                                <div className="text-sm text-gray-500">{t('checkout.payment.orderNumberLabel')}</div>
                                 <div className="text-xl font-semibold">{order.number}</div>
+                                <div className="text-sm text-gray-600">{t('checkout.payment.confirmationNotice', { email: order.email })}</div>
                                 <div className="text-sm text-gray-600">
-                                    Підтвердження буде надіслано на {order.email}.
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    Сума до оплати: {formatPrice(order.total, order.currency ?? 'EUR')}
+                                    {t('checkout.payment.totalNotice', {
+                                        amount: formatPrice(order.total, order.currency ?? 'EUR'),
+                                    })}
                                 </div>
                             </div>
 
                             <div className="space-y-3 rounded-xl border border-gray-200 p-4">
-                                <h2 className="text-lg font-semibold">Оплата</h2>
-                                <p className="text-sm text-gray-600">
-                                    Безпечна оплата через Stripe. Після успішної транзакції ви будете перенаправлені до
-                                    підтвердження замовлення.
-                                </p>
+                                <h2 className="text-lg font-semibold">{t('checkout.payment.title')}</h2>
+                                <p className="text-sm text-gray-600">{t('checkout.payment.description')}</p>
                                 <PayOrder number={order.number} onPaid={handlePaid} />
                             </div>
 
                             <div className="space-y-3">
-                                <h2 className="text-lg font-semibold">Платіжні дані</h2>
+                                <h2 className="text-lg font-semibold">{t('checkout.payment.billingTitle')}</h2>
                                 <div className="rounded-xl border border-gray-200 p-4 text-sm text-gray-700">
                                     {order.billing_address ? (
                                         <>
@@ -926,7 +947,7 @@ export default function CheckoutPage() {
                                             )}
                                             {order.billing_address.tax_id && (
                                                 <div className="text-xs text-gray-500">
-                                                    Податковий номер: {order.billing_address.tax_id}
+                                                    {t('checkout.payment.billingTax', { taxId: order.billing_address.tax_id })}
                                                 </div>
                                             )}
                                             {order.billing_address.city && (
@@ -941,14 +962,14 @@ export default function CheckoutPage() {
                                         </>
                                     ) : (
                                         <div className="text-gray-600">
-                                            Реквізити для рахунку збігаються з адресою доставки.
+                                            {t('checkout.payment.billingMatchesShipping')}
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             <div className="space-y-3">
-                                <h2 className="text-lg font-semibold">Доставка</h2>
+                                <h2 className="text-lg font-semibold">{t('checkout.payment.shippingTitle')}</h2>
                                 <div className="rounded-xl border border-gray-200 p-4 text-sm text-gray-700">
                                     <div className="font-medium">{order.shipping_address?.name}</div>
                                     <div>{order.shipping_address?.city}</div>
@@ -960,16 +981,18 @@ export default function CheckoutPage() {
                                         <div>{order.shipping_address.phone}</div>
                                     )}
                                     <div className="mt-2 text-gray-600">
-                                        Спосіб доставки: {selectedDelivery.title}
+                                        {t('checkout.payment.shippingMethod', { method: selectedDelivery.title })}
                                     </div>
                                     {deliveryComment.trim() && (
-                                        <div className="text-gray-600">Коментар: {deliveryComment.trim()}</div>
+                                        <div className="text-gray-600">
+                                            {t('checkout.payment.shippingComment', { comment: deliveryComment.trim() })}
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             <div className="space-y-3">
-                                <h2 className="text-lg font-semibold">Товари</h2>
+                                <h2 className="text-lg font-semibold">{t('checkout.payment.itemsTitle')}</h2>
                                 <div className="divide-y rounded-xl border border-gray-200">
                                     {(order.items ?? []).map((item) => {
                                         const line = item.subtotal ?? Number(item.price ?? 0) * Number(item.qty ?? 0);
@@ -979,7 +1002,7 @@ export default function CheckoutPage() {
                                                     <div className="font-medium">
                                                         {item.name ?? item.product?.name ?? `#${item.product_id}`}
                                                     </div>
-                                                    <div className="text-xs text-gray-500">Кількість: {item.qty}</div>
+                                                    <div className="text-xs text-gray-500">{t('checkout.summary.quantity', { count: Number(item.qty ?? 0) })}</div>
                                                 </div>
                                                 <div className="text-right text-sm text-gray-500">
                                                     {formatPrice(line, order.currency ?? 'EUR')}

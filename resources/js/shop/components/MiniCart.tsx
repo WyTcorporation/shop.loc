@@ -3,10 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "@/components/ui/button";
 import useCart from "../useCart";
+import { useLocale } from "../i18n/LocaleProvider";
 
 export default function MiniCart() {
     const { cart, total } = useCart();
     const location = useLocation();
+    const { t } = useLocale();
 
     // закривати при зміні маршруту
     const [open, setOpen] = React.useState(false);
@@ -54,19 +56,19 @@ export default function MiniCart() {
                         </div>
 
                         <div className="flex items-center justify-between border-t pt-2">
-                            <div className="text-sm text-muted-foreground">Разом</div>
+                            <div className="text-sm text-muted-foreground">{t('miniCart.summary.total')}</div>
                             <div className="text-base font-semibold">{sum}</div>
                         </div>
 
                         <div className="flex gap-2">
                             <Link to="/cart" className="w-full">
                                 <Button variant="outline" className="w-full" data-testid="mini-to-cart">
-                                    Відкрити кошик
+                                    {t('miniCart.actions.viewCart')}
                                 </Button>
                             </Link>
                             <Link to="/checkout" className="w-full">
                                 <Button className="w-full" data-testid="mini-to-checkout">
-                                    Оформити
+                                    {t('miniCart.actions.checkout')}
                                 </Button>
                             </Link>
                         </div>
@@ -74,7 +76,7 @@ export default function MiniCart() {
                 ) : (
                     // легкий “лоадер” поки cart ще не підвантажився або порожній
                     <div className="text-sm text-muted-foreground">
-                        {cart ? "Кошик порожній" : "Завантаження…"}
+                        {cart ? t('miniCart.empty') : t('common.loading')}
                     </div>
                 )}
             </PopoverContent>
