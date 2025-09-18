@@ -199,6 +199,11 @@ const messages = {
             title: 'Loyalty points',
             description: 'Track your available balance and loyalty point history.',
             error: 'Failed to load loyalty information.',
+            type: {
+                default: 'Transaction',
+                earn: 'Earned',
+                redeem: 'Redeemed',
+            },
             stats: {
                 balance: 'Available',
                 earned: 'Earned',

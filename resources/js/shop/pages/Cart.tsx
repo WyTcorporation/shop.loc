@@ -4,19 +4,17 @@ import useCart from '../useCart'
 import SeoHead from '../components/SeoHead';
 import { GA } from '../ui/ga';
 import { useLocale } from '../i18n/LocaleProvider';
-
-function money(v: unknown) {
-    return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })
-        .format(Number(v ?? 0));
-}
+import { formatCurrency } from '../ui/format';
 
 export default function CartPage() {
     const { cart, total, update, remove } = useCart()
-    const { t } = useLocale();
+    const { t, locale } = useLocale();
 
     const brand = t('header.brand');
 
     if (!cart) return <div className="max-w-4xl mx-auto p-6">{t('cart.loading')}</div>
+
+    const currency = cart.currency ?? 'EUR';
 
     useEffect(() => {
         GA.view_cart(cart);
@@ -52,7 +50,9 @@ export default function CartPage() {
                             )}
                             <div className="flex-1 min-w-0">
                                 <div className="font-medium truncate">{p.name ?? it.name}</div>
-                                <div className="text-sm text-gray-600">{money(p.price ?? it.price)}</div>
+                                <div className="text-sm text-gray-600">
+                                    {formatCurrency(p.price ?? it.price, { currency, locale })}
+                                </div>
                             </div>
                         </>
                     );
@@ -86,7 +86,7 @@ export default function CartPage() {
                                 onChange={e => update(it.id, Math.max(0, parseInt(e.target.value || '0', 10)))}
                                 className="border rounded px-2 py-1 w-20"
                             />
-                            <div className="w-24 text-right font-medium">{money(line)}</div>
+                            <div className="w-24 text-right font-medium">{formatCurrency(line, { currency, locale })}</div>
                             <button onClick={()=>remove(it.id)} className="px-2 py-1 text-sm rounded border">{t('cart.line.remove')}</button>
                         </div>
                     );
@@ -95,7 +95,7 @@ export default function CartPage() {
 
             <div className="flex justify-between items-center border-t pt-4">
                 <div className="text-lg">{t('cart.summary.totalLabel')}:</div>
-                <div className="text-xl font-semibold">{money(total)}</div>
+                <div className="text-xl font-semibold">{formatCurrency(total, { currency, locale })}</div>
             </div>
 
             <div className="flex justify-end">

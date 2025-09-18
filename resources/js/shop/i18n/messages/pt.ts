@@ -199,6 +199,11 @@ const messages = {
             title: 'Pontos de fidelidade',
             description: 'Acompanhe o saldo disponível e o histórico de utilização dos pontos.',
             error: 'Não foi possível carregar a informação de pontos.',
+            type: {
+                default: 'Movimento',
+                earn: 'Acumulação',
+                redeem: 'Utilização',
+            },
             stats: {
                 balance: 'Disponível',
                 earned: 'Acumulado',

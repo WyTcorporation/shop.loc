@@ -5,44 +5,16 @@ import ProfileNavigation from '../components/ProfileNavigation';
 import useAuth from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
-import { formatPrice } from '../ui/format';
-
-function formatDate(dateString?: string | null, locale?: string) {
-    if (!dateString) return '—';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) {
-        return dateString;
-    }
-    return date.toLocaleString(locale ?? 'en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
+import { formatCurrency, formatDateTime } from '../ui/format';
 
 export default function ProfileOrdersPage() {
-    const { t, lang } = useLocale();
+    const { t, locale } = useLocale();
     const { isAuthenticated, isReady } = useAuth();
     const location = useLocation();
     const redirectTo = React.useMemo(() => {
         const path = `${location.pathname ?? ''}${location.search ?? ''}${location.hash ?? ''}`;
         return path || '/profile/orders';
     }, [location.hash, location.pathname, location.search]);
-
-    const dateLocale = React.useMemo(() => {
-        switch (lang) {
-            case 'uk':
-                return 'uk-UA';
-            case 'ru':
-                return 'ru-RU';
-            case 'pt':
-                return 'pt-PT';
-            default:
-                return 'en-US';
-        }
-    }, [lang]);
 
     const [orders, setOrders] = React.useState<OrderResponse[]>([]);
     const [loading, setLoading] = React.useState(false);
@@ -125,11 +97,19 @@ export default function ProfileOrdersPage() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                     {orders.map((order) => {
-                                        const total = formatPrice(order.total, order.currency ?? 'EUR');
+                                        const total = formatCurrency(order.total, {
+                                            currency: order.currency ?? 'EUR',
+                                            locale,
+                                        });
                                         return (
                                             <tr key={order.number} className="hover:bg-gray-50">
                                                 <td className="px-4 py-4 font-medium text-gray-900">{order.number}</td>
-                                                <td className="px-4 py-4 text-gray-700">{formatDate(order.created_at, dateLocale)}</td>
+                                                <td className="px-4 py-4 text-gray-700">
+                                                    {formatDateTime(order.created_at, {
+                                                        locale,
+                                                        invalidFallback: order.created_at ?? '—',
+                                                    })}
+                                                </td>
                                                 <td className="px-4 py-4 text-gray-700">{order.status ?? '—'}</td>
                                                 <td className="px-4 py-4 text-gray-900">{total}</td>
                                                 <td className="px-4 py-4">

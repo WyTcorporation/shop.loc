@@ -5,19 +5,7 @@ import ProfileNavigation from '../components/ProfileNavigation';
 import useAuth from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
-
-function formatDate(dateString?: string | null, locale?: string) {
-    if (!dateString) return '—';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) {
-        return dateString;
-    }
-    return date.toLocaleDateString(locale ?? 'en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-}
+import { formatDate } from '../ui/format';
 
 function normalizePoints(value: number | string) {
     const numeric = typeof value === 'string' ? Number(value) : value;
@@ -28,26 +16,13 @@ function normalizePoints(value: number | string) {
 }
 
 export default function ProfilePointsPage() {
-    const { t, lang } = useLocale();
+    const { t, locale } = useLocale();
     const { isAuthenticated, isReady } = useAuth();
     const location = useLocation();
     const redirectTo = React.useMemo(() => {
         const path = `${location.pathname ?? ''}${location.search ?? ''}${location.hash ?? ''}`;
         return path || '/profile/points';
     }, [location.hash, location.pathname, location.search]);
-
-    const dateLocale = React.useMemo(() => {
-        switch (lang) {
-            case 'uk':
-                return 'uk-UA';
-            case 'ru':
-                return 'ru-RU';
-            case 'pt':
-                return 'pt-PT';
-            default:
-                return 'en-US';
-        }
-    }, [lang]);
 
     const [data, setData] = React.useState<LoyaltyPointsResponse | null>(null);
     const [loading, setLoading] = React.useState(false);
@@ -151,17 +126,22 @@ export default function ProfilePointsPage() {
                                         const pointsValue = normalizePoints(transaction.points);
                                         const rawType = transaction.type ?? '';
                                         const normalizedType = rawType.toLowerCase();
-                                        let transactionType = t('profile.points.table.type.default');
+                                        let transactionType = t('profile.points.type.default');
                                         if (normalizedType === 'earn' || normalizedType === 'earned') {
-                                            transactionType = t('profile.points.table.type.earn');
+                                            transactionType = t('profile.points.type.earn');
                                         } else if (normalizedType === 'redeem' || normalizedType === 'spent') {
-                                            transactionType = t('profile.points.table.type.redeem');
+                                            transactionType = t('profile.points.type.redeem');
                                         } else if (rawType) {
                                             transactionType = rawType;
                                         }
                                         return (
                                             <tr key={transaction.id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-4 text-gray-700">{formatDate(transaction.created_at, dateLocale)}</td>
+                                                <td className="px-4 py-4 text-gray-700">
+                                                    {formatDate(transaction.created_at, {
+                                                        locale,
+                                                        invalidFallback: transaction.created_at ?? '—',
+                                                    })}
+                                                </td>
                                                 <td className="px-4 py-4 text-gray-700">{transaction.description ?? '—'}</td>
                                                 <td className="px-4 py-4 text-gray-700">{transactionType}</td>
                                                 <td className="px-4 py-4 font-medium text-gray-900">{pointsValue}</td>
