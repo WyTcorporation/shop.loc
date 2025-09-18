@@ -292,6 +292,10 @@ export const AuthApi = {
     async logout() {
         await api.post('/auth/logout');
     },
+    async resendVerification() {
+        const { data } = await api.post<{ message?: string }>('/email/resend');
+        return data;
+    },
 };
 
 export const TwoFactorApi = {

@@ -13,6 +13,9 @@ export default function ProfilePage() {
     const [profileError, setProfileError] = React.useState<string | null>(null);
     const [profileMessage, setProfileMessage] = React.useState<string | null>(null);
     const [profileSaving, setProfileSaving] = React.useState(false);
+    const [verificationError, setVerificationError] = React.useState<string | null>(null);
+    const [verificationMessage, setVerificationMessage] = React.useState<string | null>(null);
+    const [verificationSending, setVerificationSending] = React.useState(false);
     const [form, setForm] = React.useState({
         name: user?.name ?? '',
         email: user?.email ?? '',
@@ -216,6 +219,24 @@ export default function ProfilePage() {
         }
     };
 
+    const handleResendVerification = async () => {
+        if (verificationSending || isLoading) return;
+
+        setVerificationError(null);
+        setVerificationMessage(null);
+        setVerificationSending(true);
+        try {
+            const response = await AuthApi.resendVerification();
+            setVerificationMessage(response?.message ?? 'Лист для підтвердження повторно надіслано.');
+        } catch (err) {
+            setVerificationError(
+                resolveErrorMessage(err, 'Не вдалося надіслати лист підтвердження. Спробуйте ще раз.'),
+            );
+        } finally {
+            setVerificationSending(false);
+        }
+    };
+
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col px-4 py-16">
             <div className="w-full lg:w-3/4 xl:w-2/3">
@@ -242,6 +263,61 @@ export default function ProfilePage() {
                         className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
                     >
                         {profileMessage}
+                    </div>
+                )}
+                {!user?.email_verified_at && (
+                    <div
+                        data-testid="email-verification-alert"
+                        className="mb-4 rounded border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800"
+                    >
+                        <p className="font-medium">Електронну пошту не підтверджено.</p>
+                        <p className="mt-1 text-yellow-700">
+                            Перевірте поштову скриньку або надішліть лист із підтвердженням повторно.
+                        </p>
+                        {verificationError && (
+                            <p data-testid="email-verification-error" className="mt-2 text-red-600">
+                                {verificationError}
+                            </p>
+                        )}
+                        {verificationMessage && (
+                            <p data-testid="email-verification-success" className="mt-2 text-green-700">
+                                {verificationMessage}
+                            </p>
+                        )}
+                        <button
+                            type="button"
+                            onClick={handleResendVerification}
+                            disabled={verificationSending || isLoading}
+                            className="mt-3 inline-flex items-center rounded border border-yellow-300 bg-white px-4 py-2 text-sm font-medium text-yellow-800 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {verificationSending ? (
+                                <>
+                                    <svg
+                                        aria-hidden="true"
+                                        className="mr-2 h-4 w-4 animate-spin text-yellow-700"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        />
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                        />
+                                    </svg>
+                                    Надсилання…
+                                </>
+                            ) : (
+                                'Надіслати лист повторно'
+                            )}
+                        </button>
                     </div>
                 )}
                 <form onSubmit={handleProfileSubmit} className="space-y-4" data-testid="profile-form">
