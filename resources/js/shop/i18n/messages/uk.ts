@@ -41,6 +41,75 @@ const messages = {
         },
         empty: 'Кошик порожній',
     },
+    catalog: {
+        seo: {
+            listName: ({ category }: { category?: string }) => category ? `Каталог — ${category}` : 'Каталог',
+            documentTitle: ({ category, query }: { category?: string; query?: string }) => {
+                const parts = ['Каталог'];
+                if (category) parts.push(category);
+                if (query) parts.push(`пошук “${query}”`);
+                return parts.join(' — ');
+            },
+            pageTitle: ({ category, query, brand }: { category?: string; query?: string; brand: string }) => {
+                const parts = ['Каталог'];
+                if (category) parts.push(category);
+                if (query) parts.push(`пошук “${query}”`);
+                return `${parts.join(' — ')} — ${brand}`;
+            },
+            description: ({ category, query }: { category?: string; query?: string }) => [
+                'Каталог інтернет-магазину. Фільтри: категорія, колір, розмір, ціна.',
+                category ? `Категорія: ${category}.` : '',
+                query ? `Пошук: ${query}.` : '',
+            ].filter(Boolean).join(' '),
+            breadcrumbHome: 'Головна',
+            breadcrumbCatalog: 'Каталог',
+        },
+        header: {
+            title: 'Каталог',
+            categoryPlaceholder: 'Категорія',
+            allCategories: 'Всі категорії',
+            sort: {
+                new: 'Новинки',
+                priceAsc: 'Ціна ↑',
+                priceDesc: 'Ціна ↓',
+            },
+        },
+        filters: {
+            searchPlaceholder: 'Пошук товарів…',
+            priceMinPlaceholder: 'Ціна від',
+            priceMaxPlaceholder: 'до',
+            applyPrice: 'Застосувати',
+            clearAll: 'Скинути все',
+            active: {
+                color: ({ value }: { value: string }) => `Колір: ${value}`,
+                size: ({ value }: { value: string }) => `Розмір: ${value}`,
+                minPrice: ({ value }: { value: number }) => `Від: ${value}`,
+                maxPrice: ({ value }: { value: number }) => `До: ${value}`,
+                clearTooltip: 'Скинути цей фільтр',
+                clearAll: 'Скинути все',
+            },
+            facets: {
+                categories: 'Категорії',
+                colors: 'Колір',
+                sizes: 'Розмір',
+                empty: 'нема даних',
+            },
+        },
+        products: {
+            empty: 'Нічого не знайдено. Спробуйте змінити фільтри.',
+        },
+        cards: {
+            noImage: 'без фото',
+            outOfStock: 'Немає в наявності',
+            adding: 'Купуємо…',
+            addToCart: 'Купити',
+        },
+        pagination: {
+            prev: 'Назад',
+            next: 'Далі',
+            pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Сторінка ${page} із ${lastPage}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Профіль',

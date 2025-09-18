@@ -41,6 +41,75 @@ const messages = {
         },
         empty: 'Your cart is empty',
     },
+    catalog: {
+        seo: {
+            listName: ({ category }: { category?: string }) => category ? `Catalog — ${category}` : 'Catalog',
+            documentTitle: ({ category, query }: { category?: string; query?: string }) => {
+                const parts = ['Catalog'];
+                if (category) parts.push(category);
+                if (query) parts.push(`search “${query}”`);
+                return parts.join(' — ');
+            },
+            pageTitle: ({ category, query, brand }: { category?: string; query?: string; brand: string }) => {
+                const parts = ['Catalog'];
+                if (category) parts.push(category);
+                if (query) parts.push(`search “${query}”`);
+                return `${parts.join(' — ')} — ${brand}`;
+            },
+            description: ({ category, query }: { category?: string; query?: string }) => [
+                'Online store catalog. Filters: category, color, size, price.',
+                category ? `Category: ${category}.` : '',
+                query ? `Search: ${query}.` : '',
+            ].filter(Boolean).join(' '),
+            breadcrumbHome: 'Home',
+            breadcrumbCatalog: 'Catalog',
+        },
+        header: {
+            title: 'Catalog',
+            categoryPlaceholder: 'Category',
+            allCategories: 'All categories',
+            sort: {
+                new: 'New arrivals',
+                priceAsc: 'Price ↑',
+                priceDesc: 'Price ↓',
+            },
+        },
+        filters: {
+            searchPlaceholder: 'Search products…',
+            priceMinPlaceholder: 'Price from',
+            priceMaxPlaceholder: 'to',
+            applyPrice: 'Apply',
+            clearAll: 'Clear all',
+            active: {
+                color: ({ value }: { value: string }) => `Color: ${value}`,
+                size: ({ value }: { value: string }) => `Size: ${value}`,
+                minPrice: ({ value }: { value: number }) => `From: ${value}`,
+                maxPrice: ({ value }: { value: number }) => `To: ${value}`,
+                clearTooltip: 'Clear this filter',
+                clearAll: 'Clear all',
+            },
+            facets: {
+                categories: 'Categories',
+                colors: 'Color',
+                sizes: 'Size',
+                empty: 'no data',
+            },
+        },
+        products: {
+            empty: 'Nothing found. Try adjusting the filters.',
+        },
+        cards: {
+            noImage: 'no image',
+            outOfStock: 'Out of stock',
+            adding: 'Buying…',
+            addToCart: 'Add to cart',
+        },
+        pagination: {
+            prev: 'Previous',
+            next: 'Next',
+            pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Page ${page} of ${lastPage}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Profile',
