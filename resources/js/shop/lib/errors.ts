@@ -1,5 +1,11 @@
-export function resolveErrorMessage(error: unknown, fallback = 'Сталася помилка. Спробуйте ще раз.') {
-    if (!error) return fallback;
+type Fallback = string | (() => string);
+
+function resolveFallback(fallback: Fallback) {
+    return typeof fallback === 'function' ? fallback() : fallback;
+}
+
+export function resolveErrorMessage(error: unknown, fallback: Fallback = 'Сталася помилка. Спробуйте ще раз.') {
+    if (!error) return resolveFallback(fallback);
 
     const maybeResponse = (error as { response?: { data?: unknown } })?.response?.data;
 
@@ -36,5 +42,5 @@ export function resolveErrorMessage(error: unknown, fallback = 'Сталася �
         return error.message;
     }
 
-    return fallback;
+    return resolveFallback(fallback);
 }

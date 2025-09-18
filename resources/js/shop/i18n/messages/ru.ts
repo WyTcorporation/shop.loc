@@ -61,6 +61,34 @@ const messages = {
         },
         empty: 'Корзина пуста',
     },
+    orderChat: {
+        title: 'Чат с продавцом',
+        orderLabel: ({ number }: { number: string | number }) => `Заказ ${number}`,
+        actions: {
+            refresh: 'Обновить',
+            send: 'Отправить',
+            sending: 'Отправка…',
+        },
+        loading: 'Загрузка сообщений…',
+        empty: 'Сообщений пока нет. Напишите первым!',
+        you: 'Вы',
+        seller: 'Продавец',
+        inputPlaceholder: 'Ваше сообщение продавцу…',
+        inputHint: {
+            maxLength: ({ limit }: { limit: number }) => `До ${limit} символов`,
+        },
+        guestPrompt: {
+            prefix: 'Чтобы написать продавцу,',
+            login: 'войдите',
+            or: 'или',
+            register: 'зарегистрируйтесь',
+            suffix: '.',
+        },
+        errors: {
+            load: 'Не удалось загрузить сообщения.',
+            send: 'Не удалось отправить сообщение.',
+        },
+    },
     catalog: {
         seo: {
             listName: ({ category }: { category?: string }) => category ? `Каталог — ${category}` : 'Каталог',

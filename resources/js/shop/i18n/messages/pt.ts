@@ -61,6 +61,34 @@ const messages = {
         },
         empty: 'O carrinho está vazio',
     },
+    orderChat: {
+        title: 'Chat com o vendedor',
+        orderLabel: ({ number }: { number: string | number }) => `Pedido ${number}`,
+        actions: {
+            refresh: 'Atualizar',
+            send: 'Enviar',
+            sending: 'Enviando…',
+        },
+        loading: 'A carregar mensagens…',
+        empty: 'Ainda não há mensagens. Seja o primeiro a escrever!',
+        you: 'Você',
+        seller: 'Vendedor',
+        inputPlaceholder: 'A sua mensagem para o vendedor…',
+        inputHint: {
+            maxLength: ({ limit }: { limit: number }) => `Até ${limit} caracteres`,
+        },
+        guestPrompt: {
+            prefix: 'Para enviar uma mensagem ao vendedor,',
+            login: 'entre',
+            or: 'ou',
+            register: 'cadastre-se',
+            suffix: '.',
+        },
+        errors: {
+            load: 'Não foi possível carregar as mensagens.',
+            send: 'Não foi possível enviar a mensagem.',
+        },
+    },
     catalog: {
         seo: {
             listName: ({ category }: { category?: string }) => category ? `Catálogo — ${category}` : 'Catálogo',
