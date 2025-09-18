@@ -44,11 +44,11 @@ class WishlistController extends Controller
         return response()->json($this->presentProduct($product));
     }
 
-    public function destroy(Request $request, Product $product): Response
+    public function destroy(Request $request, int $productId): Response
     {
         Wishlist::query()
             ->where('user_id', $request->user()->id)
-            ->where('product_id', $product->id)
+            ->where('product_id', $productId)
             ->delete();
 
         return response()->noContent();

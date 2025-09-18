@@ -75,3 +75,23 @@ it('deletes wishlist items for an authenticated user', function () {
     deleteJson("/api/profile/wishlist/{$product->id}")
         ->assertNoContent();
 });
+
+it('removes wishlist items when the product no longer exists', function () {
+    $user = User::factory()->create();
+    $product = Product::factory()->createQuietly();
+
+    Wishlist::query()->create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+    ]);
+
+    $productId = $product->id;
+    $product->delete();
+
+    Sanctum::actingAs($user, [], 'sanctum');
+
+    deleteJson("/api/profile/wishlist/{$productId}")
+        ->assertNoContent();
+
+    expect(Wishlist::query()->where('user_id', $user->id)->where('product_id', $productId)->exists())->toBeFalse();
+});
