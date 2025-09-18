@@ -35,6 +35,13 @@ const messages = {
             register: 'Criar conta',
         },
     },
+    consent: {
+        ariaLabel: 'Preferências de cookies',
+        message: 'Utilizamos cookies para análises (GA4). Clique em «Permitir» para os ativar. Pode alterar a sua escolha a qualquer momento.',
+        decline: 'Recusar',
+        accept: 'Permitir',
+        note: 'Os cookies essenciais não efetuam rastreio. A análise só é ativada com o seu consentimento.',
+    },
     search: {
         placeholder: 'Pesquisar produtos…',
         panel: {
