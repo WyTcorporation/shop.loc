@@ -501,7 +501,18 @@ async function showCart(id: string): Promise<Cart> {
     return data;
 }
 async function requireCartId(): Promise<string> {
-    if (activeCartId) return activeCartId;
+    if (activeCartId) {
+        try {
+            const existingCart = await showCart(activeCartId);
+            if (String(existingCart?.status ?? '') === 'active') {
+                return existingCart.id;
+            }
+        } catch (error) {
+            // Якщо відбулася помилка — створюємо новий кошик
+        }
+        resetCartCache();
+    }
+
     const { data } = await api.get<Cart>('/cart'); // створить активний кошик і поверне id
     setActiveCartId(data.id);
     return data.id;
