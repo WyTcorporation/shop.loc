@@ -676,6 +676,11 @@ const messages = {
         clear: 'Limpar',
         loading: 'A atualizar a sua lista de desejos…',
         errorTitle: 'Não foi possível atualizar a lista',
+        errors: {
+            auth: 'Inicie sessão para sincronizar a lista de desejos.',
+            sync: 'Não foi possível sincronizar a lista de desejos.',
+            partialSync: 'Alguns artigos não foram sincronizados com a lista de desejos.',
+        },
         empty: 'Ainda está vazio.',
         button: {
             add: 'Adicionar à lista de desejos',
