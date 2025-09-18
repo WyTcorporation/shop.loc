@@ -142,4 +142,53 @@ describe('Catalog page', () => {
             expect(screen.getByRole('button', { name: 'Купити' })).toBeEnabled()
         );
     });
+
+    it('deduplicates category and color facets', async () => {
+        const product = {
+            id: 202,
+            name: 'Ще один товар',
+            slug: 'another-product',
+            price: 2599,
+            images: [],
+        };
+
+        fetchCategoriesMock.mockResolvedValueOnce([
+            { id: 10, name: 'Кросівки' },
+        ]);
+        fetchProductsMock.mockResolvedValueOnce({
+            data: [product],
+            current_page: 1,
+            last_page: 1,
+            per_page: 12,
+            total: 1,
+            from: 1,
+            to: 1,
+            facets: {
+                category_id: {
+                    '10': 5,
+                    misc: 2,
+                },
+                'attrs.color': {
+                    Black: 2,
+                    ' black ': 1,
+                    BLACK: 4,
+                },
+            },
+        });
+
+        render(
+            <MemoryRouter>
+                <Catalog />
+            </MemoryRouter>
+        );
+
+        const categoryButton = await screen.findByTestId('facet-cat-10');
+        expect(categoryButton).toBeInTheDocument();
+        expect(screen.queryByTestId('facet-cat-misc')).not.toBeInTheDocument();
+
+        const colorButtons = await screen.findAllByTestId('facet-color-black');
+        expect(colorButtons).toHaveLength(1);
+        expect(colorButtons[0]).toHaveTextContent('Black');
+        expect(colorButtons[0]).toHaveTextContent('(7)');
+    });
 });

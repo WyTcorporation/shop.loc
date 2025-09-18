@@ -29,6 +29,8 @@ import { Loader2 } from 'lucide-react';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
+const normalizeFacetValue = (value: string) => value.trim().toLowerCase();
+
 export default function Catalog() {
     const [cats, setCats] = useState<Category[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
@@ -53,7 +55,33 @@ export default function Catalog() {
     // атрибути у URL (і СЕТЕРИ!)
     const [colorsParam, setColorsParam] = useQueryParam('color', ''); // "?color=red,blue"
     const [sizesParam,  setSizesParam]  = useQueryParam('size',  ''); // "?size=M,L"
-    const selectedColors = useMemo(() => colorsParam ? colorsParam.split(',').filter(Boolean) : [], [colorsParam]);
+    const selectedColorParamValues = useMemo(
+        () => colorsParam ? colorsParam.split(',').filter(Boolean) : [],
+        [colorsParam],
+    );
+    const selectedColorKeys = useMemo(() => {
+        const seen = new Set<string>();
+        const keys: string[] = [];
+        selectedColorParamValues.forEach((value) => {
+            const normalized = normalizeFacetValue(value);
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            keys.push(normalized);
+        });
+        return keys;
+    }, [selectedColorParamValues]);
+    const selectedColorKeySet = useMemo(() => new Set(selectedColorKeys), [selectedColorKeys]);
+    const colorRawValuesByKey = useMemo(() => {
+        const map = new Map<string, string[]>();
+        selectedColorParamValues.forEach((value) => {
+            const normalized = normalizeFacetValue(value);
+            if (!normalized) return;
+            const existing = map.get(normalized);
+            if (existing) existing.push(value);
+            else map.set(normalized, [value]);
+        });
+        return map;
+    }, [selectedColorParamValues]);
     const selectedSizes  = useMemo(() => sizesParam  ? sizesParam.split(',').filter(Boolean)  : [], [sizesParam]);
 
     // price range у URL
@@ -71,6 +99,19 @@ export default function Catalog() {
         const has = list.includes(value);
         const next = has ? list.filter(v => v !== value) : [...list, value];
         setParam(next.length ? next.join(',') : undefined);
+        setPage(1);
+    }
+
+    function toggleColorFacet(key: string) {
+        const canonical = colorFacetMap.get(key)?.value ?? colorRawValuesByKey.get(key)?.[0] ?? key;
+        const withoutKey = selectedColorParamValues.filter(
+            (value) => normalizeFacetValue(value) !== key,
+        );
+        const has = selectedColorKeySet.has(key);
+        const nextValues = has
+            ? withoutKey
+            : (canonical ? [...withoutKey, canonical] : withoutKey);
+        setColorsParam(nextValues.length ? nextValues.join(',') : undefined);
         setPage(1);
     }
 
@@ -98,7 +139,7 @@ export default function Catalog() {
                     category_id: categoryId,
                     search: dq || undefined,
                     sort,
-                    color: selectedColors,
+                    color: selectedColorApiValues,
                     size: selectedSizes,
                     min_price: minPriceParam,
                     max_price: maxPriceParam,
@@ -131,6 +172,46 @@ export default function Catalog() {
     const catCounts   = facets?.['category_id'] ?? {};
     const colorCounts = facets?.['attrs.color'] ?? {};
     const sizeCounts  = facets?.['attrs.size'] ?? {};
+    const categoryFacetEntries = useMemo(
+        () => Object.entries(catCounts).filter(([id]) => typeof id === 'string' && /^\d+$/.test(id)),
+        [catCounts],
+    );
+    const colorFacetMap = useMemo(() => {
+        const map = new Map<string, { normalized: string; label: string; value: string; count: number }>();
+        Object.entries(colorCounts).forEach(([rawValue, rawCount]) => {
+            if (!rawValue || rawValue === 'null') return;
+            const normalized = normalizeFacetValue(rawValue);
+            if (!normalized) return;
+            const trimmed = rawValue.trim();
+            if (!trimmed) return;
+            const display = trimmed;
+            const numericCount = typeof rawCount === 'number' ? rawCount : Number(rawCount) || 0;
+            const existing = map.get(normalized);
+            if (existing) {
+                existing.count += numericCount;
+            } else {
+                map.set(normalized, {
+                    normalized,
+                    label: display,
+                    value: display,
+                    count: numericCount,
+                });
+            }
+        });
+        return map;
+    }, [colorCounts]);
+    const colorFacetList = useMemo(() => Array.from(colorFacetMap.values()), [colorFacetMap]);
+    const colorDisplayByKey = useMemo(() => {
+        const map = new Map<string, string>();
+        colorFacetList.forEach(({ normalized, label }) => {
+            map.set(normalized, label);
+        });
+        return map;
+    }, [colorFacetList]);
+    const selectedColorApiValues = useMemo(
+        () => selectedColorKeys.map((key) => colorFacetMap.get(key)?.value ?? colorRawValuesByKey.get(key)?.[0] ?? key),
+        [selectedColorKeys, colorFacetMap, colorRawValuesByKey],
+    );
 
     function clearAll() {
         setQ('');
@@ -151,11 +232,14 @@ export default function Catalog() {
             label: cats.find(c => c.id === categoryId)?.name ?? `#${categoryId}`,
             onClear: () => { setCategoryId(undefined); setCategoryParam(undefined); setPage(1); },
         }] : []),
-        ...selectedColors.map((c) => ({
-            key: `color:${c}`,
-            label: `Колір: ${c}`,
-            onClear: () => toggleListParam(c, selectedColors, setColorsParam),
-        })),
+        ...selectedColorKeys.map((key) => {
+            const label = colorDisplayByKey.get(key) ?? colorRawValuesByKey.get(key)?.[0] ?? key;
+            return {
+                key: `color:${key}`,
+                label: `Колір: ${label}`,
+                onClear: () => toggleColorFacet(key),
+            };
+        }),
         ...selectedSizes.map((s) => ({
             key: `size:${s}`,
             label: `Розмір: ${s}`,
@@ -219,7 +303,7 @@ export default function Catalog() {
     const hasFilters =
         !!q ||
         !!categoryId ||
-        (selectedColors.length > 0) ||
+        (selectedColorKeys.length > 0) ||
         (selectedSizes.length > 0) ||
         (minPriceParam != null) ||
         (maxPriceParam != null) ||
@@ -360,7 +444,7 @@ export default function Catalog() {
                 <div>
                     <div className="mb-2 text-sm font-medium">Категорії</div>
                     <div className="flex flex-wrap gap-2">
-                        {Object.entries(catCounts).filter(([id]) => id && id !== 'null').map(([id, cnt]) => {
+                        {categoryFacetEntries.map(([id, cnt]) => {
                             const c = catById.get(String(id));
                             const active = Number(categoryId) === Number(id);
                             return (
@@ -381,7 +465,7 @@ export default function Catalog() {
                                 </button>
                             );
                         })}
-                        {Object.keys(catCounts).length === 0 && (
+                        {categoryFacetEntries.length === 0 && (
                             <span className="text-xs text-muted-foreground">нема даних</span>
                         )}
                     </div>
@@ -391,22 +475,22 @@ export default function Catalog() {
                 <div>
                     <div className="mb-2 text-sm font-medium">Колір</div>
                     <div className="flex flex-wrap gap-2">
-                        {Object.entries(colorCounts).filter(([v]) => v && v !== 'null').map(([v, cnt]) => {
-                            const active = selectedColors.includes(v);
+                        {colorFacetList.map(({ normalized, label, value, count }) => {
+                            const active = selectedColorKeySet.has(normalized);
                             return (
                                 <button
-                                    key={v}
+                                    key={normalized}
                                     type="button"
-                                    data-testid={`facet-color-${v}`}
-                                    onClick={() => toggleListParam(v, selectedColors, setColorsParam)}
+                                    data-testid={`facet-color-${normalized}`}
+                                    onClick={() => toggleColorFacet(normalized)}
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
-                                    title={`attrs.color=${v}`}
+                                    title={`attrs.color=${value}`}
                                 >
-                                    {v} <span className="opacity-70">({cnt})</span>
+                                    {label} <span className="opacity-70">({count})</span>
                                 </button>
                             );
                         })}
-                        {Object.keys(colorCounts).length === 0 && (
+                        {colorFacetList.length === 0 && (
                             <span className="text-xs text-muted-foreground">нема даних</span>
                         )}
                     </div>
