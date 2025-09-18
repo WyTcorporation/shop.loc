@@ -115,4 +115,29 @@ describe('OrderChat', () => {
         expect(await screen.findByText('You')).toBeInTheDocument();
         expect(screen.getByText('Seller')).toBeInTheDocument();
     });
+
+    it('formats timestamps according to locale', async () => {
+        const user = userEvent.setup();
+
+        render(
+            <MemoryRouter>
+                <LocaleProvider initial="uk">
+                    <Testbed orderId={42} orderNumber="A-001" />
+                </LocaleProvider>
+            </MemoryRouter>,
+        );
+
+        const timestamp = await screen.findByTestId('order-chat-message-timestamp-1');
+        expect(timestamp).toHaveTextContent(/\d{2}\.\d{2}/);
+        const initialValue = timestamp.textContent;
+        expect(initialValue).not.toBeNull();
+        const initialText = initialValue ?? '';
+
+        await user.click(screen.getByTestId('switch-lang'));
+
+        await screen.findByRole('heading', { name: 'Chat with the seller' });
+        const updatedTimestamp = await screen.findByTestId('order-chat-message-timestamp-1');
+        expect(updatedTimestamp.textContent).not.toBe(initialText);
+        expect(updatedTimestamp).toHaveTextContent(/\//);
+    });
 });
