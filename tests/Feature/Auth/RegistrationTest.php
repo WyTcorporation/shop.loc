@@ -10,6 +10,8 @@ beforeEach(function () {
         'driver' => 'session',
         'provider' => 'users',
     ]]);
+
+    config(['app.frontend_url' => 'https://shop-frontend.example']);
 });
 
 it('sends verification and welcome mails when registering', function () {
@@ -27,18 +29,28 @@ it('sends verification and welcome mails when registering', function () {
 
     Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
         expect($mail->verificationUrl)->toBeString();
+        expect($mail->displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
+
+        $rendered = $mail->render();
+        $escapedUrl = e($mail->verificationUrl);
+        $escapedDisplayUrl = e($mail->displayUrl);
+
+        expect($rendered)->toContain('href="' . $escapedUrl . '"');
+        expect($rendered)->toContain('>' . $escapedDisplayUrl . '<');
 
         return $mail->hasTo($user->email);
     });
 
     Mail::assertQueued(WelcomeMail::class, function (WelcomeMail $mail) use ($user) {
         expect($mail->verificationUrl)->toBeString();
+        expect($mail->displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
 
         $rendered = $mail->render();
         $escapedUrl = e($mail->verificationUrl);
+        $escapedDisplayUrl = e($mail->displayUrl);
 
         expect($rendered)->toContain('href="' . $escapedUrl . '"');
-        expect($rendered)->toContain($escapedUrl);
+        expect($rendered)->toContain('>' . $escapedDisplayUrl . '<');
 
         return $mail->hasTo($user->email);
     });
@@ -68,6 +80,15 @@ it('resends the verification email for authenticated users', function () {
         ->assertJson(['message' => 'Verification link sent.']);
 
     Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
+        expect($mail->displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
+
+        $rendered = $mail->render();
+        $escapedUrl = e($mail->verificationUrl);
+        $escapedDisplayUrl = e($mail->displayUrl);
+
+        expect($rendered)->toContain('href="' . $escapedUrl . '"');
+        expect($rendered)->toContain('>' . $escapedDisplayUrl . '<');
+
         return $mail->hasTo($user->email);
     });
 });
@@ -85,8 +106,16 @@ it('verifies the email address via the API endpoint', function () {
 
     Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user, &$verificationUrl) {
         $verificationUrl = $mail->verificationUrl;
+        $displayUrl = $mail->displayUrl;
 
-        expect($mail->render())->toContain(e($mail->verificationUrl));
+        expect($displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
+
+        $rendered = $mail->render();
+        $escapedUrl = e($mail->verificationUrl);
+        $escapedDisplayUrl = e($displayUrl);
+
+        expect($rendered)->toContain('href="' . $escapedUrl . '"');
+        expect($rendered)->toContain('>' . $escapedDisplayUrl . '<');
 
         return $mail->hasTo($user->email);
     });
@@ -99,3 +128,29 @@ it('verifies the email address via the API endpoint', function () {
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });
+
+function expectedDisplayUrl(?string $url): ?string
+{
+    if (! $url) {
+        return $url;
+    }
+
+    $frontendUrl = config('app.frontend_url');
+
+    if (! $frontendUrl) {
+        return $url;
+    }
+
+    $frontendUrl = rtrim($frontendUrl, '/');
+    $parts = parse_url($url);
+
+    if ($parts === false) {
+        return $url;
+    }
+
+    $path = $parts['path'] ?? '';
+    $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+    $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+
+    return $frontendUrl . $path . $query . $fragment;
+}

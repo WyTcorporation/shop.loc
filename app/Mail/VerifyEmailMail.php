@@ -12,8 +12,11 @@ class VerifyEmailMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    public string $displayUrl;
+
     public function __construct(public User $user, public string $verificationUrl)
     {
+        $this->displayUrl = $this->makeDisplayUrl($verificationUrl);
     }
 
     public function build(): self
@@ -24,6 +27,29 @@ class VerifyEmailMail extends Mailable implements ShouldQueue
             ->view('emails.auth.verify-email', [
                 'user' => $this->user,
                 'verificationUrl' => $this->verificationUrl,
+                'displayUrl' => $this->displayUrl,
             ]);
+    }
+
+    protected function makeDisplayUrl(string $url): string
+    {
+        $frontendUrl = config('app.frontend_url');
+
+        if (! $frontendUrl) {
+            return $url;
+        }
+
+        $frontendUrl = rtrim($frontendUrl, '/');
+        $parts = parse_url($url);
+
+        if ($parts === false) {
+            return $url;
+        }
+
+        $path = $parts['path'] ?? '';
+        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+        $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+
+        return $frontendUrl . $path . $query . $fragment;
     }
 }
