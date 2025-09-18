@@ -3,12 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import LocaleProvider, { useLocale } from './LocaleProvider';
-import { SUPPORTED_LANGS } from './config';
+import { SUPPORTED_LANGS, resolveLocale } from './config';
 import { localeMessages } from './messages';
 
 function MessagesProbe() {
-    const { messages } = useLocale();
-    return <span>{messages.languageName}</span>;
+    const { messages, locale } = useLocale();
+    return (
+        <>
+            <span data-testid="language-name">{messages.languageName}</span>
+            <span data-testid="active-locale">{locale}</span>
+        </>
+    );
 }
 
 describe('LocaleProvider', () => {
@@ -19,8 +24,8 @@ describe('LocaleProvider', () => {
                     <MessagesProbe />
                 </LocaleProvider>
             );
-
-            expect(screen.getByText(localeMessages[lang].languageName)).toBeInTheDocument();
+            expect(screen.getByTestId('language-name')).toHaveTextContent(localeMessages[lang].languageName);
+            expect(screen.getByTestId('active-locale')).toHaveTextContent(resolveLocale(lang));
         });
     });
 });

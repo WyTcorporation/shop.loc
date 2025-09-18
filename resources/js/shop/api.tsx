@@ -125,6 +125,7 @@ export type Cart = {
     status: 'active' | 'ordered' | string;
     items: CartItem[];
     total: number | string;
+    currency?: string;
     subtotal?: number | string;
     discounts?: {
         coupon?: { code?: string | null; amount?: number | string | null };

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\{Cart, CartItem, Coupon, Product};
 use App\Services\Carts\CartPricingService;
+use App\Services\Currency\CurrencyConverter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -231,6 +232,7 @@ class CartController extends Controller
                 'total' => $totals->discountTotal(),
             ],
             'total' => $totals->total,
+            'currency' => app(CurrencyConverter::class)->getBaseCurrency(),
             'available_points' => $totals->availablePoints,
             'max_redeemable_points' => $totals->maxRedeemablePoints,
         ]);

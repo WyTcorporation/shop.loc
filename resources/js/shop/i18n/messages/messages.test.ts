@@ -201,6 +201,9 @@ const keys: Array<{ key: TranslationKey; params?: Record<string, any> }> = [
     { key: 'profile.points.table.type.default' },
     { key: 'profile.points.table.type.earn' },
     { key: 'profile.points.table.type.redeem' },
+    { key: 'profile.points.type.default' },
+    { key: 'profile.points.type.earn' },
+    { key: 'profile.points.type.redeem' },
 ];
 
 describe('i18n new keys', () => {

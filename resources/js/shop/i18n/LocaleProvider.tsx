@@ -1,12 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { DEFAULT_LANG, Lang, normalizeLang } from './config';
+import { DEFAULT_LANG, Lang, normalizeLang, resolveLocale } from './config';
 import { createTranslator, getMessages, type Messages, type Translator } from './messages';
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; messages: Messages; t: Translator };
+type Ctx = { lang: Lang; locale: string; setLang: (l: Lang) => void; messages: Messages; t: Translator };
 
 const defaultMessages = getMessages(DEFAULT_LANG);
 const LocaleCtx = createContext<Ctx>({
     lang: DEFAULT_LANG,
+    locale: resolveLocale(DEFAULT_LANG),
     setLang: () => {},
     messages: defaultMessages,
     t: createTranslator(defaultMessages),
@@ -33,6 +34,7 @@ export default function LocaleProvider({ initial, children }: { initial?: string
         const messages = getMessages(lang);
         return {
             lang,
+            locale: resolveLocale(lang),
             setLang,
             messages,
             t: createTranslator(messages),
