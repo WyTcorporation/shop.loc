@@ -679,6 +679,12 @@ const messages = {
         loading: 'Обновляем список желаний...',
         errorTitle: 'Не удалось обновить список',
         empty: 'Пока пусто.',
+        button: {
+            add: 'Добавить в избранное',
+            remove: 'В избранном',
+            addAria: 'Добавить в избранное',
+            removeAria: 'Убрать из избранного',
+        },
         removeAria: ({ name }: { name: string }) => `Убрать «${name}» из списка желаний`,
         noImage: 'без фото',
     },

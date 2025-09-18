@@ -677,6 +677,12 @@ const messages = {
         loading: 'A atualizar a sua lista de desejos…',
         errorTitle: 'Não foi possível atualizar a lista',
         empty: 'Ainda está vazio.',
+        button: {
+            add: 'Adicionar à lista de desejos',
+            remove: 'Na lista de desejos',
+            addAria: 'Adicionar à lista de desejos',
+            removeAria: 'Remover da lista de desejos',
+        },
         removeAria: ({ name }: { name: string }) => `Remover “${name}” da lista de desejos`,
         noImage: 'sem imagem',
     },

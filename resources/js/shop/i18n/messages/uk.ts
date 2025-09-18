@@ -677,6 +677,12 @@ const messages = {
         loading: 'Оновлюємо список бажаного...',
         errorTitle: 'Не вдалося оновити список',
         empty: 'Поки що порожньо.',
+        button: {
+            add: 'В обране',
+            remove: 'В обраному',
+            addAria: 'Додати в обране',
+            removeAria: 'Усунути з обраного',
+        },
         removeAria: ({ name }: { name: string }) => `Прибрати «${name}» зі списку бажаного`,
         noImage: 'без фото',
     },
