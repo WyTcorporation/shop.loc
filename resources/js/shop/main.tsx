@@ -13,6 +13,7 @@ import { initMonitoring } from './monitoring';
 import CartPage from './pages/Cart';
 import CatalogPage from './pages/Catalog';
 import CheckoutPage from './pages/Checkout';
+import ForgotPasswordPage from './pages/ForgotPassword';
 import LoginPage from './pages/Login';
 import NotFoundPage from './pages/NotFound';
 import OrderConfirmationPage from './pages/OrderConfirmation';
@@ -22,6 +23,7 @@ import ProfileAddressesPage from './pages/ProfileAddresses';
 import ProfileOrdersPage from './pages/ProfileOrders';
 import ProfilePointsPage from './pages/ProfilePoints';
 import RegisterPage from './pages/Register';
+import ResetPasswordPage from './pages/ResetPassword';
 import SellerPage from './pages/SellerPage';
 import WishlistPage from './pages/Wishlist';
 import './sentry';
@@ -111,6 +113,8 @@ if (el) {
                                             <Route path="/order/:number" element={<OrderConfirmationPage />} />
                                             <Route path="/wishlist" element={<WishlistPage />} />
                                             <Route path="/login" element={<LoginPage />} />
+                                            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                                            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                                             <Route path="/register" element={<RegisterPage />} />
                                             <Route path="/profile" element={<ProfilePage />} />
                                             <Route path="/profile/orders" element={<ProfileOrdersPage />} />

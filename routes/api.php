@@ -27,6 +27,11 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::middleware('guest:sanctum')->group(function () {
+    Route::post('password/email', [AuthController::class, 'requestPasswordReset']);
+    Route::post('password/reset', [AuthController::class, 'resetPassword']);
+});
+
 Route::middleware('auth:sanctum')->post('email/resend', [AuthController::class, 'resendEmailVerification']);
 
 Route::get('email/verify/{id}/{hash}', VerifyEmailController::class)
