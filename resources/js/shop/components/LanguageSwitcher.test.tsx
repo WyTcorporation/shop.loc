@@ -3,7 +3,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import LanguageSwitcher from './LanguageSwitcher';
+import LanguageSwitcher, { swapLangInPath } from './LanguageSwitcher';
 import LocaleProvider from '../i18n/LocaleProvider';
 import { SUPPORTED_LANGS, type Lang } from '../i18n/config';
 
@@ -83,6 +83,29 @@ describe('LanguageSwitcher', () => {
         await user.click(screen.getByRole('button', { name: 'PT' }));
 
         expect(assignMock).toHaveBeenCalledWith('/pt/catalog');
+    });
+});
+
+describe('swapLangInPath', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+    });
+
+    it('removes the language segment when switching to Ukrainian', () => {
+        stubLocation('http://localhost/en/catalog');
+
+        expect(swapLangInPath('uk')).toBe('/catalog');
+    });
+
+    it('adds or replaces the language segment for non-default languages', () => {
+        stubLocation('http://localhost/catalog');
+
+        expect(swapLangInPath('ru')).toBe('/ru/catalog');
+
+        stubLocation('http://localhost/pt/catalog');
+
+        expect(swapLangInPath('en')).toBe('/en/catalog');
     });
 });
 
