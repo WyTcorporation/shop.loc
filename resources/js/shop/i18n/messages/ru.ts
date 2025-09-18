@@ -41,6 +41,75 @@ const messages = {
         },
         empty: 'Корзина пуста',
     },
+    catalog: {
+        seo: {
+            listName: ({ category }: { category?: string }) => category ? `Каталог — ${category}` : 'Каталог',
+            documentTitle: ({ category, query }: { category?: string; query?: string }) => {
+                const parts = ['Каталог'];
+                if (category) parts.push(category);
+                if (query) parts.push(`поиск “${query}”`);
+                return parts.join(' — ');
+            },
+            pageTitle: ({ category, query, brand }: { category?: string; query?: string; brand: string }) => {
+                const parts = ['Каталог'];
+                if (category) parts.push(category);
+                if (query) parts.push(`поиск “${query}”`);
+                return `${parts.join(' — ')} — ${brand}`;
+            },
+            description: ({ category, query }: { category?: string; query?: string }) => [
+                'Каталог интернет-магазина. Фильтры: категория, цвет, размер, цена.',
+                category ? `Категория: ${category}.` : '',
+                query ? `Поиск: ${query}.` : '',
+            ].filter(Boolean).join(' '),
+            breadcrumbHome: 'Главная',
+            breadcrumbCatalog: 'Каталог',
+        },
+        header: {
+            title: 'Каталог',
+            categoryPlaceholder: 'Категория',
+            allCategories: 'Все категории',
+            sort: {
+                new: 'Новинки',
+                priceAsc: 'Цена ↑',
+                priceDesc: 'Цена ↓',
+            },
+        },
+        filters: {
+            searchPlaceholder: 'Поиск товаров…',
+            priceMinPlaceholder: 'Цена от',
+            priceMaxPlaceholder: 'до',
+            applyPrice: 'Применить',
+            clearAll: 'Сбросить всё',
+            active: {
+                color: ({ value }: { value: string }) => `Цвет: ${value}`,
+                size: ({ value }: { value: string }) => `Размер: ${value}`,
+                minPrice: ({ value }: { value: number }) => `От: ${value}`,
+                maxPrice: ({ value }: { value: number }) => `До: ${value}`,
+                clearTooltip: 'Сбросить этот фильтр',
+                clearAll: 'Сбросить всё',
+            },
+            facets: {
+                categories: 'Категории',
+                colors: 'Цвет',
+                sizes: 'Размер',
+                empty: 'нет данных',
+            },
+        },
+        products: {
+            empty: 'Ничего не найдено. Попробуйте изменить фильтры.',
+        },
+        cards: {
+            noImage: 'без фото',
+            outOfStock: 'Нет в наличии',
+            adding: 'Покупаем…',
+            addToCart: 'Купить',
+        },
+        pagination: {
+            prev: 'Назад',
+            next: 'Далее',
+            pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Страница ${page} из ${lastPage}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Профиль',

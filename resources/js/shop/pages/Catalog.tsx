@@ -26,6 +26,7 @@ import { useHreflangs } from '../hooks/useHreflangs';
 import { GA } from '../ui/ga';
 import useCart from '../useCart';
 import { Loader2 } from 'lucide-react';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
 
@@ -39,6 +40,7 @@ export default function Catalog() {
     const [loading, setLoading] = useState(true);
     const [addingId, setAddingId] = useState<number | null>(null);
     const { add } = useCart();
+    const { t } = useLocale();
 
     // пошук у URL
     const [q, setQ] = useQueryParam('q', '');
@@ -149,9 +151,12 @@ export default function Catalog() {
                     setProducts(res.data);
                     setLastPage(res.last_page);
                     setFacets(res.facets ?? {});
-                    const listName = categoryId
-                        ? `Каталог — ${cats.find(c => c.id === categoryId)?.name ?? `#${categoryId}`}`
-                        : 'Каталог';
+                    const categoryName = categoryId
+                        ? cats.find(c => c.id === categoryId)?.name ?? `#${categoryId}`
+                        : undefined;
+                    const listName = t('catalog.seo.listName', {
+                        category: categoryId ? categoryName : undefined,
+                    });
                     GA.view_item_list(res.data, listName);
                 }
             } finally {
@@ -236,43 +241,46 @@ export default function Catalog() {
             const label = colorDisplayByKey.get(key) ?? colorRawValuesByKey.get(key)?.[0] ?? key;
             return {
                 key: `color:${key}`,
-                label: `Колір: ${label}`,
+                label: t('catalog.filters.active.color', { value: label }),
                 onClear: () => toggleColorFacet(key),
             };
         }),
         ...selectedSizes.map((s) => ({
             key: `size:${s}`,
-            label: `Розмір: ${s}`,
+            label: t('catalog.filters.active.size', { value: s }),
             onClear: () => toggleListParam(s, selectedSizes, setSizesParam),
         })),
         ...(minPriceParam != null ? [{
             key: 'min',
-            label: `Від: ${minPriceParam}`,
+            label: t('catalog.filters.active.minPrice', { value: minPriceParam }),
             onClear: () => { setMinPrice(undefined); setMinPriceParam(undefined); setPage(1); },
         }] : []),
         ...(maxPriceParam != null ? [{
             key: 'max',
-            label: `До: ${maxPriceParam}`,
+            label: t('catalog.filters.active.maxPrice', { value: maxPriceParam }),
             onClear: () => { setMaxPrice(undefined); setMaxPriceParam(undefined); setPage(1); },
         }] : []),
     ];
 
     const currentCatName = categoryId ? (catById.get(String(categoryId))?.name ?? `#${categoryId}`) : null;
-    useDocumentTitle(`Каталог${currentCatName ? ` — ${currentCatName}` : ''}${dq ? ` — ${dq}` : ''}`);
+    useDocumentTitle(t('catalog.seo.documentTitle', {
+        category: currentCatName ?? undefined,
+        query: dq || undefined,
+    }));
 
     // ---------- SEO (OG/Twitter + prev/next + breadcrumbs) ----------
     const activeCatName = categoryId ? cats.find(c => c.id === categoryId)?.name : undefined;
 
-    const titleParts: string[] = ['Каталог'];
-    if (activeCatName) titleParts.push(activeCatName);
-    if (q) titleParts.push(`пошук “${q}”`);
-    const pageTitle = `${titleParts.join(' — ')} — Shop`;
+    const pageTitle = t('catalog.seo.pageTitle', {
+        category: activeCatName ?? undefined,
+        query: q || undefined,
+        brand: t('common.brand'),
+    });
 
-    const pageDescription = [
-        'Каталог інтернет-магазину. Фільтри: категорія, колір, розмір, ціна.',
-        activeCatName ? `Категорія: ${activeCatName}.` : '',
-        q ? `Пошук: ${q}.` : '',
-    ].filter(Boolean).join(' ');
+    const pageDescription = t('catalog.seo.description', {
+        category: activeCatName ?? undefined,
+        query: q || undefined,
+    });
 
     function buildUrlWith(kv: Record<string, string | number | undefined>) {
         const href = typeof window !== 'undefined' ? window.location.href : '';
@@ -294,8 +302,8 @@ export default function Catalog() {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Головна', item: catalogUrl },
-            { '@type': 'ListItem', position: 2, name: 'Каталог', item: typeof window !== 'undefined' ? window.location.href : undefined }
+            { '@type': 'ListItem', position: 1, name: t('catalog.seo.breadcrumbHome'), item: catalogUrl },
+            { '@type': 'ListItem', position: 2, name: t('catalog.seo.breadcrumbCatalog'), item: typeof window !== 'undefined' ? window.location.href : undefined }
         ]
     };
     // ----------------------------------------------------------------
@@ -327,7 +335,7 @@ export default function Catalog() {
             <JsonLd data={breadcrumbLd} />
 
             <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="text-2xl font-semibold tracking-tight">Каталог</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">{t('catalog.header.title')}</h1>
                 <div className="flex flex-col gap-3 sm:flex-row">
                     <div className="flex gap-2">
                         <Select
@@ -340,10 +348,10 @@ export default function Catalog() {
                             }}
                         >
                             <SelectTrigger className="w-48">
-                                <SelectValue placeholder="Категорія" />
+                                <SelectValue placeholder={t('catalog.header.categoryPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Всі категорії</SelectItem>
+                                <SelectItem value="all">{t('catalog.header.allCategories')}</SelectItem>
                                 {cats.map((c) => (
                                     <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                                 ))}
@@ -363,9 +371,9 @@ export default function Catalog() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="new">Новинки</SelectItem>
-                                <SelectItem value="price_asc">Ціна ↑</SelectItem>
-                                <SelectItem value="price_desc">Ціна ↓</SelectItem>
+                                <SelectItem value="new">{t('catalog.header.sort.new')}</SelectItem>
+                                <SelectItem value="price_asc">{t('catalog.header.sort.priceAsc')}</SelectItem>
+                                <SelectItem value="price_desc">{t('catalog.header.sort.priceDesc')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -374,13 +382,13 @@ export default function Catalog() {
                         <Input
                             value={q}
                             onChange={(e) => { setPage(1); setQ(e.target.value); }}
-                            placeholder="Пошук товарів…"
+                            placeholder={t('catalog.filters.searchPlaceholder')}
                         />
 
                         <Input
                             data-testid="price-min"
                             type="number"
-                            placeholder="Ціна від"
+                            placeholder={t('catalog.filters.priceMinPlaceholder')}
                             value={minPrice ?? ''}
                             onChange={(e) => setMinPrice(e.target.value === '' ? undefined : Number(e.target.value))}
                             className="w-48"
@@ -388,7 +396,7 @@ export default function Catalog() {
                         <Input
                             data-testid="price-max"
                             type="number"
-                            placeholder="до"
+                            placeholder={t('catalog.filters.priceMaxPlaceholder')}
                             value={maxPrice ?? ''}
                             onChange={(e) => setMaxPrice(e.target.value === '' ? undefined : Number(e.target.value))}
                             className="w-32"
@@ -401,7 +409,7 @@ export default function Catalog() {
                                 setPage(1);
                             }}
                         >
-                            Застосувати
+                            {t('catalog.filters.applyPrice')}
                         </Button>
 
                         <Button
@@ -409,7 +417,7 @@ export default function Catalog() {
                             data-testid="clear-filters"
                             onClick={clearAll}
                         >
-                            Скинути все
+                            {t('catalog.filters.clearAll')}
                         </Button>
                     </div>
                 </div>
@@ -423,14 +431,14 @@ export default function Catalog() {
                             type="button"
                             onClick={ch.onClear}
                             className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs hover:bg-gray-50"
-                            title="Скинути цей фільтр"
+                            title={t('catalog.filters.active.clearTooltip')}
                         >
                             {ch.label}
                             <span aria-hidden>×</span>
                         </button>
                     ))}
                     <Button variant="ghost" size="sm" onClick={clearAll}>
-                        Скинути все
+                        {t('catalog.filters.active.clearAll')}
                     </Button>
                 </div>
             )}
@@ -442,7 +450,7 @@ export default function Catalog() {
             >
                 {/* Категорії */}
                 <div>
-                    <div className="mb-2 text-sm font-medium">Категорії</div>
+                    <div className="mb-2 text-sm font-medium">{t('catalog.filters.facets.categories')}</div>
                     <div className="flex flex-wrap gap-2">
                         {categoryFacetEntries.map(([id, cnt]) => {
                             const c = catById.get(String(id));
@@ -466,14 +474,14 @@ export default function Catalog() {
                             );
                         })}
                         {categoryFacetEntries.length === 0 && (
-                            <span className="text-xs text-muted-foreground">нема даних</span>
+                            <span className="text-xs text-muted-foreground">{t('catalog.filters.facets.empty')}</span>
                         )}
                     </div>
                 </div>
 
                 {/* Колір */}
                 <div>
-                    <div className="mb-2 text-sm font-medium">Колір</div>
+                    <div className="mb-2 text-sm font-medium">{t('catalog.filters.facets.colors')}</div>
                     <div className="flex flex-wrap gap-2">
                         {colorFacetList.map(({ normalized, label, value, count }) => {
                             const active = selectedColorKeySet.has(normalized);
@@ -491,14 +499,14 @@ export default function Catalog() {
                             );
                         })}
                         {colorFacetList.length === 0 && (
-                            <span className="text-xs text-muted-foreground">нема даних</span>
+                            <span className="text-xs text-muted-foreground">{t('catalog.filters.facets.empty')}</span>
                         )}
                     </div>
                 </div>
 
                 {/* Розмір */}
                 <div>
-                    <div className="mb-2 text-sm font-medium">Розмір</div>
+                    <div className="mb-2 text-sm font-medium">{t('catalog.filters.facets.sizes')}</div>
                     <div className="flex flex-wrap gap-2">
                         {Object.entries(sizeCounts).filter(([v]) => v && v !== 'null').map(([v, cnt]) => {
                             const active = selectedSizes.includes(v);
@@ -516,7 +524,7 @@ export default function Catalog() {
                             );
                         })}
                         {Object.keys(sizeCounts).length === 0 && (
-                            <span className="text-xs text-muted-foreground">нема даних</span>
+                            <span className="text-xs text-muted-foreground">{t('catalog.filters.facets.empty')}</span>
                         )}
                     </div>
                 </div>
@@ -533,7 +541,7 @@ export default function Catalog() {
                     ))}
                 </div>
             ) : products.length === 0 ? (
-                <div className="text-muted-foreground">Нічого не знайдено. Спробуйте змінити фільтри.</div>
+                <div className="text-muted-foreground">{t('catalog.products.empty')}</div>
             ) : (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                     {products.map((p) => {
@@ -559,7 +567,7 @@ export default function Catalog() {
                                             />
                                         ) : (
                                             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                                                без фото
+                                                {t('catalog.cards.noImage')}
                                             </div>
                                         )}
                                     </div>
@@ -567,7 +575,7 @@ export default function Catalog() {
                                         <div className="line-clamp-2 text-sm font-medium">{p.name}</div>
                                         <div className="mt-1 text-sm text-muted-foreground">{formatPrice(p.price)}</div>
                                         {!inStock && (
-                                            <div className="mt-1 text-xs text-red-600">Немає в наявності</div>
+                                            <div className="mt-1 text-xs text-red-600">{t('catalog.cards.outOfStock')}</div>
                                         )}
                                     </div>
                                 </Link>
@@ -591,14 +599,14 @@ export default function Catalog() {
                                             addingId === p.id ? (
                                                 <>
                                                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                                                    <span>Купуємо…</span>
+                                                    <span>{t('catalog.cards.adding')}</span>
                                                 </>
                                             ) : (
-                                                'Купити'
+                                                t('catalog.cards.addToCart')
                                             )
                                         ) : (
                                             <>
-                                                <span>Немає в наявності</span>
+                                                <span>{t('catalog.cards.outOfStock')}</span>
                                             </>
                                         )}
                                     </Button>
@@ -611,13 +619,13 @@ export default function Catalog() {
 
             <footer className="mt-8 flex items-center justify-center gap-3">
                 <Button variant="outline" disabled={!canPrev} onClick={() => setPage((x) => Math.max(1, x - 1))}>
-                    Назад
+                    {t('catalog.pagination.prev')}
                 </Button>
                 <span className="text-sm text-muted-foreground">
-          Сторінка {page} із {lastPage}
-        </span>
+                    {t('catalog.pagination.pageStatus', { page, lastPage })}
+                </span>
                 <Button variant="outline" disabled={!canNext} onClick={() => setPage((x) => x + 1)}>
-                    Далі
+                    {t('catalog.pagination.next')}
                 </Button>
             </footer>
         </div>
