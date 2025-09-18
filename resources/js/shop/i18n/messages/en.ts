@@ -158,6 +158,43 @@ const messages = {
             pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Page ${page} of ${lastPage}`,
         },
     },
+    sellerPage: {
+        pageTitle: ({ name }: { name?: string }) => name ? `${name} — Seller` : 'Seller',
+        documentTitle: ({ name, brand }: { name?: string; brand: string }) =>
+            name ? `${name} — Seller — ${brand}` : `Seller — ${brand}`,
+        productsTitle: 'Seller products',
+        loadingVendor: 'Loading seller details…',
+        notFound: 'Seller not found.',
+        noProducts: 'This seller has no available products yet.',
+        noImage: 'no image',
+        contact: {
+            email: ({ email }: { email: string }) => `Email: ${email}`,
+            phone: ({ phone }: { phone: string }) => `Phone: ${phone}`,
+        },
+        seo: {
+            title: ({ name, brand }: { name?: string; brand: string }) =>
+                name ? `${name} — Seller — ${brand}` : `Seller — ${brand}`,
+            description: ({ description, email, phone }: { description?: string; email?: string; phone?: string }) => {
+                const parts = [
+                    description?.trim() ?? '',
+                    email ? `Email: ${email}` : '',
+                    phone ? `Phone: ${phone}` : '',
+                ].filter(Boolean);
+                return parts.length ? parts.join(' ') : 'Seller profile page.';
+            },
+        },
+        pagination: {
+            prev: 'Back',
+            next: 'Next',
+            status: ({ page, lastPage }: { page: number; lastPage: number }) => `Page ${page} of ${lastPage}`,
+        },
+        errors: {
+            loadProducts: 'Could not load seller products.',
+        },
+        ga: {
+            listName: ({ name }: { name: string }) => `Seller ${name}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Profile',
@@ -628,6 +665,7 @@ const messages = {
         },
     },
     wishlist: {
+        badge: 'Wishlist',
         title: 'Wishlist',
         clear: 'Clear',
         loading: 'Refreshing your wishlist…',

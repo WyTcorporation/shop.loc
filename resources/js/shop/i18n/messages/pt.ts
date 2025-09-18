@@ -158,6 +158,43 @@ const messages = {
             pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Página ${page} de ${lastPage}`,
         },
     },
+    sellerPage: {
+        pageTitle: ({ name }: { name?: string }) => name ? `${name} — Vendedor` : 'Vendedor',
+        documentTitle: ({ name, brand }: { name?: string; brand: string }) =>
+            name ? `${name} — Vendedor — ${brand}` : `Vendedor — ${brand}`,
+        productsTitle: 'Produtos do vendedor',
+        loadingVendor: 'A carregar informações do vendedor…',
+        notFound: 'Vendedor não encontrado.',
+        noProducts: 'Este vendedor ainda não tem produtos disponíveis.',
+        noImage: 'sem imagem',
+        contact: {
+            email: ({ email }: { email: string }) => `Email: ${email}`,
+            phone: ({ phone }: { phone: string }) => `Telefone: ${phone}`,
+        },
+        seo: {
+            title: ({ name, brand }: { name?: string; brand: string }) =>
+                name ? `${name} — Vendedor — ${brand}` : `Vendedor — ${brand}`,
+            description: ({ description, email, phone }: { description?: string; email?: string; phone?: string }) => {
+                const parts = [
+                    description?.trim() ?? '',
+                    email ? `Email: ${email}` : '',
+                    phone ? `Telefone: ${phone}` : '',
+                ].filter(Boolean);
+                return parts.length ? parts.join(' ') : 'Página do vendedor. Contactos e produtos.';
+            },
+        },
+        pagination: {
+            prev: 'Anterior',
+            next: 'Seguinte',
+            status: ({ page, lastPage }: { page: number; lastPage: number }) => `Página ${page} de ${lastPage}`,
+        },
+        errors: {
+            loadProducts: 'Não foi possível carregar os produtos do vendedor.',
+        },
+        ga: {
+            listName: ({ name }: { name: string }) => `Vendedor ${name}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Perfil',
@@ -629,6 +666,7 @@ const messages = {
         },
     },
     wishlist: {
+        badge: 'Lista de desejos',
         title: 'Lista de desejos',
         clear: 'Limpar',
         loading: 'A atualizar a sua lista de desejos…',

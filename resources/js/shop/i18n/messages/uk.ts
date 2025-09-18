@@ -158,6 +158,43 @@ const messages = {
             pageStatus: ({ page, lastPage }: { page: number; lastPage: number }) => `Сторінка ${page} із ${lastPage}`,
         },
     },
+    sellerPage: {
+        pageTitle: ({ name }: { name?: string }) => name ? `${name} — Продавець` : 'Продавець',
+        documentTitle: ({ name, brand }: { name?: string; brand: string }) =>
+            name ? `${name} — Продавець — ${brand}` : `Продавець — ${brand}`,
+        productsTitle: 'Товари продавця',
+        loadingVendor: 'Завантаження інформації про продавця…',
+        notFound: 'Продавця не знайдено.',
+        noProducts: 'У цього продавця поки немає доступних товарів.',
+        noImage: 'без фото',
+        contact: {
+            email: ({ email }: { email: string }) => `Email: ${email}`,
+            phone: ({ phone }: { phone: string }) => `Телефон: ${phone}`,
+        },
+        seo: {
+            title: ({ name, brand }: { name?: string; brand: string }) =>
+                name ? `${name} — Продавець — ${brand}` : `Продавець — ${brand}`,
+            description: ({ description, email, phone }: { description?: string; email?: string; phone?: string }) => {
+                const parts = [
+                    description?.trim() ?? '',
+                    email ? `Email: ${email}` : '',
+                    phone ? `Телефон: ${phone}` : '',
+                ].filter(Boolean);
+                return parts.length ? parts.join(' ') : 'Сторінка продавця. Контакти та товари.';
+            },
+        },
+        pagination: {
+            prev: 'Назад',
+            next: 'Далі',
+            status: ({ page, lastPage }: { page: number; lastPage: number }) => `Сторінка ${page} з ${lastPage}`,
+        },
+        errors: {
+            loadProducts: 'Не вдалося завантажити товари продавця.',
+        },
+        ga: {
+            listName: ({ name }: { name: string }) => `Продавець ${name}`,
+        },
+    },
     profile: {
         navigation: {
             overview: 'Профіль',
@@ -629,6 +666,7 @@ const messages = {
         },
     },
     wishlist: {
+        badge: 'Обране',
         title: 'Обране',
         clear: 'Очистити',
         loading: 'Оновлюємо список бажаного...',
