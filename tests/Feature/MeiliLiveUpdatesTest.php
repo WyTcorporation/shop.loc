@@ -7,6 +7,7 @@ use Laravel\Scout\Jobs\RemoveFromSearch;
 
 it('indexes on create/update and removes on delete', function () {
     // Увімкнути режим черги для Scout у тесті
+    config()->set('scout.driver', 'meilisearch');
     config()->set('scout.queue', true);
 
     // Фейкаємо чергу, щоб перехопити Scout-джоби

@@ -16,8 +16,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Listeners\ClaimGuestOrders;
 use App\Listeners\MergeGuestCart;
-use Illuminate\Support\Facades\Event;
+use App\Listeners\SendPasswordChangedMail;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Event;
 use App\Models\Product;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
@@ -51,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
         Shipment::observe(ShipmentObserver::class);
         Event::listen(Login::class, MergeGuestCart::class);
         Event::listen(Login::class, ClaimGuestOrders::class);
+        Event::listen(PasswordReset::class, SendPasswordChangedMail::class);
 
         RateLimiter::for('api', function (Request $request) {
             return [
