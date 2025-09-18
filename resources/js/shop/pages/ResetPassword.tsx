@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { AuthApi } from '../api';
 import { resolveErrorMessage } from '../lib/errors';
+import { useLocale } from '../i18n/LocaleProvider';
 
 const EMAIL_REGEX = /[^@\s]+@[^@\s]+\.[^@\s]+/;
 
@@ -17,6 +18,7 @@ export default function ResetPasswordPage() {
     const [emailError, setEmailError] = React.useState<string | null>(null);
     const [passwordError, setPasswordError] = React.useState<string | null>(null);
     const [passwordConfirmationError, setPasswordConfirmationError] = React.useState<string | null>(null);
+    const { t } = useLocale();
 
     if (!token) {
         return <Navigate to="/forgot-password" replace />;
@@ -29,30 +31,30 @@ export default function ResetPasswordPage() {
         const trimmedConfirmation = passwordConfirmation.trim();
 
         if (!trimmedEmail) {
-            setEmailError('Вкажіть email.');
+            setEmailError(t('auth.reset.errors.emailRequired'));
             valid = false;
         } else if (!EMAIL_REGEX.test(trimmedEmail)) {
-            setEmailError('Вкажіть коректну електронну адресу.');
+            setEmailError(t('auth.reset.errors.emailInvalid'));
             valid = false;
         } else {
             setEmailError(null);
         }
 
         if (!trimmedPassword) {
-            setPasswordError('Вкажіть новий пароль.');
+            setPasswordError(t('auth.reset.errors.passwordRequired'));
             valid = false;
         } else if (trimmedPassword.length < 8) {
-            setPasswordError('Пароль має містити щонайменше 8 символів.');
+            setPasswordError(t('auth.reset.errors.passwordTooShort'));
             valid = false;
         } else {
             setPasswordError(null);
         }
 
         if (!trimmedConfirmation) {
-            setPasswordConfirmationError('Підтвердіть новий пароль.');
+            setPasswordConfirmationError(t('auth.reset.errors.confirmationRequired'));
             valid = false;
         } else if (trimmedPassword !== trimmedConfirmation) {
-            setPasswordConfirmationError('Паролі не співпадають.');
+            setPasswordConfirmationError(t('auth.reset.errors.passwordMismatch'));
             valid = false;
         } else {
             setPasswordConfirmationError(null);
@@ -82,9 +84,9 @@ export default function ResetPasswordPage() {
                 password: trimmedPassword,
                 password_confirmation: passwordConfirmation.trim(),
             });
-            setStatus(response?.message ?? 'Пароль успішно змінено. Тепер можна увійти.');
+            setStatus(response?.message ?? t('auth.reset.update.successFallback'));
         } catch (err) {
-            setError(resolveErrorMessage(err, 'Не вдалося змінити пароль. Перевірте дані та спробуйте ще раз.'));
+            setError(resolveErrorMessage(err, t('auth.reset.update.errorFallback')));
         } finally {
             setSubmitting(false);
         }
@@ -93,8 +95,8 @@ export default function ResetPasswordPage() {
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-16">
             <div className="w-full max-w-md rounded-lg border bg-white p-8 shadow-sm">
-                <h1 className="mb-6 text-2xl font-semibold">Скидання пароля</h1>
-                <p className="mb-4 text-sm text-gray-600">Введіть дані, щоб встановити новий пароль до акаунта.</p>
+                <h1 className="mb-6 text-2xl font-semibold">{t('auth.reset.update.title')}</h1>
+                <p className="mb-4 text-sm text-gray-600">{t('auth.reset.update.description')}</p>
                 {status && (
                     <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">{status}</div>
                 )}
@@ -104,7 +106,7 @@ export default function ResetPasswordPage() {
                 <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                     <div className="space-y-1">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email
+                            {t('auth.reset.fields.emailLabel')}
                         </label>
                         <input
                             id="email"
@@ -119,7 +121,7 @@ export default function ResetPasswordPage() {
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Новий пароль
+                            {t('auth.reset.fields.passwordLabel')}
                         </label>
                         <input
                             id="password"
@@ -134,7 +136,7 @@ export default function ResetPasswordPage() {
                     </div>
                     <div className="space-y-1">
                         <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
-                            Підтвердження пароля
+                            {t('auth.reset.fields.passwordConfirmationLabel')}
                         </label>
                         <input
                             id="password_confirmation"
@@ -152,15 +154,15 @@ export default function ResetPasswordPage() {
                         disabled={submitting}
                         className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting ? 'Зберігаємо…' : 'Змінити пароль'}
+                        {submitting ? t('auth.reset.update.submitting') : t('auth.reset.update.submit')}
                     </button>
                 </form>
                 <p className="mt-6 text-sm text-gray-600">
-                    Повернутися до{' '}
+                    {t('auth.reset.update.backToLoginPrefix')}{' '}
                     <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                        сторінки входу
+                        {t('auth.reset.update.backToLoginLink')}
                     </Link>
-                    .
+                    {t('auth.reset.update.backToLoginSuffix')}
                 </p>
             </div>
         </div>

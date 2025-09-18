@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { AuthApi } from '../api';
 import { resolveErrorMessage } from '../lib/errors';
+import { useLocale } from '../i18n/LocaleProvider';
 
 const EMAIL_REGEX = /[^@\s]+@[^@\s]+\.[^@\s]+/;
 
@@ -11,6 +12,7 @@ export default function ForgotPasswordPage() {
     const [error, setError] = React.useState<string | null>(null);
     const [status, setStatus] = React.useState<string | null>(null);
     const [emailError, setEmailError] = React.useState<string | null>(null);
+    const { t } = useLocale();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -19,12 +21,12 @@ export default function ForgotPasswordPage() {
         const trimmedEmail = email.trim();
 
         if (!trimmedEmail) {
-            setEmailError('Вкажіть email.');
+            setEmailError(t('auth.reset.errors.emailRequired'));
             return;
         }
 
         if (!EMAIL_REGEX.test(trimmedEmail)) {
-            setEmailError('Вкажіть коректну електронну адресу.');
+            setEmailError(t('auth.reset.errors.emailInvalid'));
             return;
         }
 
@@ -35,9 +37,9 @@ export default function ForgotPasswordPage() {
 
         try {
             const response = await AuthApi.requestPasswordReset({ email: trimmedEmail });
-            setStatus(response?.message ?? 'Посилання для відновлення пароля надіслано.');
+            setStatus(response?.message ?? t('auth.reset.request.successFallback'));
         } catch (err) {
-            setError(resolveErrorMessage(err, 'Не вдалося надіслати лист. Спробуйте ще раз.'));
+            setError(resolveErrorMessage(err, t('auth.reset.request.errorFallback')));
         } finally {
             setSubmitting(false);
         }
@@ -46,10 +48,8 @@ export default function ForgotPasswordPage() {
     return (
         <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl flex-col items-center justify-center px-4 py-16">
             <div className="w-full max-w-md rounded-lg border bg-white p-8 shadow-sm">
-                <h1 className="mb-6 text-2xl font-semibold">Відновлення пароля</h1>
-                <p className="mb-4 text-sm text-gray-600">
-                    Введіть email, і ми надішлемо посилання для відновлення пароля.
-                </p>
+                <h1 className="mb-6 text-2xl font-semibold">{t('auth.reset.request.title')}</h1>
+                <p className="mb-4 text-sm text-gray-600">{t('auth.reset.request.description')}</p>
                 {status && (
                     <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">{status}</div>
                 )}
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
                 <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                     <div className="space-y-1">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email
+                            {t('auth.reset.fields.emailLabel')}
                         </label>
                         <input
                             id="email"
@@ -77,13 +77,13 @@ export default function ForgotPasswordPage() {
                         disabled={submitting}
                         className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting ? 'Надсилаємо…' : 'Надіслати посилання'}
+                        {submitting ? t('auth.reset.request.submitting') : t('auth.reset.request.submit')}
                     </button>
                 </form>
                 <p className="mt-6 text-sm text-gray-600">
-                    Пам’ятаєте пароль?{' '}
+                    {t('auth.reset.request.remember')}{' '}
                     <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                        Повернутися до входу
+                        {t('auth.reset.shared.backToLogin')}
                     </Link>
                 </p>
             </div>
