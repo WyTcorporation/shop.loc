@@ -17,7 +17,7 @@
     @if ($verificationUrl)
         <p style="margin:0 0 16px 0;color:#444;font-size:14px;">
             {{ __('Кнопка не працює? Скопіюйте та вставте це посилання у свій браузер:') }}
-            <a href="{{ $verificationUrl }}" style="color:#2563eb;text-decoration:none;">{{ $verificationUrl }}</a>
+            <a href="{{ $verificationUrl }}" style="color:#2563eb;text-decoration:none;">{{ $displayUrl ?? $verificationUrl }}</a>
         </p>
     @endif
 
