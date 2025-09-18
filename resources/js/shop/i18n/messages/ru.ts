@@ -554,6 +554,75 @@ const messages = {
         noImage: 'без фото',
     },
     product: {
+        seo: {
+            pageTitle: ({ name, price, brand }: { name: string; price: string; brand: string }) => `${name} — ${price} — ${brand}`,
+            fallbackTitle: ({ brand }: { brand: string }) => `Товар — ${brand}`,
+            description: ({ name, price, inStock }: { name: string; price: string; inStock: boolean }) =>
+                `Купить ${name} за ${price}. ${inStock ? 'В наличии.' : 'Нет в наличии.'} Заказывайте онлайн.`,
+            fallbackDescription: 'Карточка товара в магазине.',
+            breadcrumbHome: 'Главная',
+            breadcrumbCatalog: 'Каталог',
+        },
+        gallery: {
+            noImage: 'без фото',
+            openImage: ({ index }: { index: number }) => `Открыть изображение ${index}`,
+        },
+        reviews: {
+            ariaLabel: 'Отзывы',
+            title: 'Отзывы',
+            summary: {
+                loading: 'Загрузка рейтинга…',
+                label: 'Средний рейтинг:',
+                of: ({ max }: { max: number }) => `из ${max}`,
+                empty: 'Еще нет отзывов',
+            },
+            loading: 'Загрузка отзывов…',
+            empty: 'Отзывов пока нет. Станьте первым!',
+            anonymous: 'Пользователь',
+            ratingLabel: ({ value, max }: { value: number; max: number }) => `${value} из ${max}`,
+            pending: 'Отзыв ожидает модерации. Мы сообщим после публикации.',
+        },
+        stock: {
+            available: ({ count }: { count: number }) => `В наличии: ${count} шт.`,
+            unavailable: 'Нет в наличии',
+        },
+        actions: {
+            addToCart: 'Добавить в корзину',
+            backToCatalog: '← К каталогу',
+        },
+        toasts: {
+            added: {
+                title: 'Добавлено в корзину',
+                action: 'Открыть корзину',
+                error: 'Не удалось добавить в корзину',
+            },
+        },
+        tabs: {
+            description: 'Описание',
+            specs: 'Характеристики',
+            delivery: 'Доставка',
+        },
+        description: {
+            empty: 'Описание пока отсутствует.',
+        },
+        specs: {
+            empty: 'Характеристики еще не добавлены.',
+        },
+        delivery: {
+            items: {
+                novaPoshta: 'Новая Почта по Украине — 1–3 дня.',
+                courier: 'Курьер в крупных городах — 1–2 дня.',
+                payment: 'Оплата: картой онлайн или наложенный платеж.',
+                returns: 'Возврат/обмен — 14 дней (согласно закону о защите прав потребителей).',
+            },
+        },
+        ratingStars: {
+            option: ({ value, max }: { value: number; max: number }) => `Оценка ${value} из ${max}`,
+            hint: ({ value, max }: { value: number; max: number }) => `${value} из ${max}`,
+        },
+        similar: {
+            count: ({ count }: { count: number }) => `Найдено похожих: ${count}`,
+        },
         reviewForm: {
             ariaLabel: 'Форма отзыва',
             title: 'Оставить отзыв',

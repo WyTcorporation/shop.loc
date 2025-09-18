@@ -551,6 +551,75 @@ const messages = {
         noImage: 'no image',
     },
     product: {
+        seo: {
+            pageTitle: ({ name, price, brand }: { name: string; price: string; brand: string }) => `${name} — ${price} — ${brand}`,
+            fallbackTitle: ({ brand }: { brand: string }) => `Product — ${brand}`,
+            description: ({ name, price, inStock }: { name: string; price: string; inStock: boolean }) =>
+                `Buy ${name} for ${price}. ${inStock ? 'In stock.' : 'Out of stock.'} Order online.`,
+            fallbackDescription: 'Product detail page.',
+            breadcrumbHome: 'Home',
+            breadcrumbCatalog: 'Catalog',
+        },
+        gallery: {
+            noImage: 'no image',
+            openImage: ({ index }: { index: number }) => `Open image ${index}`,
+        },
+        reviews: {
+            ariaLabel: 'Reviews',
+            title: 'Reviews',
+            summary: {
+                loading: 'Loading rating…',
+                label: 'Average rating:',
+                of: ({ max }: { max: number }) => `of ${max}`,
+                empty: 'No reviews yet',
+            },
+            loading: 'Loading reviews…',
+            empty: 'No reviews yet. Be the first to leave one!',
+            anonymous: 'Customer',
+            ratingLabel: ({ value, max }: { value: number; max: number }) => `${value} of ${max}`,
+            pending: 'The review is pending moderation. We will notify you once it is published.',
+        },
+        stock: {
+            available: ({ count }: { count: number }) => `In stock: ${count} pcs.`,
+            unavailable: 'Out of stock',
+        },
+        actions: {
+            addToCart: 'Add to cart',
+            backToCatalog: '← Back to catalog',
+        },
+        toasts: {
+            added: {
+                title: 'Added to cart',
+                action: 'Open cart',
+                error: 'Failed to add to cart',
+            },
+        },
+        tabs: {
+            description: 'Description',
+            specs: 'Specifications',
+            delivery: 'Delivery',
+        },
+        description: {
+            empty: 'Description is not available yet.',
+        },
+        specs: {
+            empty: 'Specifications are not provided yet.',
+        },
+        delivery: {
+            items: {
+                novaPoshta: 'Nova Poshta across Ukraine — 1–3 days.',
+                courier: 'Courier delivery in major cities — 1–2 days.',
+                payment: 'Payment: online card or cash on delivery.',
+                returns: 'Returns/exchanges — 14 days (according to consumer protection law).',
+            },
+        },
+        ratingStars: {
+            option: ({ value, max }: { value: number; max: number }) => `Rate ${value} out of ${max}`,
+            hint: ({ value, max }: { value: number; max: number }) => `${value} of ${max}`,
+        },
+        similar: {
+            count: ({ count }: { count: number }) => `Found similar items: ${count}`,
+        },
         reviewForm: {
             ariaLabel: 'Review form',
             title: 'Leave a review',

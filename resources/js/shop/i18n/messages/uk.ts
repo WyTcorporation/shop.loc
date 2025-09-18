@@ -552,6 +552,75 @@ const messages = {
         noImage: 'без фото',
     },
     product: {
+        seo: {
+            pageTitle: ({ name, price, brand }: { name: string; price: string; brand: string }) => `${name} — ${price} — ${brand}`,
+            fallbackTitle: ({ brand }: { brand: string }) => `Товар — ${brand}`,
+            description: ({ name, price, inStock }: { name: string; price: string; inStock: boolean }) =>
+                `Купити ${name} за ${price}. ${inStock ? 'В наявності.' : 'Немає в наявності.'} Замовляйте онлайн.`,
+            fallbackDescription: 'Картка товару в магазині.',
+            breadcrumbHome: 'Головна',
+            breadcrumbCatalog: 'Каталог',
+        },
+        gallery: {
+            noImage: 'без фото',
+            openImage: ({ index }: { index: number }) => `Відкрити зображення ${index}`,
+        },
+        reviews: {
+            ariaLabel: 'Відгуки',
+            title: 'Відгуки',
+            summary: {
+                loading: 'Завантаження рейтингу…',
+                label: 'Середній рейтинг:',
+                of: ({ max }: { max: number }) => `із ${max}`,
+                empty: 'Ще немає відгуків',
+            },
+            loading: 'Завантаження відгуків…',
+            empty: 'Відгуків поки немає. Станьте першим!',
+            anonymous: 'Користувач',
+            ratingLabel: ({ value, max }: { value: number; max: number }) => `${value} із ${max}`,
+            pending: 'Відгук очікує модерації. Ми сповістимо після публікації.',
+        },
+        stock: {
+            available: ({ count }: { count: number }) => `В наявності: ${count} шт.`,
+            unavailable: 'Немає в наявності',
+        },
+        actions: {
+            addToCart: 'Додати в кошик',
+            backToCatalog: '← До каталогу',
+        },
+        toasts: {
+            added: {
+                title: 'Додано до кошика',
+                action: 'Відкрити кошик',
+                error: 'Не вдалося додати до кошика',
+            },
+        },
+        tabs: {
+            description: 'Опис',
+            specs: 'Характеристики',
+            delivery: 'Доставка',
+        },
+        description: {
+            empty: 'Опис поки відсутній.',
+        },
+        specs: {
+            empty: 'Характеристики ще не додані.',
+        },
+        delivery: {
+            items: {
+                novaPoshta: 'Нова Пошта по Україні — 1–3 дні.',
+                courier: 'Курʼєр у великих містах — 1–2 дні.',
+                payment: 'Оплата: карткою онлайн або накладений платіж.',
+                returns: 'Повернення/обмін — 14 днів (згідно ЗУ «Про захист прав споживачів»).',
+            },
+        },
+        ratingStars: {
+            option: ({ value, max }: { value: number; max: number }) => `Оцінка ${value} з ${max}`,
+            hint: ({ value, max }: { value: number; max: number }) => `${value} з ${max}`,
+        },
+        similar: {
+            count: ({ count }: { count: number }) => `Знайдено схожих: ${count}`,
+        },
         reviewForm: {
             ariaLabel: 'Форма відгуку',
             title: 'Залишити відгук',

@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type RatingStarsProps = {
     value: number;
@@ -21,6 +22,7 @@ export default function RatingStars({
     'aria-label': ariaLabel,
     'aria-labelledby': ariaLabelledby,
 }: RatingStarsProps) {
+    const { t } = useLocale();
     const normalizedMax = Math.max(1, Math.floor(max));
     const normalizedValue = clamp(value, normalizedMax);
     const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
@@ -102,7 +104,7 @@ export default function RatingStars({
                 {values.map((starValue, index) => {
                     const isFilled = starValue <= highlightValue;
                     const isSelected = starValue === normalizedValue;
-                    const label = `Оцінка ${starValue} з ${normalizedMax}`;
+                    const label = t('product.ratingStars.option', { value: starValue, max: normalizedMax });
 
                     return (
                         <button
@@ -132,7 +134,7 @@ export default function RatingStars({
                 })}
             </div>
             <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
-                {normalizedValue} з {normalizedMax}
+                {t('product.ratingStars.hint', { value: normalizedValue, max: normalizedMax })}
             </p>
         </div>
     );
