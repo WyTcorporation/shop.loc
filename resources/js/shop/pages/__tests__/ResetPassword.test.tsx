@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ResetPasswordPage from '../ResetPassword';
+import { createTranslator, getMessages } from '../../i18n/messages';
+import { DEFAULT_LANG } from '../../i18n/config';
+
+const t = createTranslator(getMessages(DEFAULT_LANG));
 
 describe('ResetPasswordPage', () => {
     it('renders the reset password form', () => {
@@ -12,8 +16,10 @@ describe('ResetPasswordPage', () => {
             </MemoryRouter>,
         );
 
-        expect(screen.getByRole('heading', { name: /скидання пароля/i })).toBeInTheDocument();
-        expect(screen.getByLabelText(/новий пароль/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /змінити пароль/i })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: t('auth.reset.update.title') })).toBeInTheDocument();
+        expect(screen.getByLabelText(t('auth.reset.fields.emailLabel'))).toBeInTheDocument();
+        expect(screen.getByLabelText(t('auth.reset.fields.passwordLabel'))).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: t('auth.reset.update.submit') })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: t('auth.reset.update.backToLoginLink') })).toBeInTheDocument();
     });
 });
