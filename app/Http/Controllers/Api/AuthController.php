@@ -54,14 +54,14 @@ class AuthController extends Controller
         /** @var User|null $user */
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Unauthenticated.',
             ], 401);
         }
 
-        if (! $user->hasVerifiedEmail()) {
-            $this->queueEmailVerification($user);
+        if (!$user->hasVerifiedEmail()) {
+            $this->queueEmailVerification($user, true);
         }
 
         return response()->json([
@@ -80,7 +80,7 @@ class AuthController extends Controller
         /** @var User|null $user */
         $user = User::query()->where('email', $data['email'])->first();
 
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
+        if (!$user || !Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
@@ -98,7 +98,7 @@ class AuthController extends Controller
                 ], 409);
             }
 
-            if (! $twoFactorService->verify($twoFactor->secret, $data['otp'])) {
+            if (!$twoFactorService->verify($twoFactor->secret, $data['otp'])) {
                 throw ValidationException::withMessages([
                     'otp' => ['Невірний код двофакторної автентифікації.'],
                 ]);
@@ -120,7 +120,7 @@ class AuthController extends Controller
         /** @var User|null $user */
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Unauthenticated.',
             ], 401);
@@ -136,7 +136,7 @@ class AuthController extends Controller
         /** @var User|null $user */
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Unauthenticated.',
             ], 401);
@@ -159,8 +159,8 @@ class AuthController extends Controller
 
         $passwordChanged = false;
 
-        if (! empty($data['password'])) {
-            $passwordChanged = ! Hash::check($data['password'], $user->password);
+        if (!empty($data['password'])) {
+            $passwordChanged = !Hash::check($data['password'], $user->password);
 
             if ($passwordChanged) {
                 $user->password = Hash::make($data['password']);
@@ -202,7 +202,7 @@ class AuthController extends Controller
         ];
     }
 
-    private function queueEmailVerification(User $user): string
+    private function queueEmailVerification(User $user, $send = false): string
     {
         $verificationUrl = URL::temporarySignedRoute(
             'api.email.verify',
@@ -213,14 +213,14 @@ class AuthController extends Controller
             ]
         );
 
-        Mail::to($user)->queue(new VerifyEmailMail($user, $verificationUrl));
+        if ($send) Mail::to($user)->queue(new VerifyEmailMail($user, $verificationUrl));
 
         return $verificationUrl;
     }
 
     private function maybeAlertSupportAboutPasswordChange(User $user): void
     {
-        if (! config('services.support.alert_password_changes')) {
+        if (!config('services.support.alert_password_changes')) {
             return;
         }
 
