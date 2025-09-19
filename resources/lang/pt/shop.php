@@ -113,6 +113,17 @@ return [
         'status_updated' => [
             'subject_line' => 'Status do pedido nº :number atualizado',
         ],
+        'statuses' => [
+            'new' => 'novo',
+            'paid' => 'pago',
+            'shipped' => 'enviado',
+            'cancelled' => 'cancelado',
+        ],
+        'errors' => [
+            'only_new_can_be_marked_paid' => 'Apenas pedidos com o status ":required" podem ser marcados como pagos. O pedido nº:number está atualmente com o status ":status".',
+            'only_paid_can_be_marked_shipped' => 'Apenas pedidos com o status ":required" podem ser marcados como enviados. O pedido nº:number está atualmente com o status ":status".',
+            'only_new_or_paid_can_be_cancelled' => 'Apenas pedidos com os seguintes status podem ser cancelados: :allowed. O pedido nº:number está atualmente com o status ":status".',
+        ],
     ],
 
     'api' => [
