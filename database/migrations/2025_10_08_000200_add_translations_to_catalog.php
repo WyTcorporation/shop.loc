@@ -17,6 +17,7 @@ return new class extends Migration
 
         Schema::table('products', function (Blueprint $table) {
             $table->json('name_translations')->nullable()->after('name');
+            $table->json('description_translations')->nullable()->after('description');
         });
 
         Schema::table('vendors', function (Blueprint $table) {
@@ -40,6 +41,7 @@ return new class extends Migration
 
         $this->copyExistingValues('categories', 'name', 'name_translations', $locale);
         $this->copyExistingValues('products', 'name', 'name_translations', $locale);
+        $this->copyExistingValues('products', 'description', 'description_translations', $locale);
         $this->copyExistingValues('vendors', 'name', 'name_translations', $locale);
         $this->copyExistingValues('vendors', 'description', 'description_translations', $locale);
         $this->copyExistingValues('warehouses', 'name', 'name_translations', $locale);

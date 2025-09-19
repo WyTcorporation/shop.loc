@@ -26,6 +26,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'name_translations',
+        'description_translations',
         'slug',
         'sku',
         'category_id',
@@ -49,6 +50,7 @@ class Product extends Model
         'reviews_count' => 'integer',
         'rating' => 'decimal:2',
         'name_translations' => 'array',
+        'description_translations' => 'array',
     ];
 
     public function initializeHasTranslations(): void

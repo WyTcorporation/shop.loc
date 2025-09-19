@@ -175,7 +175,7 @@ docker compose exec app sh -lc "rm -f public/hot && rm -rf public/build/*"
 
 docker compose exec app sh -lc 'printf "%s" "http://localhost:5173" > public/hot'
 docker compose exec app sh -lc 'php artisan optimize:clear'
-
+docker compose exec app php artisan migrate:fresh --seed
 
 # 2) Перезібрати/перезапустити node після змін у compose/vite
 docker compose up -d --build node
