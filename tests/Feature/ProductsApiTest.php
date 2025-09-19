@@ -18,7 +18,31 @@ it('lists products', function () {
 });
 
 it('filters products by search', function () {
-    $this->getJson('/api/products?search=est')->assertOk();
+    config()->set('scout.driver', 'database');
+    config()->set('app.locale', 'en');
+    config()->set('app.fallback_locale', 'en');
+
+    $this->withoutMiddleware(SetLocaleFromRequest::class);
+
+    Product::query()->delete();
+
+    $product = Product::factory()->create([
+        'is_active' => true,
+        'name' => 'Laptop',
+        'name_translations' => [
+            'en' => 'Laptop',
+            'pt' => 'Computador',
+        ],
+    ]);
+
+    app()->setLocale('pt');
+
+    $response = $this->getJson('/api/products?search=Computador', ['Accept-Language' => 'pt']);
+
+    $response->assertOk()
+        ->assertJsonPath('total', 1)
+        ->assertJsonPath('data.0.id', $product->id)
+        ->assertJsonPath('data.0.name', 'Computador');
 });
 
 it('filters products by machine attribute value and returns localized attributes', function () {

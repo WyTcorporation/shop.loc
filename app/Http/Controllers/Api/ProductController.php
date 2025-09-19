@@ -48,6 +48,11 @@ class ProductController extends Controller
         $colors = $this->extractFilterValues($r, 'color');
         $sizes = $this->extractFilterValues($r, 'size');
 
+        $locale = app()->getLocale() ?: config('app.locale');
+        $fallbackLocale = config('app.fallback_locale') ?: $locale;
+        $localizedNameSql = Product::localizedNameSql($locale, $fallbackLocale);
+        $driver = Product::query()->getModel()->getConnection()->getDriverName();
+
         $qb = Product::query()->where('is_active', true);
 
         if (config('scout.driver') === 'meilisearch' && ($search !== '' || $categoryId || $colors || $sizes || $minPrice !== null || $maxPrice !== null)) {
@@ -89,7 +94,33 @@ class ProductController extends Controller
         } else {
             // ===== DB fallback =====
             if ($search !== '' && config('scout.driver') !== 'meilisearch') {
-                $qb->where('name', 'like', "%{$search}%");
+                $escaped = addcslashes($search, '\\%_');
+                $like = '%'.$escaped.'%';
+
+                $qb->where(function (Builder $query) use ($localizedNameSql, $like, $driver, $escaped) {
+                    $query->whereRaw("{$localizedNameSql} LIKE ?", [$like])
+                        ->orWhere('sku', 'like', $like)
+                        ->orWhere(function (Builder $query) use ($driver, $escaped) {
+                            $jsonLike = '%'.$escaped.'%';
+
+                            if ($driver === 'sqlite') {
+                                $query->whereRaw(
+                                    "EXISTS (SELECT 1 FROM json_each(COALESCE(name_translations, '{}')) WHERE value LIKE ?)",
+                                    [$jsonLike]
+                                );
+                            } elseif ($driver === 'pgsql') {
+                                $query->whereRaw(
+                                    "EXISTS (SELECT 1 FROM jsonb_each_text(COALESCE(name_translations::jsonb, '{}'::jsonb)) WHERE value ILIKE ?)",
+                                    [$jsonLike]
+                                );
+                            } else {
+                                $query->whereRaw(
+                                    "JSON_SEARCH(COALESCE(name_translations, JSON_OBJECT()), 'one', ?, NULL, '$.*') IS NOT NULL",
+                                    [$jsonLike]
+                                );
+                            }
+                        });
+                });
             }
             if ($categoryId) {
                 $qb->where('category_id', $categoryId);
@@ -461,6 +492,9 @@ class ProductController extends Controller
     private function transformProduct(Product $product, string $currency): array
     {
         $data = $product->toArray();
+        if ($product->localized_name !== null) {
+            $data['name'] = $product->localized_name;
+        }
         $data['description'] = $product->description;
 
         $baseCurrency = $this->converter->getBaseCurrency();
