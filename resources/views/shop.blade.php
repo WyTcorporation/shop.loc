@@ -16,9 +16,11 @@
 
 
     @viteReactRefresh
+    @php($supportedLocales = config('app.supported_locales', ['uk', 'en', 'ru', 'pt']))
+    @php($defaultLocale = config('app.locale', 'uk'))
     <script>
-        window.__APP_SUPPORTED_LOCALES__ = @json(config('app.supported_locales', ['uk', 'en', 'ru', 'pt']));
-        window.__APP_DEFAULT_LOCALE__ = @json(config('app.locale', 'uk'));
+        window.__APP_SUPPORTED_LOCALES__ = @js($supportedLocales);
+        window.__APP_DEFAULT_LOCALE__ = @js($defaultLocale);
     </script>
     @vite('resources/js/shop/main.tsx')
 </head>
