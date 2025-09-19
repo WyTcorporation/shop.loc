@@ -7,6 +7,17 @@ const messages = {
             back: 'Voltar',
             retry: 'Tentar novamente',
         },
+        navigation: {
+            breadcrumbAria: 'Navegação breadcrumb',
+        },
+        lightbox: {
+            close: 'Fechar',
+            prev: 'Imagem anterior',
+            next: 'Imagem seguinte',
+        },
+        toast: {
+            close: 'Fechar notificação',
+        },
         notFound: {
             seoTitle: ({ brand }: { brand: string }) => `Página não encontrada — 404 — ${brand}`,
             seoDescription: 'Página não encontrada',

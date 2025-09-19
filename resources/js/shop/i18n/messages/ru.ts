@@ -7,6 +7,17 @@ const messages = {
             back: 'Назад',
             retry: 'Повторить',
         },
+        navigation: {
+            breadcrumbAria: 'Навигация «хлебные крошки»',
+        },
+        lightbox: {
+            close: 'Закрыть',
+            prev: 'Предыдущее изображение',
+            next: 'Следующее изображение',
+        },
+        toast: {
+            close: 'Закрыть уведомление',
+        },
         notFound: {
             seoTitle: ({ brand }: { brand: string }) => `Страница не найдена — 404 — ${brand}`,
             seoDescription: 'Страница не найдена',

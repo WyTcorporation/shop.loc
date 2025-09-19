@@ -1,4 +1,5 @@
 import React, {createContext, useCallback, useContext, useMemo, useRef, useState} from 'react';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type ToastAction = { label: string; onClick: () => void };
 type Variant = 'success' | 'error' | 'info';
@@ -67,6 +68,7 @@ export function NotifyProvider({
 }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
     const timers = useRef<Record<string, number>>({});
+    const { t: translate } = useLocale();
 
     const clear = useCallback((id: string) => {
         setToasts((list) => list.filter((t) => t.id !== id));
@@ -146,7 +148,7 @@ export function NotifyProvider({
                                 ) : null}
                             </div>
                             <button
-                                aria-label="Close"
+                                aria-label={translate('common.toast.close')}
                                 className="rounded p-1 text-gray-500 hover:bg-gray-100"
                                 onClick={() => clear(t.id)}
                             >

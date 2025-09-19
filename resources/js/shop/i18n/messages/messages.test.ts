@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { createTranslator, localeMessages, type TranslationKey } from './index';
 
 const keys: Array<{ key: TranslationKey; params?: Record<string, any> }> = [
+    { key: 'common.navigation.breadcrumbAria' },
+    { key: 'common.lightbox.close' },
+    { key: 'common.lightbox.prev' },
+    { key: 'common.lightbox.next' },
+    { key: 'common.toast.close' },
     { key: 'catalog.seo.listName', params: { category: 'Shoes' } },
     { key: 'catalog.seo.documentTitle', params: { category: 'Shoes', query: 'red' } },
     { key: 'catalog.seo.pageTitle', params: { category: 'Shoes', query: 'red', brand: 'Shop' } },
