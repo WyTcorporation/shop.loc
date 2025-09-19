@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Middleware\SetLocaleFromRequest;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
@@ -17,6 +18,48 @@ it('lists products', function () {
 
 it('filters products by search', function () {
     $this->getJson('/api/products?search=est')->assertOk();
+});
+
+it('returns localized descriptions for each supported locale', function () {
+    $locales = config('app.supported_locales');
+    $defaultLocale = config('app.locale');
+
+    $this->withoutMiddleware(SetLocaleFromRequest::class);
+
+    $nameTranslations = [
+        'uk' => 'Тестовий товар',
+        'en' => 'Test product',
+        'ru' => 'Тестовый товар',
+        'pt' => 'Produto de teste',
+    ];
+
+    $descriptionTranslations = [
+        'uk' => 'Опис українською',
+        'en' => 'Description in English',
+        'ru' => 'Описание на русском',
+        'pt' => 'Descrição em português',
+    ];
+
+    $product = Product::factory()->create([
+        'name' => $nameTranslations[$defaultLocale] ?? reset($nameTranslations),
+        'name_translations' => $nameTranslations,
+        'description' => $descriptionTranslations[$defaultLocale] ?? reset($descriptionTranslations),
+        'description_translations' => $descriptionTranslations,
+        'slug' => 'localized-product-test',
+        'is_active' => true,
+    ]);
+
+    expect($product->fresh()->description_translations)->toMatchArray($descriptionTranslations);
+    expect($product->fresh()->description)->toBe($descriptionTranslations[$defaultLocale]);
+
+    foreach ($locales as $locale) {
+        app()->setLocale($locale);
+
+        $this->getJson("/api/products/{$product->slug}")
+            ->assertOk()
+            ->assertJsonPath('description', $descriptionTranslations[$locale])
+            ->assertJsonPath("description_translations.{$locale}", $descriptionTranslations[$locale]);
+    }
 });
 
 it('creates order from cart flow (smoke)', function () {

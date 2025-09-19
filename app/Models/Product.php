@@ -26,6 +26,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'name_translations',
+        'description',
         'description_translations',
         'slug',
         'sku',
@@ -55,7 +56,7 @@ class Product extends Model
 
     public function initializeHasTranslations(): void
     {
-        $this->translatable = ['name'];
+        $this->translatable = ['name', 'description'];
         $this->initializeTranslationsTrait();
     }
 
