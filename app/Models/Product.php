@@ -226,7 +226,13 @@ class Product extends Model
             $newQty = $stock->qty + $delta;
 
             if ($newQty < $stock->reserved) {
-                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+                throw new \DomainException(__(
+                    'shop.inventory.not_enough_stock',
+                    [
+                        'product_id' => $this->id,
+                        'warehouse_id' => $warehouseId,
+                    ]
+                ));
             }
 
             $stock->qty = $newQty;
@@ -250,7 +256,13 @@ class Product extends Model
             $available = $stock->qty - $stock->reserved;
 
             if ($available < $qty) {
-                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+                throw new \DomainException(__(
+                    'shop.inventory.not_enough_stock',
+                    [
+                        'product_id' => $this->id,
+                        'warehouse_id' => $warehouseId,
+                    ]
+                ));
             }
 
             $stock->reserved += $qty;
@@ -300,15 +312,33 @@ class Product extends Model
                 ->first();
 
             if (! $stock) {
-                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+                throw new \DomainException(__(
+                    'shop.inventory.not_enough_stock',
+                    [
+                        'product_id' => $this->id,
+                        'warehouse_id' => $warehouseId,
+                    ]
+                ));
             }
 
             if ($stock->reserved < $qty) {
-                throw new \DomainException("Not enough reserved stock for product {$this->id} at warehouse {$warehouseId}");
+                throw new \DomainException(__(
+                    'shop.inventory.not_enough_reserved_stock',
+                    [
+                        'product_id' => $this->id,
+                        'warehouse_id' => $warehouseId,
+                    ]
+                ));
             }
 
             if ($stock->qty < $qty) {
-                throw new \DomainException("Not enough stock for product {$this->id} at warehouse {$warehouseId}");
+                throw new \DomainException(__(
+                    'shop.inventory.not_enough_stock',
+                    [
+                        'product_id' => $this->id,
+                        'warehouse_id' => $warehouseId,
+                    ]
+                ));
             }
 
             $stock->reserved -= $qty;

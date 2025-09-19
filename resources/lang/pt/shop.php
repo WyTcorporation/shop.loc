@@ -126,6 +126,11 @@ return [
         ],
     ],
 
+    'inventory' => [
+        'not_enough_stock' => 'Estoque insuficiente para o produto nº :product_id no depósito nº :warehouse_id.',
+        'not_enough_reserved_stock' => 'Estoque reservado insuficiente para o produto nº :product_id no depósito nº :warehouse_id.',
+    ],
+
     'api' => [
         'common' => [
             'not_found' => 'Recurso não encontrado.',

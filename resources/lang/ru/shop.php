@@ -126,6 +126,11 @@ return [
         ],
     ],
 
+    'inventory' => [
+        'not_enough_stock' => 'Недостаточно товара для продукта №:product_id на складе №:warehouse_id.',
+        'not_enough_reserved_stock' => 'Недостаточно зарезервированного товара для продукта №:product_id на складе №:warehouse_id.',
+    ],
+
     'api' => [
         'common' => [
             'not_found' => 'Ресурс не найден.',

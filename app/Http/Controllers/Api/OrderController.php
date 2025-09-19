@@ -77,7 +77,10 @@ class OrderController extends Controller
 
             foreach ($cart->items as $item) {
                 if ($item->product->availableStock($warehouse->id) < $item->qty) {
-                    abort(422, __('shop.api.orders.insufficient_stock', ['product' => $item->product_id]));
+                    abort(422, __('shop.inventory.not_enough_stock', [
+                        'product_id' => $item->product_id,
+                        'warehouse_id' => $warehouse->id,
+                    ]));
                 }
             }
 
@@ -108,7 +111,7 @@ class OrderController extends Controller
                 try {
                     $item->product->reserveStock($item->qty, $warehouse->id);
                 } catch (DomainException $e) {
-                    abort(422, __('shop.api.orders.insufficient_stock', ['product' => $item->product_id]));
+                    abort(422, $e->getMessage());
                 }
             }
 

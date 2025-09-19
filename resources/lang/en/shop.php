@@ -126,6 +126,11 @@ return [
         ],
     ],
 
+    'inventory' => [
+        'not_enough_stock' => 'Not enough stock for product #:product_id at warehouse #:warehouse_id.',
+        'not_enough_reserved_stock' => 'Not enough reserved stock for product #:product_id at warehouse #:warehouse_id.',
+    ],
+
     'api' => [
         'common' => [
             'not_found' => 'Resource not found.',
