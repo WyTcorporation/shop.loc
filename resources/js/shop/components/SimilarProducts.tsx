@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { formatPrice } from '../ui/format';
 import { fetchProducts, type Product, type Paginated } from '../api';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type Props = {
     categoryId?: number;
@@ -11,9 +12,11 @@ type Props = {
     title?: string;
 };
 
-export default function SimilarProducts({ categoryId, currentSlug, limit = 4, title = 'Схожі товари' }: Props) {
+export default function SimilarProducts({ categoryId, currentSlug, limit = 4, title }: Props) {
     const [items, setItems] = React.useState<Product[]>([]);
     const [loading, setLoading] = React.useState(false);
+    const { t } = useLocale();
+    const heading = title ?? t('product.similar.title');
 
     React.useEffect(() => {
         let on = true;
@@ -43,7 +46,7 @@ export default function SimilarProducts({ categoryId, currentSlug, limit = 4, ti
 
     return (
         <section className="mt-8" data-testid="similar-section">
-            <h2 className="mb-3 text-lg font-semibold">{title}</h2>
+            <h2 className="mb-3 text-lg font-semibold">{heading}</h2>
 
             {loading ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="similar-skel">
@@ -57,7 +60,7 @@ export default function SimilarProducts({ categoryId, currentSlug, limit = 4, ti
                 </div>
             ) : items.length === 0 ? (
                 <div className="text-sm text-muted-foreground" data-testid="similar-empty">
-                    Наразі немає схожих товарів.
+                    {t('product.similar.empty')}
                 </div>
             ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -73,7 +76,9 @@ export default function SimilarProducts({ categoryId, currentSlug, limit = 4, ti
                                         {primary ? (
                                             <img src={primary.url} alt={primary.alt ?? p.name} className="h-full w-full object-cover" />
                                         ) : (
-                                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">без фото</div>
+                                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                                                {t('product.similar.noImage')}
+                                            </div>
                                         )}
                                     </div>
                                     <div className="p-3">

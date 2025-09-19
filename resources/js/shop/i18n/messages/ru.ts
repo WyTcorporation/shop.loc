@@ -772,6 +772,9 @@ const messages = {
             hint: ({ value, max }: { value: number; max: number }) => `${value} из ${max}`,
         },
         similar: {
+            title: 'Похожие товары',
+            empty: 'Пока нет похожих товаров.',
+            noImage: 'Без фото',
             count: ({ count }: { count: number }) => `Найдено похожих: ${count}`,
         },
         reviewForm: {
