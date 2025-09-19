@@ -637,6 +637,7 @@ const messages = {
             submit: 'Створити акаунт',
             haveAccount: 'Вже є акаунт?',
             signInLink: 'Увійти',
+            passwordTooShort: 'Пароль має містити щонайменше 8 символів.',
             passwordMismatch: 'Паролі не співпадають.',
             errorFallback: 'Не вдалося зареєструватися. Спробуйте ще раз.',
         },

@@ -100,6 +100,7 @@ const keys: Array<{ key: TranslationKey; params?: Record<string, any> }> = [
     { key: 'auth.register.submit' },
     { key: 'auth.register.haveAccount' },
     { key: 'auth.register.signInLink' },
+    { key: 'auth.register.passwordTooShort' },
     { key: 'auth.register.passwordMismatch' },
     { key: 'auth.register.errorFallback' },
     { key: 'auth.login.title' },

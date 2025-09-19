@@ -23,6 +23,11 @@ export default function RegisterPage() {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (submitting) return;
+        const trimmedPassword = password.trim();
+        if (trimmedPassword.length < 8) {
+            setError(t('auth.register.passwordTooShort'));
+            return;
+        }
         if (password !== passwordConfirmation) {
             setError(t('auth.register.passwordMismatch'));
             return;
