@@ -75,9 +75,16 @@ return new class extends Migration
             $table->dropColumn(['name_translations', 'description_translations']);
         });
 
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('name_translations');
-        });
+        $productTranslationColumns = array_values(array_filter(
+            ['name_translations', 'description_translations'],
+            static fn (string $column): bool => Schema::hasColumn('products', $column)
+        ));
+
+        if ($productTranslationColumns !== []) {
+            Schema::table('products', function (Blueprint $table) use ($productTranslationColumns) {
+                $table->dropColumn($productTranslationColumns);
+            });
+        }
 
         Schema::table('categories', function (Blueprint $table) {
             $table->dropColumn('name_translations');
