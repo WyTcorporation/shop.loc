@@ -9,6 +9,8 @@ use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\FakeMysqlConnectionResolver;
+use Tests\Support\FakeMysqlSqliteConnection;
 use Tests\Support\FakePgsqlConnectionResolver;
 use Tests\Support\FakePgsqlSqliteConnection;
 use Database\Support\TranslationGenerator;
@@ -67,7 +69,6 @@ it('falls back to postgres json search without mysql functions', function () {
     Model::setConnectionResolver(new FakePgsqlConnectionResolver($connection));
 
     DB::shouldReceive('connection')->andReturn($connection);
-
     $schema = $connection->getSchemaBuilder();
     $schema->create('products', function (Blueprint $table) {
         $table->increments('id');
@@ -141,6 +142,163 @@ it('falls back to postgres json search without mysql functions', function () {
         $schema->dropIfExists('product_images');
         $schema->dropIfExists('currencies');
         $schema->dropIfExists('products');
+
+        Model::setConnectionResolver($originalResolver);
+    }
+});
+
+it('returns facets when using the mysql driver for db fallback', function () {
+    config()->set('scout.driver', 'database');
+    config()->set('app.locale', 'en');
+    config()->set('app.fallback_locale', 'en');
+    app()->setLocale('en');
+
+    $pdo = new PDO('sqlite::memory:');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $connection = new FakeMysqlSqliteConnection($pdo, ':memory:', '', ['driver' => 'mysql']);
+
+    /** @var ConnectionResolverInterface $originalResolver */
+    $originalResolver = Model::getConnectionResolver();
+    Model::setConnectionResolver(new FakeMysqlConnectionResolver($connection));
+
+    /** @var \Illuminate\Database\DatabaseManager $databaseManager */
+    $databaseManager = app('db');
+    $originalDefault = config('database.default');
+    $originalMysqlConfig = config('database.connections.mysql');
+
+    config()->set('database.connections.mysql', array_merge(
+        $originalMysqlConfig ?? [],
+        [
+            'driver' => 'mysql',
+        ]
+    ));
+
+    $databaseManager->extend('mysql', function () use ($connection) {
+        return $connection;
+    });
+
+    $databaseManager->setDefaultConnection('mysql');
+    config()->set('database.default', 'mysql');
+
+    $schema = $connection->getSchemaBuilder();
+    $schema->create('products', function (Blueprint $table) {
+        $table->increments('id');
+        $table->unsignedInteger('category_id')->nullable();
+        $table->unsignedInteger('vendor_id')->nullable();
+        $table->string('name');
+        $table->text('description')->nullable();
+        $table->json('name_translations')->nullable();
+        $table->json('attributes')->nullable();
+        $table->string('slug')->default('');
+        $table->string('sku')->default('');
+        $table->boolean('is_active')->default(true);
+        $table->integer('stock')->default(0);
+        $table->decimal('price', 10, 2)->nullable();
+        $table->integer('price_cents')->nullable();
+        $table->decimal('price_old', 10, 2)->nullable();
+        $table->timestamps();
+    });
+
+    $schema->create('currencies', function (Blueprint $table) {
+        $table->increments('id');
+        $table->string('code');
+        $table->decimal('rate', 12, 6)->default(1);
+    });
+
+    $schema->create('product_images', function (Blueprint $table) {
+        $table->increments('id');
+        $table->unsignedInteger('product_id');
+        $table->string('disk')->nullable();
+        $table->string('path')->nullable();
+        $table->json('alt_translations')->nullable();
+        $table->boolean('is_primary')->default(false);
+        $table->integer('sort')->default(0);
+    });
+
+    $schema->create('vendors', function (Blueprint $table) {
+        $table->increments('id');
+        $table->string('name')->nullable();
+        $table->string('slug')->default('');
+        $table->string('contact_email')->nullable();
+        $table->string('contact_phone')->nullable();
+    });
+
+    $connection->flushCapturedQueries();
+
+    try {
+        $now = now();
+        Product::query()->insert([
+            [
+                'category_id' => 1,
+                'vendor_id' => null,
+                'name' => 'Facet Base',
+                'description' => 'Description',
+                'name_translations' => json_encode(['en' => 'Facet Base']),
+                'attributes' => json_encode([
+                    ['key' => 'color', 'value' => 'black', 'translations' => ['en' => 'Black']],
+                    ['key' => 'size', 'value' => 'm', 'translations' => ['en' => 'Medium']],
+                ]),
+                'slug' => 'facet-base',
+                'sku' => 'FB-1',
+                'stock' => 5,
+                'price' => 10.50,
+                'price_cents' => 1050,
+                'price_old' => null,
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'category_id' => 2,
+                'vendor_id' => null,
+                'name' => 'Facet Extra',
+                'description' => 'Description',
+                'name_translations' => json_encode(['en' => 'Facet Extra']),
+                'attributes' => json_encode([
+                    ['key' => 'color', 'value' => 'red', 'translations' => ['en' => 'Red']],
+                    ['key' => 'size', 'value' => 'l', 'translations' => ['en' => 'Large']],
+                ]),
+                'slug' => 'facet-extra',
+                'sku' => 'FB-2',
+                'stock' => 3,
+                'price' => 12.00,
+                'price_cents' => 1200,
+                'price_old' => null,
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ]);
+
+        $response = $this->getJson('/api/products?with_facets=1')->assertOk();
+
+        $payload = $response->json();
+        $facets = $payload['facets'] ?? [];
+
+        expect($facets)->toBeArray();
+        expect($facets)->not()->toBeEmpty();
+        expect($facets['attrs.color']['black']['count'] ?? null)->toBe(1);
+        expect($facets['attrs.size']['m']['count'] ?? null)->toBe(1);
+
+        $captured = $connection->capturedQueries();
+        expect($captured)->not()->toBeEmpty();
+        expect(collect($captured)->contains(fn ($sql) => str_contains($sql, 'JSON_TABLE')))->toBeTrue();
+    } finally {
+        $schema->dropIfExists('vendors');
+        $schema->dropIfExists('product_images');
+        $schema->dropIfExists('currencies');
+        $schema->dropIfExists('products');
+
+        $databaseManager->forgetExtension('mysql');
+        $databaseManager->setDefaultConnection($originalDefault);
+        config()->set('database.default', $originalDefault);
+
+        if ($originalMysqlConfig !== null) {
+            config()->set('database.connections.mysql', $originalMysqlConfig);
+        } else {
+            config()->offsetUnset('database.connections.mysql');
+        }
 
         Model::setConnectionResolver($originalResolver);
     }
