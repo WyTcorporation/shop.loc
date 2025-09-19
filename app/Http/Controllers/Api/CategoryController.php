@@ -26,36 +26,60 @@ class CategoryController extends Controller
         $tree = (bool)$request->boolean('tree', false);
 
         $cacheKey = $tree ? Category::CACHE_KEY_TREE : Category::CACHE_KEY_FLAT;
+        $locale = app()->getLocale();
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($tree) {
-            $cats = Category::query()
-                ->select('id', 'name', 'slug', 'parent_id')
-                ->orderBy('parent_id')
-                ->orderBy('name')
-                ->get();
+        $cached = Cache::get($cacheKey);
 
-            if (! $tree) {
-                return $cats->toArray();
-            }
+        if (is_array($cached) && array_is_list($cached)) {
+            return response()->json($cached);
+        }
 
-            // простенька збірка в дерево
-            $byParent = $cats->groupBy('parent_id');
-            $build = function ($parentId) use (&$build, $byParent) {
-                return ($byParent[$parentId] ?? collect())
-                    ->map(function ($c) use (&$build) {
-                        return [
-                            'id' => $c->id,
-                            'name' => $c->name,
-                            'slug' => $c->slug,
-                            'children' => $build($c->id),
-                        ];
-                    })
-                    ->values();
-            };
+        if (! is_array($cached)) {
+            $cached = [];
+        }
 
-            return $build(null)->toArray();
-        });
+        if (! array_key_exists($locale, $cached)) {
+            $cached[$locale] = $this->buildCategoriesPayload($tree);
+            Cache::put($cacheKey, $cached, now()->addMinutes(10));
+        }
 
-        return response()->json($data);
+        return response()->json($cached[$locale]);
+    }
+
+    protected function buildCategoriesPayload(bool $tree): array
+    {
+        $cats = Category::query()
+            ->select('id', 'name', 'name_translations', 'slug', 'parent_id')
+            ->orderBy('parent_id')
+            ->orderBy('name')
+            ->get();
+
+        if (! $tree) {
+            return $cats
+                ->map(fn (Category $category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'parent_id' => $category->parent_id,
+                ])
+                ->toArray();
+        }
+
+        $byParent = $cats->groupBy('parent_id');
+
+        $build = function ($parentId) use (&$build, $byParent) {
+            return ($byParent[$parentId] ?? collect())
+                ->map(function (Category $c) use (&$build) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'slug' => $c->slug,
+                        'children' => $build($c->id),
+                    ];
+                })
+                ->values();
+        };
+
+        return $build(null)->toArray();
     }
 }

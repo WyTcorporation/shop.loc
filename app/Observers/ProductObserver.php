@@ -15,7 +15,7 @@ class ProductObserver
 
     public function updated(Product $product): void
     {
-        if ($product->wasChanged(['name','slug','sku','category_id','price','stock','is_active','attributes'])) {
+        if ($product->wasChanged(['name','name_translations','slug','sku','category_id','price','stock','is_active','attributes'])) {
             $product->shouldBeSearchable()
                 ? $product->searchable()
                 : $product->unsearchable();

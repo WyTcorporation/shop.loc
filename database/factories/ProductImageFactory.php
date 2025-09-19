@@ -20,9 +20,13 @@ class ProductImageFactory extends Factory
      */
     public function definition(): array
     {
+        $locale = config('app.locale');
+        $alt = fake()->words(3, true);
+
         return [
             'path'       => 'products/tmp/'.fake()->uuid().'.png', // справжній шлях виставимо в сідері
-            'alt'        => fake()->words(3, true),
+            'alt'        => $alt,
+            'alt_translations' => [$locale => $alt],
             'disk'       => 'public',
             'sort'       => 0,
             'is_primary' => false,

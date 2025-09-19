@@ -12,10 +12,16 @@ class WarehouseFactory extends Factory
 
     public function definition(): array
     {
+        $locale = config('app.locale');
+        $name = $this->faker->unique()->company . ' Warehouse';
+        $description = $this->faker->optional()->sentence();
+
         return [
             'code' => Str::upper('WH-' . $this->faker->unique()->lexify('????')),
-            'name' => $this->faker->unique()->company . ' Warehouse',
-            'description' => $this->faker->optional()->sentence(),
+            'name' => $name,
+            'name_translations' => [$locale => $name],
+            'description' => $description,
+            'description_translations' => $description !== null ? [$locale => $description] : [],
         ];
     }
 }

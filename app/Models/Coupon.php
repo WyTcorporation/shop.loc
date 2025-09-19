@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Models\Concerns\HasTranslations;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,9 @@ use Illuminate\Support\Carbon;
 class Coupon extends Model
 {
     use HasFactory;
+    use HasTranslations {
+        HasTranslations::initializeHasTranslations as protected initializeTranslationsTrait;
+    }
 
     public const TYPE_FIXED = 'fixed';
     public const TYPE_PERCENT = 'percent';
@@ -20,7 +24,9 @@ class Coupon extends Model
     protected $fillable = [
         'code',
         'name',
+        'name_translations',
         'description',
+        'description_translations',
         'type',
         'value',
         'min_cart_total',
@@ -45,7 +51,15 @@ class Coupon extends Model
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
         'meta' => 'array',
+        'name_translations' => 'array',
+        'description_translations' => 'array',
     ];
+
+    public function initializeHasTranslations(): void
+    {
+        $this->translatable = ['name', 'description'];
+        $this->initializeTranslationsTrait();
+    }
 
     public function scopeActive(Builder $builder): Builder
     {

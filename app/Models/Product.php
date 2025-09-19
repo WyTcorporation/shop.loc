@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,12 +15,17 @@ use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
-    use HasFactory, Searchable;
+    use HasFactory;
+    use HasTranslations {
+        HasTranslations::initializeHasTranslations as protected initializeTranslationsTrait;
+    }
+    use Searchable;
 
     public const FACETS_CACHE_VERSION_KEY = 'products:facets:version';
 
     protected $fillable = [
         'name',
+        'name_translations',
         'slug',
         'sku',
         'category_id',
@@ -42,7 +48,14 @@ class Product extends Model
         'price_old' => 'decimal:2',
         'reviews_count' => 'integer',
         'rating' => 'decimal:2',
+        'name_translations' => 'array',
     ];
+
+    public function initializeHasTranslations(): void
+    {
+        $this->translatable = ['name'];
+        $this->initializeTranslationsTrait();
+    }
 
 
     protected static function boot()
@@ -323,6 +336,7 @@ class Product extends Model
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'name_translations' => $this->name_translations,
             'slug' => $this->slug,
             'sku' => $this->sku,
             'category_id' => $this->category_id,
