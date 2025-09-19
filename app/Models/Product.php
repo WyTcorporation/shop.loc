@@ -333,10 +333,18 @@ class Product extends Model
     {
         $attrs = (array) $this->getAttribute('attributes');
 
+        $translations = $this->name_translations ?? [];
+        $defaultLocale = config('app.locale');
+        $defaultName = parent::getAttribute('name');
+
+        if ($defaultName === null && isset($translations[$defaultLocale])) {
+            $defaultName = $translations[$defaultLocale];
+        }
+
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'name_translations' => $this->name_translations,
+            'name' => $defaultName,
+            'name_translations' => $translations,
             'slug' => $this->slug,
             'sku' => $this->sku,
             'category_id' => $this->category_id,

@@ -8,6 +8,7 @@ use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use App\Models\Category;
+use Database\Support\TranslationGenerator;
 
 /**
  * @extends Factory<Product>
@@ -38,9 +39,11 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
-        $name = ucfirst($this->faker->unique()->words(3, true));
+        $set = TranslationGenerator::productSet();
+        $nameTranslations = $set['name'];
+        $defaultLocale = config('app.locale');
+        $name = $nameTranslations[$defaultLocale] ?? reset($nameTranslations);
         $price = $this->faker->randomFloat(2, 10, 500);
-        $locale = config('app.locale');
 
         $colors = [
             'чорний',
@@ -59,7 +62,7 @@ class ProductFactory extends Factory
 
         return [
             'name' => $name,
-            'name_translations' => [$locale => $name],
+            'name_translations' => $nameTranslations,
             'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
             'sku' => Str::upper(Str::random(10)),
             'category_id' => Category::factory(),
