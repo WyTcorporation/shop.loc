@@ -156,6 +156,11 @@ const messages = {
                 categories: 'Categories',
                 colors: 'Color',
                 sizes: 'Size',
+                tooltip: {
+                    category: ({ value }: { value: string }) => `Filter by category: ${value}`,
+                    color: ({ value }: { value: string }) => `Filter by color: ${value}`,
+                    size: ({ value }: { value: string }) => `Filter by size: ${value}`,
+                },
                 empty: 'no data',
             },
         },

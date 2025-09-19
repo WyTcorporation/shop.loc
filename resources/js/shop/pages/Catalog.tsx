@@ -455,6 +455,7 @@ export default function Catalog() {
                         {categoryFacetEntries.map(([id, cnt]) => {
                             const c = catById.get(String(id));
                             const active = Number(categoryId) === Number(id);
+                            const label = c?.name ?? `#${id}`;
                             return (
                                 <button
                                     key={id}
@@ -467,9 +468,9 @@ export default function Catalog() {
                                         setPage(1);
                                     }}
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
-                                    title={`category_id=${id}`}
+                                    title={t('catalog.filters.facets.tooltip.category', { value: label })}
                                 >
-                                    {c?.name ?? `#${id}`} <span className="opacity-70">({cnt})</span>
+                                    {label} <span className="opacity-70">({cnt})</span>
                                 </button>
                             );
                         })}
@@ -492,7 +493,7 @@ export default function Catalog() {
                                     data-testid={`facet-color-${normalized}`}
                                     onClick={() => toggleColorFacet(normalized)}
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
-                                    title={`attrs.color=${value}`}
+                                    title={t('catalog.filters.facets.tooltip.color', { value: label })}
                                 >
                                     {label} <span className="opacity-70">({count})</span>
                                 </button>
@@ -517,7 +518,7 @@ export default function Catalog() {
                                     data-testid={`facet-size-${v}`}
                                     onClick={() => toggleListParam(v, selectedSizes, setSizesParam)}
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
-                                    title={`attrs.size=${v}`}
+                                    title={t('catalog.filters.facets.tooltip.size', { value: v })}
                                 >
                                     {v} <span className="opacity-70">({cnt})</span>
                                 </button>
