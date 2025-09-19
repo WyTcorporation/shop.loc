@@ -240,54 +240,63 @@ class ProductController extends Controller
         $filtered = (clone $base)->select('id');
 
         $driver = DB::connection()->getDriverName();
+        $expressions = $this->attributeJsonExpressions($driver);
 
-        if ($driver === 'sqlite') {
-            $colorCounts = DB::query()
-                ->fromSub($filtered, 'filtered_products')
-                ->join('products', 'products.id', '=', 'filtered_products.id')
-                ->join(DB::raw("json_each(COALESCE(products.attributes, '[]')) AS attr"), DB::raw('1'), '=', DB::raw('1'))
-                ->whereRaw("json_extract(attr.value, '$.key') = ?", ['color'])
-                ->selectRaw("json_extract(attr.value, '$.value') as value, COUNT(*) as c")
-                ->groupBy('value')
-                ->pluck('c', 'value')
-                ->toArray();
-
-            $sizeCounts = DB::query()
-                ->fromSub($filtered, 'filtered_products_sizes')
-                ->join('products', 'products.id', '=', 'filtered_products_sizes.id')
-                ->join(DB::raw("json_each(COALESCE(products.attributes, '[]')) AS attr"), DB::raw('1'), '=', DB::raw('1'))
-                ->whereRaw("json_extract(attr.value, '$.key') = ?", ['size'])
-                ->selectRaw("json_extract(attr.value, '$.value') as value, COUNT(*) as c")
-                ->groupBy('value')
-                ->pluck('c', 'value')
-                ->toArray();
-        } else {
-            $colorCounts = DB::query()
-                ->fromSub($filtered, 'filtered_products')
-                ->join('products', 'products.id', '=', 'filtered_products.id')
-                ->joinRaw('JOIN LATERAL jsonb_array_elements(products.attributes) AS attr ON true')
-                ->whereRaw("attr->>'key' = 'color'")
-                ->selectRaw("attr->>'value' as value, COUNT(*) as c")
-                ->groupBy('value')
-                ->pluck('c', 'value')
-                ->toArray();
-
-            $sizeCounts = DB::query()
-                ->fromSub($filtered, 'filtered_products_sizes')
-                ->join('products', 'products.id', '=', 'filtered_products_sizes.id')
-                ->joinRaw('JOIN LATERAL jsonb_array_elements(products.attributes) AS attr ON true')
-                ->whereRaw("attr->>'key' = 'size'")
-                ->selectRaw("attr->>'value' as value, COUNT(*) as c")
-                ->groupBy('value')
-                ->pluck('c', 'value')
-                ->toArray();
-        }
+        $colorCounts = $this->buildAttributeFacetCounts($filtered, $expressions, 'color', 'filtered_products');
+        $sizeCounts = $this->buildAttributeFacetCounts($filtered, $expressions, 'size', 'filtered_products_sizes');
 
         return [
             'category_id' => (object) $categoryCounts,
             'attrs.color' => $this->attributeFacetPayload($colorCounts, 'color'),
             'attrs.size' => $this->attributeFacetPayload($sizeCounts, 'size'),
         ];
+    }
+
+    /**
+     * @param array{join:callable,key:string,value:string,translations:string} $expressions
+     * @return array<int|string,int>
+     */
+    private function buildAttributeFacetCounts(Builder $filtered, array $expressions, string $attributeKey, string $subqueryAlias): array
+    {
+        $builder = DB::query()
+            ->fromSub(clone $filtered, $subqueryAlias)
+            ->join('products', 'products.id', '=', $subqueryAlias . '.id');
+
+        ($expressions['join'])($builder);
+
+        return $builder
+            ->whereRaw("{$expressions['key']} = ?", [$attributeKey])
+            ->selectRaw("{$expressions['value']} as value, COUNT(*) as c")
+            ->groupBy(DB::raw($expressions['value']))
+            ->pluck('c', 'value')
+            ->toArray();
+    }
+
+    /**
+     * @return array{join:callable,key:string,value:string,translations:string}
+     */
+    private function attributeJsonExpressions(string $driver): array
+    {
+        return match ($driver) {
+            'sqlite' => [
+                'join' => fn ($query) => $query->join(DB::raw("json_each(COALESCE(products.attributes, '[]')) AS attr"), DB::raw('1'), '=', DB::raw('1')),
+                'key' => "json_extract(attr.value, '$.key')",
+                'value' => "json_extract(attr.value, '$.value')",
+                'translations' => "json_extract(attr.value, '$.translations')",
+            ],
+            'pgsql' => [
+                'join' => fn ($query) => $query->join(DB::raw('LATERAL jsonb_array_elements(products.attributes) AS attr'), DB::raw('true'), '=', DB::raw('true')),
+                'key' => "attr->>'key'",
+                'value' => "attr->>'value'",
+                'translations' => "attr->'translations'",
+            ],
+            default => [
+                'join' => fn ($query) => $query->join(DB::raw("JSON_TABLE(products.attributes, '\$[*]' COLUMNS(attr_key VARCHAR(191) PATH '\$.key', attr_value VARCHAR(191) PATH '\$.value', attr_translations JSON PATH '\$.translations')) AS attr"), DB::raw('true'), '=', DB::raw('true')),
+                'key' => 'attr.attr_key',
+                'value' => 'attr.attr_value',
+                'translations' => 'attr.attr_translations',
+            ],
+        };
     }
 
     private function transformFacetDistribution(array $facetDist): array
@@ -351,25 +360,19 @@ class ProductController extends Controller
         }
 
         $driver = DB::connection()->getDriverName();
+        $expressions = $this->attributeJsonExpressions($driver);
 
-        if ($driver === 'sqlite') {
-            $rows = DB::query()
-                ->selectRaw("json_extract(attr.value, '$.value') as value, json_extract(attr.value, '$.translations') as translations")
-                ->from('products')
-                ->join(DB::raw("json_each(COALESCE(products.attributes, '[]')) AS attr"), DB::raw('1'), '=', DB::raw('1'))
-                ->whereRaw("json_extract(attr.value, '$.key') = ?", [$attributeKey])
-                ->whereIn(DB::raw("json_extract(attr.value, '$.value')"), $values)
-                ->distinct()
-                ->get();
-        } else {
-            $rows = DB::query()
-                ->selectRaw("attr->>'value' as value, attr->'translations' as translations")
-                ->fromRaw('products, jsonb_array_elements(products.attributes) as attr')
-                ->whereRaw("attr->>'key' = ?", [$attributeKey])
-                ->whereIn(DB::raw("attr->>'value'"), $values)
-                ->distinct()
-                ->get();
-        }
+        $rowsQuery = DB::query()
+            ->selectRaw("{$expressions['value']} as value, {$expressions['translations']} as translations")
+            ->from('products');
+
+        ($expressions['join'])($rowsQuery);
+
+        $rows = $rowsQuery
+            ->whereRaw("{$expressions['key']} = ?", [$attributeKey])
+            ->whereIn(DB::raw($expressions['value']), $values)
+            ->distinct()
+            ->get();
 
         $map = [];
 
