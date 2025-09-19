@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ProductsApi, ReviewsApi, type Product, type Review } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
@@ -30,8 +30,7 @@ export default function ProductPage() {
     const [loadingReviews, setLoadingReviews] = useState(false);
 
     const { add } = useCart();
-    const { success, error } = useNotify();
-    const navigate = useNavigate();
+    const { error } = useNotify();
     const hreflangs = useHreflangs('uk');
     const { t } = useLocale();
 
@@ -218,10 +217,6 @@ export default function ProductPage() {
         try {
             await add(p.id, qty);
             GA.add_to_cart(p, qty);
-            success({
-                title: t('product.toasts.added.title'),
-                action: { label: t('product.toasts.added.action'), onClick: () => navigate('/cart') },
-            });
         } catch (e: any) {
             const fallbackMessage = t('product.toasts.added.error');
             const description = e?.response?.data?.message;
