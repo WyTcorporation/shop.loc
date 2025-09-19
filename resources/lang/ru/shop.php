@@ -149,6 +149,19 @@ return [
         ],
     ],
 
+    'loyalty' => [
+        'transaction' => [
+            'earn' => 'Начислено :points баллов лояльности.',
+            'redeem' => 'Списано :points баллов лояльности.',
+            'adjustment' => 'Баланс изменён на :points.',
+        ],
+        'demo' => [
+            'checkout_redeem' => 'Баллы списаны при оформлении заказа',
+            'shipped_bonus' => 'Бонус за отправленный заказ :number',
+            'cancellation_return' => 'Баллы возвращены после отмены',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двухфакторная аутентификация не настроена.',

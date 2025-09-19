@@ -149,6 +149,19 @@ return [
         ],
     ],
 
+    'loyalty' => [
+        'transaction' => [
+            'earn' => 'Earned :points loyalty points.',
+            'redeem' => 'Redeemed :points loyalty points.',
+            'adjustment' => 'Points adjusted by :points.',
+        ],
+        'demo' => [
+            'checkout_redeem' => 'Redeemed during checkout',
+            'shipped_bonus' => 'Bonus for shipped order :number',
+            'cancellation_return' => 'Points returned after cancellation',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Two-factor authentication is not initialized.',

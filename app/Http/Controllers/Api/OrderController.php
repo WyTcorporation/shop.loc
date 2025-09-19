@@ -187,24 +187,36 @@ class OrderController extends Controller
             }
 
             if ($cart->user_id && $totals->pointsUsed > 0) {
+                $meta = [
+                    'key' => 'shop.api.orders.points_redeemed_description',
+                    'number' => $order->number,
+                ];
+
                 LoyaltyPointTransaction::create([
                     'user_id' => $cart->user_id,
                     'order_id' => $order->id,
                     'type' => LoyaltyPointTransaction::TYPE_REDEEM,
                     'points' => -$totals->pointsUsed,
                     'amount' => $totals->pointsValue,
-                    'description' => __('shop.api.orders.points_redeemed_description', ['number' => $order->number]),
+                    'description' => __($meta['key'], $meta),
+                    'meta' => $meta,
                 ]);
             }
 
             if ($cart->user_id && $pointsEarned > 0) {
+                $meta = [
+                    'key' => 'shop.api.orders.points_earned_description',
+                    'number' => $order->number,
+                ];
+
                 LoyaltyPointTransaction::create([
                     'user_id' => $cart->user_id,
                     'order_id' => $order->id,
                     'type' => LoyaltyPointTransaction::TYPE_EARN,
                     'points' => $pointsEarned,
                     'amount' => $totals->total,
-                    'description' => __('shop.api.orders.points_earned_description', ['number' => $order->number]),
+                    'description' => __($meta['key'], $meta),
+                    'meta' => $meta,
                 ]);
             }
 

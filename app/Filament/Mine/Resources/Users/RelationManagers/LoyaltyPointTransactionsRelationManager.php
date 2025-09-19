@@ -32,6 +32,7 @@ class LoyaltyPointTransactionsRelationManager extends RelationManager
                     ->state(fn ($record) => formatCurrency($record->amount, $record->order?->currency))
                     ->toggleable(),
                 TextColumn::make('description')
+                    ->formatStateUsing(fn ($state, $record) => $record->localized_description ?: $state)
                     ->wrap()
                     ->toggleable(),
             ])

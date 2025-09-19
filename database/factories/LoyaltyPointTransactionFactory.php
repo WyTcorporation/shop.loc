@@ -20,6 +20,7 @@ class LoyaltyPointTransactionFactory extends Factory
         $type = $points >= 0
             ? LoyaltyPointTransaction::TYPE_EARN
             : LoyaltyPointTransaction::TYPE_REDEEM;
+        $meta = $this->buildMeta($type, $points);
 
         return [
             'user_id' => User::factory(),
@@ -27,8 +28,8 @@ class LoyaltyPointTransactionFactory extends Factory
             'type' => $type,
             'points' => $points,
             'amount' => $this->amountForPoints($points),
-            'description' => $this->faker->sentence(),
-            'meta' => null,
+            'description' => __($meta['key'], $meta),
+            'meta' => $meta,
         ];
     }
 
@@ -37,10 +38,14 @@ class LoyaltyPointTransactionFactory extends Factory
         $value = abs($points ?? $this->faker->numberBetween(25, 200));
 
         return $this->state(function () use ($value) {
+            $meta = $this->buildMeta(LoyaltyPointTransaction::TYPE_EARN, $value);
+
             return [
                 'type' => LoyaltyPointTransaction::TYPE_EARN,
                 'points' => $value,
                 'amount' => $this->amountForPoints($value),
+                'description' => __($meta['key'], $meta),
+                'meta' => $meta,
             ];
         });
     }
@@ -50,10 +55,14 @@ class LoyaltyPointTransactionFactory extends Factory
         $value = abs($points ?? $this->faker->numberBetween(25, 150));
 
         return $this->state(function () use ($value) {
+            $meta = $this->buildMeta(LoyaltyPointTransaction::TYPE_REDEEM, -$value);
+
             return [
                 'type' => LoyaltyPointTransaction::TYPE_REDEEM,
                 'points' => -$value,
                 'amount' => $this->amountForPoints(-$value),
+                'description' => __($meta['key'], $meta),
+                'meta' => $meta,
             ];
         });
     }
@@ -64,10 +73,14 @@ class LoyaltyPointTransactionFactory extends Factory
         $value = $value === 0 ? 10 : $value;
 
         return $this->state(function () use ($value) {
+            $meta = $this->buildMeta(LoyaltyPointTransaction::TYPE_ADJUST, $value);
+
             return [
                 'type' => LoyaltyPointTransaction::TYPE_ADJUST,
                 'points' => $value,
                 'amount' => $this->amountForPoints($value),
+                'description' => __($meta['key'], $meta),
+                'meta' => $meta,
             ];
         });
     }
@@ -77,5 +90,23 @@ class LoyaltyPointTransactionFactory extends Factory
         $ratio = (float) config('shop.loyalty.redeem_value', 0.1);
 
         return round($points * $ratio, 2);
+    }
+
+    private function buildMeta(string $type, int $points): array
+    {
+        return match ($type) {
+            LoyaltyPointTransaction::TYPE_EARN => [
+                'key' => 'shop.loyalty.transaction.earn',
+                'points' => abs($points),
+            ],
+            LoyaltyPointTransaction::TYPE_REDEEM => [
+                'key' => 'shop.loyalty.transaction.redeem',
+                'points' => abs($points),
+            ],
+            default => [
+                'key' => 'shop.loyalty.transaction.adjustment',
+                'points' => $points,
+            ],
+        };
     }
 }

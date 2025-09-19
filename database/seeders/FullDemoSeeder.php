@@ -442,25 +442,36 @@ class FullDemoSeeder extends Seeder
                 'factory' => LoyaltyPointTransaction::factory()->earn(180),
                 'user' => $users->get('repeat'),
                 'order' => $orders->get('paid'),
-                'description' => 'Points earned for paying order '.($orders->get('paid')?->number ?? ''),
+                'meta' => [
+                    'key' => 'shop.api.orders.points_earned_description',
+                    'number' => $orders->get('paid')?->number,
+                ],
             ],
             [
                 'factory' => LoyaltyPointTransaction::factory()->redeem(200),
                 'user' => $users->get('repeat'),
                 'order' => $orders->get('paid'),
-                'description' => 'Redeemed during checkout',
+                'meta' => [
+                    'key' => 'shop.loyalty.demo.checkout_redeem',
+                    'number' => $orders->get('paid')?->number,
+                ],
             ],
             [
                 'factory' => LoyaltyPointTransaction::factory()->earn(250),
                 'user' => $users->get('vip'),
                 'order' => $orders->get('shipped'),
-                'description' => 'Bonus for shipped order '.($orders->get('shipped')?->number ?? ''),
+                'meta' => [
+                    'key' => 'shop.loyalty.demo.shipped_bonus',
+                    'number' => $orders->get('shipped')?->number,
+                ],
             ],
             [
                 'factory' => LoyaltyPointTransaction::factory()->adjustment(-80),
                 'user' => $users->get('buyer'),
                 'order' => $orders->get('cancelled'),
-                'description' => 'Points returned after cancellation',
+                'meta' => [
+                    'key' => 'shop.loyalty.demo.cancellation_return',
+                ],
             ],
         ];
 
@@ -475,8 +486,12 @@ class FullDemoSeeder extends Seeder
                 $factory = $factory->for($order);
             }
 
+            $meta = array_filter($entry['meta'], fn ($value) => $value !== null && $value !== '');
+            $meta['key'] = $entry['meta']['key'];
+
             $factory->create([
-                'description' => $entry['description'],
+                'description' => __($meta['key'], $meta),
+                'meta' => $meta,
             ]);
         }
     }

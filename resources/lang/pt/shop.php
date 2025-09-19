@@ -149,6 +149,19 @@ return [
         ],
     ],
 
+    'loyalty' => [
+        'transaction' => [
+            'earn' => 'Acumulados :points pontos de fidelidade.',
+            'redeem' => 'Resgatados :points pontos de fidelidade.',
+            'adjustment' => 'Saldo ajustado em :points.',
+        ],
+        'demo' => [
+            'checkout_redeem' => 'Pontos resgatados no checkout',
+            'shipped_bonus' => 'Bônus pelo pedido enviado :number',
+            'cancellation_return' => 'Pontos devolvidos após cancelamento',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'A autenticação em duas etapas não está configurada.',

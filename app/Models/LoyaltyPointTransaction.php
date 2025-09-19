@@ -30,6 +30,21 @@ class LoyaltyPointTransaction extends Model
         'meta' => 'array',
     ];
 
+    public function getLocalizedDescriptionAttribute(): string
+    {
+        $meta = $this->meta;
+
+        if (is_array($meta) && isset($meta['key']) && is_string($meta['key']) && $meta['key'] !== '') {
+            $translation = __($meta['key'], $meta);
+
+            if ($translation !== $meta['key']) {
+                return $translation;
+            }
+        }
+
+        return (string) ($this->description ?? '');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
