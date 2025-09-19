@@ -17,14 +17,18 @@ class VendorFactory extends Factory
     public function definition(): array
     {
         $name = $this->faker->unique()->company();
+        $locale = config('app.locale');
+        $description = $this->faker->optional()->sentence(10);
 
         return [
             'user_id' => User::factory(),
             'name' => $name,
+            'name_translations' => [$locale => $name],
             'slug' => Str::slug($name) . '-' . Str::lower(Str::random(5)),
             'contact_email' => $this->faker->unique()->companyEmail(),
             'contact_phone' => $this->faker->phoneNumber(),
-            'description' => $this->faker->optional()->sentence(10),
+            'description' => $description,
+            'description_translations' => $description !== null ? [$locale => $description] : [],
         ];
     }
 }

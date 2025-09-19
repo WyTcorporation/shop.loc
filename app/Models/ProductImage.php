@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,14 +13,24 @@ use Illuminate\Support\Facades\Storage;
 class ProductImage extends Model
 {
     use HasFactory;
+    use HasTranslations {
+        HasTranslations::initializeHasTranslations as protected initializeTranslationsTrait;
+    }
 
     protected $appends = ['url'];
 
-    protected $fillable = ['product_id', 'disk', 'path', 'alt','sort','is_primary'];
+    protected $fillable = ['product_id', 'disk', 'path', 'alt','alt_translations','sort','is_primary'];
 
     protected $casts = [
         'sort' => 'integer',
+        'alt_translations' => 'array',
     ];
+
+    public function initializeHasTranslations(): void
+    {
+        $this->translatable = ['alt'];
+        $this->initializeTranslationsTrait();
+    }
 
     protected static function booted(): void
     {

@@ -40,6 +40,7 @@ class ProductFactory extends Factory
     {
         $name = ucfirst($this->faker->unique()->words(3, true));
         $price = $this->faker->randomFloat(2, 10, 500);
+        $locale = config('app.locale');
 
         $colors = [
             'чорний',
@@ -58,6 +59,7 @@ class ProductFactory extends Factory
 
         return [
             'name' => $name,
+            'name_translations' => [$locale => $name],
             'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
             'sku' => Str::upper(Str::random(10)),
             'category_id' => Category::factory(),
