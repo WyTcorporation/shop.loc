@@ -27,6 +27,10 @@ class SearchController extends Controller
         $limit = min($limit, 20);
 
         $currency = config('shop.currency.base', 'EUR');
+        $locale = app()->getLocale() ?: config('app.locale');
+        $fallbackLocale = config('app.fallback_locale') ?: $locale;
+        $localizedNameSql = Product::localizedNameSql($locale, $fallbackLocale);
+        $driver = Product::query()->getModel()->getConnection()->getDriverName();
 
         try {
             $results = Product::search($query)
@@ -39,16 +43,26 @@ class SearchController extends Controller
             $wordMatch = '% ' . $escaped . '%';
 
             $results = Product::query()
-                ->select(['id', 'name', 'slug', 'price', 'price_cents'])
+                ->select(['id', 'name', 'name_translations', 'slug', 'price', 'price_cents'])
+                ->selectRaw($localizedNameSql . ' as localized_name')
                 ->where('is_active', true)
                 ->where('stock', '>', 0)
-                ->where(function ($qb) use ($prefix, $wordMatch) {
-                    $qb->where('name', 'like', $prefix)
-                        ->orWhere('name', 'like', $wordMatch)
-                        ->orWhere('sku', 'like', $prefix);
+                ->where(function ($qb) use ($localizedNameSql, $prefix, $wordMatch, $escaped, $driver) {
+                    $qb->where(function ($qb) use ($localizedNameSql, $prefix, $wordMatch) {
+                        $qb->whereRaw("{$localizedNameSql} LIKE ?", [$prefix])
+                            ->orWhereRaw("{$localizedNameSql} LIKE ?", [$wordMatch]);
+                    })
+                        ->orWhere('sku', 'like', $prefix)
+                        ->orWhere(function ($qb) use ($driver, $escaped) {
+                            if ($driver === 'sqlite') {
+                                $qb->whereRaw("EXISTS (SELECT 1 FROM json_each(name_translations) WHERE value LIKE ?)", ['%' . $escaped . '%']);
+                            } else {
+                                $qb->whereRaw("JSON_SEARCH(name_translations, 'one', ?, NULL, '$.*') IS NOT NULL", ['%' . $escaped . '%']);
+                            }
+                        });
                 })
-                ->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$prefix])
-                ->orderBy('name')
+                ->orderByRaw("CASE WHEN {$localizedNameSql} LIKE ? THEN 0 ELSE 1 END", [$prefix])
+                ->orderByRaw("{$localizedNameSql} ASC")
                 ->limit($limit)
                 ->get();
         }
@@ -56,7 +70,7 @@ class SearchController extends Controller
         $payload = $results->map(function (Product $product) use ($currency) {
             return [
                 'id' => $product->id,
-                'name' => $product->name,
+                'name' => $product->localized_name,
                 'slug' => $product->slug,
                 'preview_url' => $product->preview_url,
                 'price' => $product->price !== null ? round((float) $product->price, 2) : null,
