@@ -156,6 +156,11 @@ const messages = {
                 categories: 'Категорії',
                 colors: 'Колір',
                 sizes: 'Розмір',
+                tooltip: {
+                    category: ({ value }: { value: string }) => `Фільтр за категорією: ${value}`,
+                    color: ({ value }: { value: string }) => `Фільтр за кольором: ${value}`,
+                    size: ({ value }: { value: string }) => `Фільтр за розміром: ${value}`,
+                },
                 empty: 'нема даних',
             },
         },
