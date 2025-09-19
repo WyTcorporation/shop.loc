@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLocale } from '../i18n/LocaleProvider';
 
 type Crumb = { label: string; href?: string };
 
 export default function Breadcrumbs({ items }: { items: Crumb[] }) {
+    const { t } = useLocale();
+
     if (!items?.length) return null;
 
     return (
         <nav
-            aria-label="Breadcrumb"
+            aria-label={t('common.navigation.breadcrumbAria')}
             className="mb-4 text-sm text-muted-foreground"
             data-testid="breadcrumbs"
         >

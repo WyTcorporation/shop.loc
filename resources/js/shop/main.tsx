@@ -92,11 +92,11 @@ function RouteToastAutoClear() {
 if (el) {
     createRoot(el).render(
         <React.StrictMode>
-            <NotifyProvider autoCloseMs={0}>
-                <AuthProvider>
-                    <CartProvider>
-                        <WishlistProvider>
-                            <LangGate>
+            <LangGate>
+                <NotifyProvider autoCloseMs={0}>
+                    <AuthProvider>
+                        <CartProvider>
+                            <WishlistProvider>
                                 <BrowserRouter>
                                     <AppErrorBoundary>
                                         <RouteToastAutoClear />
@@ -124,11 +124,11 @@ if (el) {
                                         </Routes>
                                     </AppErrorBoundary>
                                 </BrowserRouter>
-                            </LangGate>
-                        </WishlistProvider>
-                    </CartProvider>
-                </AuthProvider>
-            </NotifyProvider>
+                            </WishlistProvider>
+                        </CartProvider>
+                    </AuthProvider>
+                </NotifyProvider>
+            </LangGate>
         </React.StrictMode>,
     );
 }

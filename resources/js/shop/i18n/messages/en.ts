@@ -7,6 +7,17 @@ const messages = {
             back: 'Back',
             retry: 'Retry',
         },
+        navigation: {
+            breadcrumbAria: 'Breadcrumb navigation',
+        },
+        lightbox: {
+            close: 'Close',
+            prev: 'Previous image',
+            next: 'Next image',
+        },
+        toast: {
+            close: 'Close notification',
+        },
         notFound: {
             seoTitle: ({ brand }: { brand: string }) => `Page not found — 404 — ${brand}`,
             seoDescription: 'Page not found',

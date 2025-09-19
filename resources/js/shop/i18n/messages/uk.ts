@@ -7,6 +7,17 @@ const messages = {
             back: 'Назад',
             retry: 'Повторити',
         },
+        navigation: {
+            breadcrumbAria: 'Навігація «хлібні крихти»',
+        },
+        lightbox: {
+            close: 'Закрити',
+            prev: 'Попереднє зображення',
+            next: 'Наступне зображення',
+        },
+        toast: {
+            close: 'Закрити сповіщення',
+        },
         notFound: {
             seoTitle: ({ brand }: { brand: string }) => `Сторінку не знайдено — 404 — ${brand}`,
             seoDescription: 'Сторінку не знайдено',
