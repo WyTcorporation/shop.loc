@@ -214,6 +214,23 @@ export default function ProfilePage() {
         }
     }, [dateLocale, twoFactorStatus?.confirmed_at]);
 
+    const welcomeName = user?.name ?? t('profile.overview.guestName');
+    const welcomeMessage = React.useMemo(
+        () => t('profile.overview.welcome', { name: welcomeName }),
+        [t, welcomeName],
+    );
+    const [welcomePrefix, welcomeSuffix, welcomeHasName] = React.useMemo(() => {
+        const index = welcomeMessage.indexOf(welcomeName);
+        if (index < 0) {
+            return [welcomeMessage, '', false] as const;
+        }
+        return [
+            welcomeMessage.slice(0, index),
+            welcomeMessage.slice(index + welcomeName.length),
+            true,
+        ] as const;
+    }, [welcomeMessage, welcomeName]);
+
     if (!isReady) {
         return (
             <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-16">
@@ -257,23 +274,6 @@ export default function ProfilePage() {
             setVerificationSending(false);
         }
     };
-
-    const welcomeName = user?.name ?? t('profile.overview.guestName');
-    const welcomeMessage = React.useMemo(
-        () => t('profile.overview.welcome', { name: welcomeName }),
-        [t, welcomeName],
-    );
-    const [welcomePrefix, welcomeSuffix, welcomeHasName] = React.useMemo(() => {
-        const index = welcomeMessage.indexOf(welcomeName);
-        if (index < 0) {
-            return [welcomeMessage, '', false] as const;
-        }
-        return [
-            welcomeMessage.slice(0, index),
-            welcomeMessage.slice(index + welcomeName.length),
-            true,
-        ] as const;
-    }, [welcomeMessage, welcomeName]);
 
     const twoFactorStatusText = twoFactorStatus?.enabled
         ? t('profile.overview.twoFactor.status.enabled')
