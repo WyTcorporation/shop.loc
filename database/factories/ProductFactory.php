@@ -41,8 +41,10 @@ class ProductFactory extends Factory
     {
         $set = TranslationGenerator::productSet();
         $nameTranslations = $set['name'];
+        $descriptionTranslations = $set['description'];
         $defaultLocale = config('app.locale');
         $name = $nameTranslations[$defaultLocale] ?? reset($nameTranslations);
+        $description = $descriptionTranslations[$defaultLocale] ?? reset($descriptionTranslations);
         $price = $this->faker->randomFloat(2, 10, 500);
 
         $colors = [
@@ -63,6 +65,8 @@ class ProductFactory extends Factory
         return [
             'name' => $name,
             'name_translations' => $nameTranslations,
+            'description' => $description,
+            'description_translations' => $descriptionTranslations,
             'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
             'sku' => Str::upper(Str::random(10)),
             'category_id' => Category::factory(),

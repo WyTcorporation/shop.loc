@@ -259,6 +259,7 @@ class ProductController extends Controller
     private function transformProduct(Product $product, string $currency): array
     {
         $data = $product->toArray();
+        $data['description'] = $product->description;
 
         $baseCurrency = $this->converter->getBaseCurrency();
         $basePriceCents = $product->price_cents ?? (int) round((float) $product->price * 100);

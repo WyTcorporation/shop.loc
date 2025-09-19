@@ -18,6 +18,7 @@ it('seeds localized content for demo data', function () {
 
     $product = Product::with('images')->firstOrFail();
     expect($product->name_translations)->toHaveKeys($locales);
+    expect($product->description_translations)->toHaveKeys($locales);
 
     $image = $product->images->first();
     expect($image)->not->toBeNull();
