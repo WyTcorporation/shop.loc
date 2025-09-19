@@ -428,6 +428,13 @@ const messages = {
             delivery: 'Доставка',
             payment: 'Оплата',
         },
+        payOrder: {
+            error: 'Оплата не прошла',
+            success: 'Оплата успешна',
+            processing: 'Оплата обрабатывается…',
+            submit: 'Оплатить',
+            submitting: 'Оплата…',
+        },
         notifications: {
             cartUnavailable: 'Корзина пуста или уже оформлена.',
             cartCheckFailed: 'Не удалось проверить корзину.',
