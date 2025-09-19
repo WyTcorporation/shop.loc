@@ -19,6 +19,8 @@ use App\Models\TwoFactorSecret;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\Wishlist;
+use Database\Seeders\Concerns\GeneratesLocalizedText;
+use Database\Support\TranslationGenerator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Storage;
 
 class FullDemoSeeder extends Seeder
 {
+    use GeneratesLocalizedText;
     public function run(): void
     {
         $this->resetMedia();
@@ -113,7 +116,7 @@ class FullDemoSeeder extends Seeder
         $couponData = [
             [
                 'code' => 'WELCOME10',
-                'name' => 'Welcome 10% off',
+                'translation_key' => 'welcome',
                 'type' => Coupon::TYPE_PERCENT,
                 'value' => 10,
                 'max_discount' => 50,
@@ -121,11 +124,10 @@ class FullDemoSeeder extends Seeder
                 'per_user_limit' => 1,
                 'starts_at' => now()->subMonth(),
                 'expires_at' => now()->addMonths(3),
-                'description' => 'Starter discount for new customers',
             ],
             [
                 'code' => 'FREESHIP15',
-                'name' => 'Free shipping bonus',
+                'translation_key' => 'shipping',
                 'type' => Coupon::TYPE_FIXED,
                 'value' => 15,
                 'min_cart_total' => 60,
@@ -134,11 +136,10 @@ class FullDemoSeeder extends Seeder
                 'per_user_limit' => 3,
                 'starts_at' => now()->subWeeks(2),
                 'expires_at' => now()->addWeeks(6),
-                'description' => 'Covers shipping for medium carts',
             ],
             [
                 'code' => 'VIP20',
-                'name' => 'VIP 20% off',
+                'translation_key' => 'vip',
                 'type' => Coupon::TYPE_PERCENT,
                 'value' => 20,
                 'max_discount' => 120,
@@ -146,22 +147,32 @@ class FullDemoSeeder extends Seeder
                 'per_user_limit' => null,
                 'starts_at' => now()->subMonth(),
                 'expires_at' => now()->addMonths(2),
-                'description' => 'Exclusive discount for loyal shoppers',
             ],
         ];
 
         return collect($couponData)->map(function (array $data) {
-            $coupon = Coupon::updateOrCreate(
-                ['code' => $data['code']],
-                array_merge([
-                    'min_cart_total' => 0,
-                    'is_active' => true,
-                    'used' => 0,
-                    'meta' => null,
-                ], $data)
-            );
+            $texts = TranslationGenerator::couponTexts($data['translation_key']);
+            $name = $this->localized($texts['name']);
+            $description = $this->localized($texts['description']);
 
-            return $coupon;
+            $attributes = array_merge([
+                'min_cart_total' => $data['min_cart_total'] ?? 0,
+                'is_active' => true,
+                'used' => 0,
+                'meta' => null,
+            ], $data, [
+                'name' => $name['value'],
+                'name_translations' => $name['translations'],
+                'description' => $description['value'],
+                'description_translations' => $description['translations'],
+            ]);
+
+            unset($attributes['translation_key']);
+
+            return Coupon::updateOrCreate(
+                ['code' => $data['code']],
+                $attributes
+            );
         })->keyBy('code');
     }
 
@@ -185,23 +196,36 @@ class FullDemoSeeder extends Seeder
 
     private function seedWarehouses(): Collection
     {
+        $mainLabels = TranslationGenerator::warehouseTexts('main');
+        $mainName = $this->localized($mainLabels['name']);
+        $mainDescription = $this->localized($mainLabels['description']);
+
         $main = Warehouse::updateOrCreate(
             ['code' => 'MAIN'],
             [
-                'name' => 'Main Warehouse',
-                'description' => 'Primary fulfillment center',
+                'name' => $mainName['value'],
+                'name_translations' => $mainName['translations'],
+                'description' => $mainDescription['value'],
+                'description_translations' => $mainDescription['translations'],
             ]
         );
 
         $warehouseConfigs = [
-            ['code' => 'EU-HUB', 'name' => 'EU Hub'],
-            ['code' => 'US-COAST', 'name' => 'US Coastal Warehouse'],
+            ['code' => 'EU-HUB', 'key' => 'eu'],
+            ['code' => 'US-COAST', 'key' => 'us'],
         ];
 
         $additional = collect($warehouseConfigs)->map(function (array $config) {
+            $labels = TranslationGenerator::warehouseTexts($config['key']);
+            $name = $this->localized($labels['name']);
+            $description = $this->localized($labels['description']);
+
             $attributes = Warehouse::factory()->state([
                 'code' => $config['code'],
-                'name' => $config['name'],
+                'name' => $name['value'],
+                'name_translations' => $name['translations'],
+                'description' => $description['value'],
+                'description_translations' => $description['translations'],
             ])->make()->toArray();
 
             return Warehouse::updateOrCreate(

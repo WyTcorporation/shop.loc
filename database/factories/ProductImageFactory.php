@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\ProductImage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Database\Support\TranslationGenerator;
 
 /**
  * @extends Factory<ProductImage>
@@ -20,13 +21,15 @@ class ProductImageFactory extends Factory
      */
     public function definition(): array
     {
-        $locale = config('app.locale');
-        $alt = fake()->words(3, true);
+        $defaultLocale = config('app.locale');
+        $productSet = TranslationGenerator::productSet();
+        $altTranslations = TranslationGenerator::imageAlt($productSet['theme'], $productSet['name'], 1);
+        $alt = $altTranslations[$defaultLocale] ?? reset($altTranslations);
 
         return [
             'path'       => 'products/tmp/'.fake()->uuid().'.png', // справжній шлях виставимо в сідері
             'alt'        => $alt,
-            'alt_translations' => [$locale => $alt],
+            'alt_translations' => $altTranslations,
             'disk'       => 'public',
             'sort'       => 0,
             'is_primary' => false,
