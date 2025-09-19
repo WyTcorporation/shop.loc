@@ -46,21 +46,7 @@ class ProductFactory extends Factory
         $name = $nameTranslations[$defaultLocale] ?? reset($nameTranslations);
         $description = $descriptionTranslations[$defaultLocale] ?? reset($descriptionTranslations);
         $price = $this->faker->randomFloat(2, 10, 500);
-
-        $colors = [
-            'чорний',
-            'білий',
-            'синій',
-            'червоний',
-            'зелений',
-            'жовтий',
-            'помаранчевий',
-            'фіолетовий',
-            'рожевий',
-            'сірий',
-            'коричневий',
-            'бірюзовий',
-        ];
+        $attributes = TranslationGenerator::productAttributes($set['theme'] ?? null);
 
         return [
             'name' => $name,
@@ -71,10 +57,7 @@ class ProductFactory extends Factory
             'sku' => Str::upper(Str::random(10)),
             'category_id' => Category::factory(),
             'vendor_id' => Vendor::factory(),
-            'attributes' => [
-                'size' => $this->faker->randomElement(['S','M','L']),
-                'color' => $this->faker->randomElement($colors),
-            ],
+            'attributes' => $attributes,
             'stock' => $this->faker->numberBetween(0, 100),
             'price' => $price,
             'price_cents' => (int) round($price * 100),
