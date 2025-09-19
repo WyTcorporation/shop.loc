@@ -9,6 +9,7 @@ use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Tests\Support\FakeMysqlConnectionResolver;
 use Tests\Support\FakeMysqlSqliteConnection;
 use Tests\Support\FakePgsqlConnectionResolver;
@@ -302,6 +303,44 @@ it('returns facets when using the mysql driver for db fallback', function () {
 
         Model::setConnectionResolver($originalResolver);
     }
+});
+
+it('caches facets per locale', function () {
+    config()->set('scout.driver', 'database');
+    config()->set('cache.default', 'array');
+    config()->set('app.locale', 'en');
+    config()->set('app.fallback_locale', 'en');
+
+    $this->withoutMiddleware(SetLocaleFromRequest::class);
+
+    Cache::flush();
+    Product::query()->delete();
+
+    Product::factory()->create([
+        'is_active' => true,
+        'attributes' => [
+            [
+                'key' => 'color',
+                'value' => 'red',
+                'translations' => [
+                    'en' => 'Red',
+                    'es' => 'Rojo',
+                ],
+            ],
+        ],
+    ]);
+
+    app()->setLocale('en');
+
+    $english = $this->getJson('/api/products/facets');
+    $english->assertOk();
+    expect(data_get($english->json(), ['facets', 'attrs.color', 'red', 'label']))->toBe('Red');
+
+    app()->setLocale('es');
+
+    $spanish = $this->getJson('/api/products/facets');
+    $spanish->assertOk();
+    expect(data_get($spanish->json(), ['facets', 'attrs.color', 'red', 'label']))->toBe('Rojo');
 });
 
 it('filters products by machine attribute value and returns localized attributes', function () {
