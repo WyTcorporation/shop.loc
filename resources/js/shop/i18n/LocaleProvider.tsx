@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { DEFAULT_LANG, Lang, normalizeLang, resolveLocale } from './config';
 import { createTranslator, getMessages, type Messages, type Translator } from './messages';
 
@@ -15,8 +15,13 @@ const LocaleCtx = createContext<Ctx>({
 
 export function useLocale() { return useContext(LocaleCtx); }
 
-export default function LocaleProvider({ initial, children }: { initial?: string; children: any }) {
+export default function LocaleProvider({ initial, children }: { initial?: string; children: ReactNode }) {
     const [lang, setLang] = useState<Lang>(normalizeLang(initial));
+
+    useEffect(() => {
+        const normalized = normalizeLang(initial);
+        setLang((current) => (current === normalized ? current : normalized));
+    }, [initial]);
 
     useEffect(() => {
         // <html lang="...">
