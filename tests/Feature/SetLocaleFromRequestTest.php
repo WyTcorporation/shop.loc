@@ -57,4 +57,5 @@ it('sets locale from accept language header with normalization', function (strin
 })->with([
     ['ru-RU,ru;q=0.8,en;q=0.5', 'ru'],
     ['pt-BR,pt;q=0.9,en;q=0.8', 'pt'],
+    ['en-US,en;q=0.9', 'en'],
 ]);
