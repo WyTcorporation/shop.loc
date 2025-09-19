@@ -146,6 +146,7 @@ return [
         ],
         'payments' => [
             'missing_intent' => 'payment_intent ausente.',
+            'invalid_signature' => 'Assinatura do Stripe inválida.',
         ],
     ],
 

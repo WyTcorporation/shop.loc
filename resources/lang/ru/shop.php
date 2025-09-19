@@ -146,6 +146,7 @@ return [
         ],
         'payments' => [
             'missing_intent' => 'Отсутствует payment_intent.',
+            'invalid_signature' => 'Недействительная подпись Stripe.',
         ],
     ],
 
