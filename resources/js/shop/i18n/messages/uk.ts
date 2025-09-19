@@ -770,6 +770,14 @@ const messages = {
         specs: {
             empty: 'Характеристики ще не додані.',
         },
+        attributeNames: {
+            color: 'Колір',
+            material: 'Матеріал',
+            size: 'Розмір',
+            weight: 'Вага',
+            dimensions: 'Розміри',
+            brand: 'Бренд',
+        },
         delivery: {
             items: {
                 novaPoshta: 'Нова Пошта по Україні — 1–3 дні.',

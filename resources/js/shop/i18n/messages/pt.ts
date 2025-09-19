@@ -770,6 +770,14 @@ const messages = {
         specs: {
             empty: 'As especificações ainda não foram adicionadas.',
         },
+        attributeNames: {
+            color: 'Cor',
+            material: 'Material',
+            size: 'Tamanho',
+            weight: 'Peso',
+            dimensions: 'Dimensões',
+            brand: 'Marca',
+        },
         delivery: {
             items: {
                 novaPoshta: 'Nova Poshta na Ucrânia — 1–3 dias.',
