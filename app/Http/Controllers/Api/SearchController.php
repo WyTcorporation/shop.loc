@@ -56,6 +56,11 @@ class SearchController extends Controller
                         ->orWhere(function ($qb) use ($driver, $escaped) {
                             if ($driver === 'sqlite') {
                                 $qb->whereRaw("EXISTS (SELECT 1 FROM json_each(name_translations) WHERE value LIKE ?)", ['%' . $escaped . '%']);
+                            } elseif ($driver === 'pgsql') {
+                                $qb->whereRaw(
+                                    "EXISTS (SELECT 1 FROM jsonb_each_text(COALESCE(name_translations::jsonb, '{}'::jsonb)) WHERE value ILIKE ?)",
+                                    ['%' . $escaped . '%']
+                                );
                             } else {
                                 $qb->whereRaw("JSON_SEARCH(name_translations, 'one', ?, NULL, '$.*') IS NOT NULL", ['%' . $escaped . '%']);
                             }
