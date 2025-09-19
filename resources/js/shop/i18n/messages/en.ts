@@ -769,6 +769,14 @@ const messages = {
         specs: {
             empty: 'Specifications are not provided yet.',
         },
+        attributeNames: {
+            color: 'Color',
+            material: 'Material',
+            size: 'Size',
+            weight: 'Weight',
+            dimensions: 'Dimensions',
+            brand: 'Brand',
+        },
         delivery: {
             items: {
                 novaPoshta: 'Nova Poshta across Ukraine — 1–3 days.',

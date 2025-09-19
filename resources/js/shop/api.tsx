@@ -51,6 +51,14 @@ export type Vendor = {
     description?: string | null;
 };
 
+export type ProductAttribute = {
+    key?: string | null;
+    name?: string | null;
+    value?: string | number | null;
+    label?: string | null;
+    translations?: Record<string, string | { label?: string | null; value?: string | null } | null> | null;
+};
+
 export type Product = {
     id: number;
     name: string;
@@ -65,6 +73,8 @@ export type Product = {
     price_cents?: number;
     base_price_cents?: number;
     vendor?: Vendor | null;
+    attributes?: ProductAttribute[] | Record<string, unknown> | null;
+    attrs?: ProductAttribute[] | Record<string, unknown> | null;
     [k: string]: any;
 };
 

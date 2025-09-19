@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ProductsApi, ReviewsApi, type Product, type Review } from '../api';
+import { ProductsApi, ReviewsApi, type Product, type ProductAttribute, type Review } from '../api';
 import useCart from '../useCart';
 import { useNotify } from '../ui/notify';
 import { formatPrice } from '../ui/format';
@@ -32,7 +32,7 @@ export default function ProductPage() {
     const { add } = useCart();
     const { error } = useNotify();
     const hreflangs = useHreflangs('uk');
-    const { t } = useLocale();
+    const { t, locale } = useLocale();
 
     // fetch product
     useEffect(() => {
@@ -159,21 +159,124 @@ export default function ProductPage() {
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
 
     // характеристики (під різні формати бекенда)
+    const attributeNameMap = useMemo(() => {
+        const entries = [
+            ['color', t('product.attributeNames.color')],
+            ['material', t('product.attributeNames.material')],
+            ['size', t('product.attributeNames.size')],
+            ['weight', t('product.attributeNames.weight')],
+            ['dimensions', t('product.attributeNames.dimensions')],
+            ['brand', t('product.attributeNames.brand')],
+        ] as const;
+        return entries.reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+        }, {} as Record<string, string>);
+    }, [t]);
+
+    const localePreferences = useMemo(() => {
+        const list: string[] = [];
+        if (typeof locale === 'string' && locale) {
+            list.push(locale);
+            const base = locale.split('-')[0];
+            if (base && base !== locale) list.push(base);
+        }
+        return list.length ? Array.from(new Set(list)) : [];
+    }, [locale]);
+
     const specs = useMemo(() => {
         if (!p) return [] as Array<{ name: string; value: string }>;
-        const raw: any = (p as any).attributes ?? (p as any).attrs ?? {};
+
+        const normalizeName = (raw: string) => raw
+            .replace(/[_.-]+/g, ' ')
+            .split(' ')
+            .map(part => part.trim())
+            .filter(Boolean)
+            .map(part => part.charAt(0).toLocaleUpperCase() + part.slice(1))
+            .join(' ');
+
+        const resolveName = (rawKey?: string | null, fallback?: string | null) => {
+            const key = (rawKey ?? '').toLowerCase();
+            if (key && attributeNameMap[key]) return attributeNameMap[key];
+            if (typeof fallback === 'string' && fallback.trim()) return normalizeName(fallback);
+            if (typeof rawKey === 'string' && rawKey.trim()) return normalizeName(rawKey);
+            return '';
+        };
+
+        const resolveValue = (
+            attr: ProductAttribute | undefined,
+            rawValue?: unknown,
+        ) => {
+            const translations = attr?.translations;
+            if (translations && typeof translations === 'object') {
+                for (const loc of localePreferences) {
+                    const translated = (translations as Record<string, unknown>)[loc];
+                    if (typeof translated === 'string' && translated.trim()) {
+                        return translated.trim();
+                    }
+                    if (translated && typeof translated === 'object') {
+                        const { label: tlLabel, value: tlValue } = translated as {
+                            label?: string | null;
+                            value?: string | null;
+                        };
+                        if (typeof tlLabel === 'string' && tlLabel.trim()) {
+                            return tlLabel.trim();
+                        }
+                        if (typeof tlValue === 'string' && tlValue.trim()) {
+                            return tlValue.trim();
+                        }
+                    }
+                }
+            }
+            if (typeof attr?.label === 'string' && attr.label.trim()) {
+                return attr.label.trim();
+            }
+            if (attr?.value != null && String(attr.value).trim()) {
+                return String(attr.value).trim();
+            }
+            if (rawValue != null) {
+                const str = String(rawValue);
+                if (str.trim()) return str.trim();
+            }
+            return '';
+        };
+
+        const list: Array<{ name: string; value: string }> = [];
+        const raw = p.attributes ?? p.attrs ?? {};
+
+        const pushSpec = (name: string, value: string) => {
+            const trimmedName = name.trim();
+            const trimmedValue = value.trim();
+            if (trimmedName && trimmedValue) {
+                list.push({ name: trimmedName, value: trimmedValue });
+            }
+        };
+
         if (Array.isArray(raw)) {
-            // масив типу [{name,value}] або [{key,value}]
-            return raw.map((x: any) => ({
-                name: String(x.name ?? x.key ?? ''),
-                value: String(x.value ?? ''),
-            })).filter(x => x.name);
+            raw.forEach((item) => {
+                if (!item) return;
+                const attribute = item as ProductAttribute;
+                const name = resolveName(attribute.key ?? attribute.name, attribute.name);
+                const value = resolveValue(attribute, attribute.value);
+                pushSpec(name, value);
+            });
+        } else if (raw && typeof raw === 'object') {
+            Object.entries(raw).forEach(([key, value]) => {
+                if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    const attr = value as ProductAttribute;
+                    const name = resolveName(attr.key ?? key, attr.name ?? key);
+                    const val = resolveValue(attr, attr.value);
+                    pushSpec(name, val);
+                } else {
+                    const name = resolveName(key, key);
+                    const val = value != null ? String(value) : '';
+                    pushSpec(name, val);
+                }
+            });
         }
-        if (raw && typeof raw === 'object') {
-            return Object.entries(raw).map(([k,v]) => ({ name: String(k), value: String(v as any) }));
-        }
-        return [];
-    }, [p]);
+
+        return list;
+    }, [p, attributeNameMap, localePreferences]);
 
     const productLd = useMemo(() => {
         if (!p) return null;

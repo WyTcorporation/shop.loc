@@ -772,6 +772,14 @@ const messages = {
         specs: {
             empty: 'Характеристики еще не добавлены.',
         },
+        attributeNames: {
+            color: 'Цвет',
+            material: 'Материал',
+            size: 'Размер',
+            weight: 'Вес',
+            dimensions: 'Габариты',
+            brand: 'Бренд',
+        },
         delivery: {
             items: {
                 novaPoshta: 'Новая Почта по Украине — 1–3 дня.',
