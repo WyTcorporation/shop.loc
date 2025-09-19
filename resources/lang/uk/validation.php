@@ -150,9 +150,9 @@ return [
     ],
 
     'attributes' => [
-        'email' => 'електронна адреса',
+        'email' => 'Електронна адреса',
         'name' => 'імʼя',
-        'password' => 'пароль',
-        'password_confirmation' => 'підтвердження пароля',
+        'password' => 'Пароль',
+        'password_confirmation' => 'Підтвердження пароля',
     ],
 ];

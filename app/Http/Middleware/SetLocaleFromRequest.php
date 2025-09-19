@@ -8,8 +8,27 @@ use Illuminate\Support\Str;
 class SetLocaleFromRequest
 {
     /** @var string[] */
-    private array $supported = ['uk', 'en'];
-    private string $fallback = 'uk';
+    private array $supported;
+    private string $fallback;
+
+    public function __construct()
+    {
+        $configured = config('app.supported_locales', []);
+        if (!is_array($configured) || $configured === []) {
+            $configured = ['uk', 'en', 'ru', 'pt'];
+        }
+
+        $this->supported = array_values(array_unique(array_map(
+            static fn ($locale) => Str::of((string) $locale)
+                ->lower()
+                ->replace('_', '-')
+                ->value(),
+            $configured,
+        )));
+
+        $fallback = (string) config('app.fallback_locale', 'uk');
+        $this->fallback = $this->normalize($fallback) ?? ($this->supported[0] ?? 'uk');
+    }
 
     public function handle(Request $request, Closure $next)
     {
@@ -17,32 +36,45 @@ class SetLocaleFromRequest
 
         // 1) prefix /{locale}/...
         $seg1 = trim($request->segment(1) ?? '', '/');
-        if (in_array($seg1, $this->supported, true)) {
-            $locale = $seg1;
-        }
+        $locale = $this->normalize($seg1);
 
         // 2) cookie "lang"
         if (!$locale) {
-            $cookie = (string)$request->cookie('lang');
-            if (in_array($cookie, $this->supported, true)) {
-                $locale = $cookie;
-            }
+            $locale = $this->normalize((string) $request->cookie('lang'));
         }
 
         // 3) Accept-Language
         if (!$locale) {
-            $al = (string)$request->header('Accept-Language', '');
+            $al = (string) $request->header('Accept-Language', '');
             $first = Str::of($al)->explode(',')->first();
-            $first = Str::of((string)$first)->before(';')->lower()->value();
-            if (in_array($first, $this->supported, true)) {
-                $locale = $first;
-            } elseif (in_array(Str::substr($first, 0, 2), $this->supported, true)) {
-                $locale = Str::substr($first, 0, 2);
-            }
+            $first = Str::of((string) $first)->before(';')->value();
+            $locale = $this->normalize($first);
         }
 
         app()->setLocale($locale ?: $this->fallback);
 
         return $next($request);
+    }
+
+    private function normalize(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        $normalized = Str::of($value)
+            ->lower()
+            ->replace('_', '-')
+            ->value();
+
+        if (in_array($normalized, $this->supported, true)) {
+            return $normalized;
+        }
+
+        $primary = Str::of($normalized)->before('-')->value();
+
+        return $primary && in_array($primary, $this->supported, true)
+            ? $primary
+            : null;
     }
 }
