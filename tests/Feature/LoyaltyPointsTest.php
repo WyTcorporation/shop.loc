@@ -53,6 +53,10 @@ it('accrues loyalty points when order is placed', function () {
     expect($transaction)->not->toBeNull();
     expect($transaction->points)->toBe($order->loyalty_points_earned);
     expect($transaction->amount)->toEqualWithDelta($order->total, 0.01);
+    expect($transaction->meta)->toMatchArray([
+        'key' => 'shop.api.orders.points_earned_description',
+        'number' => $order->number,
+    ]);
 
     expect($order->user->fresh()->loyalty_points_balance)->toBe($order->loyalty_points_earned);
 });
@@ -66,12 +70,18 @@ it('redeems loyalty points during checkout and deducts them', function () {
 
     $user = User::factory()->create();
 
+    $initialMeta = [
+        'key' => 'shop.loyalty.transaction.earn',
+        'points' => 200,
+    ];
+
     LoyaltyPointTransaction::create([
         'user_id' => $user->id,
         'type' => LoyaltyPointTransaction::TYPE_EARN,
         'points' => 200,
         'amount' => 20,
-        'description' => 'Initial balance',
+        'description' => __($initialMeta['key'], $initialMeta),
+        'meta' => $initialMeta,
     ]);
 
     $product = Product::factory()->create([
@@ -128,10 +138,18 @@ it('redeems loyalty points during checkout and deducts them', function () {
     expect($redeem)->not->toBeNull();
     expect($redeem->points)->toBe(-150);
     expect($redeem->amount)->toEqualWithDelta(15.0, 0.01);
+    expect($redeem->meta)->toMatchArray([
+        'key' => 'shop.api.orders.points_redeemed_description',
+        'number' => $order->number,
+    ]);
 
     $earn = $transactions->firstWhere('type', LoyaltyPointTransaction::TYPE_EARN);
     expect($earn)->not->toBeNull();
     expect($earn->points)->toBe(85);
+    expect($earn->meta)->toMatchArray([
+        'key' => 'shop.api.orders.points_earned_description',
+        'number' => $order->number,
+    ]);
 
     expect($order->user->fresh()->loyalty_points_balance)->toBe(200 - 150 + 85);
 });

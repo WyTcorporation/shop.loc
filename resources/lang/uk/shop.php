@@ -149,6 +149,19 @@ return [
         ],
     ],
 
+    'loyalty' => [
+        'transaction' => [
+            'earn' => 'Нараховано :points балів лояльності.',
+            'redeem' => 'Списано :points балів лояльності.',
+            'adjustment' => 'Баланс змінено на :points.',
+        ],
+        'demo' => [
+            'checkout_redeem' => 'Бали списано під час оформлення замовлення',
+            'shipped_bonus' => 'Бонус за відправлене замовлення :number',
+            'cancellation_return' => 'Бали повернено після скасування',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двофакторну автентифікацію не налаштовано.',

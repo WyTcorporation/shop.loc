@@ -50,6 +50,8 @@ it('returns loyalty point summary for authenticated user', function () {
     $response->assertJsonCount(4, 'transactions');
 
     expect($response->json('transactions.0.id'))->toBe($latest->id);
+    expect($response->json('transactions.0.description'))->toBe(__($latest->meta['key'], $latest->meta));
+    expect($response->json('transactions.0.meta'))->toMatchArray($latest->meta);
 });
 
 it('requires authentication to view loyalty point summary', function () {

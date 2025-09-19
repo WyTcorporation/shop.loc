@@ -261,6 +261,7 @@ export type LoyaltyPointTransaction = {
     points: number | string;
     amount?: number | string | null;
     description?: string | null;
+    meta?: Record<string, unknown> | null;
     created_at?: string | null;
     updated_at?: string | null;
 };
