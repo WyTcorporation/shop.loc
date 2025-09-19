@@ -87,6 +87,105 @@ class Product extends Model
         Cache::forever($key, $current + 1);
     }
 
+    public static function localizedNameSql(?string $locale = null, ?string $fallbackLocale = null): string
+    {
+        $locale = $locale ?: app()->getLocale() ?: config('app.locale');
+        $fallbackLocale = $fallbackLocale ?: config('app.fallback_locale') ?: $locale;
+        $driver = static::databaseDriver();
+
+        $segments = [];
+
+        if ($locale) {
+            $segments[] = static::jsonTranslationSelect($locale);
+        }
+
+        if ($fallbackLocale && $fallbackLocale !== $locale) {
+            $segments[] = static::jsonTranslationSelect($fallbackLocale);
+        }
+
+        $segments[] = static::jsonFirstTranslationSelect($driver);
+        $segments[] = 'name';
+
+        $segments = array_values(array_unique(array_filter($segments)));
+
+        return 'COALESCE(' . implode(', ', $segments) . ')';
+    }
+
+    public static function localizedNameSelect(string $alias = 'localized_name', ?string $locale = null, ?string $fallbackLocale = null)
+    {
+        $sql = static::localizedNameSql($locale, $fallbackLocale);
+
+        return DB::raw("{$sql} as {$alias}");
+    }
+
+    public function getLocalizedNameAttribute(): ?string
+    {
+        $locale = app()->getLocale() ?: config('app.locale');
+        $fallbackLocale = config('app.fallback_locale') ?: $locale;
+
+        $translations = (array) ($this->name_translations ?? []);
+
+        if ($locale && isset($translations[$locale]) && $translations[$locale] !== '') {
+            return $translations[$locale];
+        }
+
+        if ($fallbackLocale && isset($translations[$fallbackLocale]) && $translations[$fallbackLocale] !== '') {
+            return $translations[$fallbackLocale];
+        }
+
+        if ($translations !== []) {
+            $first = reset($translations);
+
+            if (is_string($first) && $first !== '') {
+                return $first;
+            }
+        }
+
+        $name = parent::getAttribute('name');
+
+        return $name !== null ? (string) $name : null;
+    }
+
+    protected static function jsonTranslationSelect(string $locale): string
+    {
+        $path = static::jsonLocalePath($locale);
+
+        if (static::databaseDriver() === 'sqlite') {
+            return "json_extract(name_translations, '{$path}')";
+        }
+
+        return "JSON_UNQUOTE(JSON_EXTRACT(name_translations, '{$path}'))";
+    }
+
+    protected static function jsonLocalePath(string $locale): string
+    {
+        $normalized = str_replace('\\', '\\', $locale);
+        $normalized = str_replace("'", "''", $normalized);
+
+        return '$."' . $normalized . '"';
+    }
+
+    protected static function jsonFirstTranslationSelect(string $driver): string
+    {
+        if ($driver === 'sqlite') {
+            return '(SELECT value FROM json_each(name_translations) LIMIT 1)';
+        }
+
+        $single = "'";
+        $double = '"';
+
+        return 'JSON_UNQUOTE(JSON_EXTRACT(name_translations, CONCAT('
+            . $single . '$.' . $double . $single . ', '
+            . 'JSON_UNQUOTE(JSON_EXTRACT(JSON_KEYS(name_translations), ' . $single . '$[0]' . $single . ')), '
+            . $single . $double . $single
+            . ')))';
+    }
+
+    protected static function databaseDriver(): string
+    {
+        return DB::connection((new static())->getConnectionName())->getDriverName();
+    }
+
 
     public function category(): BelongsTo
     {
