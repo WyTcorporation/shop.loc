@@ -20,7 +20,7 @@ class StripeWebhookController extends Controller
             $event = Webhook::constructEvent($payload, $sigHeader, $secret);
         } catch (\Throwable $e) {
             Log::warning('Stripe webhook signature error: '.$e->getMessage());
-            return response()->json(['error' => 'invalid signature'], 400);
+            return response()->json(['error' => __('shop.api.payments.invalid_signature')], 400);
         }
 
         try {

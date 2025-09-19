@@ -146,6 +146,7 @@ return [
         ],
         'payments' => [
             'missing_intent' => 'Payment intent is missing.',
+            'invalid_signature' => 'Invalid Stripe signature.',
         ],
     ],
 
