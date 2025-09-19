@@ -152,18 +152,67 @@ export default function Catalog() {
     const canNext = page < lastPage;
 
     // безпечне читання фасетів
-    const catById = new Map(cats.map(c => [String(c.id), c]));
-    const categoryFacetData = facets?.['category_id'] ?? {};
-    const colorFacetData = facets?.['attrs.color'] ?? {};
-    const sizeFacetData = facets?.['attrs.size'] ?? {};
-    const categoryFacetEntries = useMemo(
-        () =>
-            Object.values(categoryFacetData).filter(
-                (entry): entry is FacetEntry =>
-                    Boolean(entry?.value) && /^\d+$/.test(entry.value),
-            ),
-        [categoryFacetData],
-    );
+    const catById = useMemo(() => new Map(cats.map((c) => [String(c.id), c])), [cats]);
+    const categoryFacetRaw = facets?.['category_id'];
+    const colorFacetRaw = facets?.['attrs.color'];
+    const sizeFacetRaw = facets?.['attrs.size'];
+    const colorFacetData: Record<string, FacetEntry> =
+        colorFacetRaw && !Array.isArray(colorFacetRaw)
+            ? (colorFacetRaw as Record<string, FacetEntry>)
+            : {};
+    const sizeFacetData: Record<string, FacetEntry> =
+        sizeFacetRaw && !Array.isArray(sizeFacetRaw)
+            ? (sizeFacetRaw as Record<string, FacetEntry>)
+            : {};
+    const categoryFacetEntries = useMemo(() => {
+        if (!categoryFacetRaw) {
+            return [];
+        }
+
+        if (Array.isArray(categoryFacetRaw)) {
+            return categoryFacetRaw
+                .map((entry) => {
+                    const value = String(entry?.value ?? '');
+                    if (!value || !/^\d+$/.test(value)) {
+                        return null;
+                    }
+                    const category = catById.get(value);
+                    return {
+                        ...entry,
+                        value,
+                        label: entry.label ?? category?.name ?? undefined,
+                    };
+                })
+                .filter((entry): entry is FacetEntry => Boolean(entry));
+        }
+
+        return Object.entries(categoryFacetRaw as Record<string, FacetEntry | number>)
+            .map(([key, value]) => {
+                const normalizedValue = String(
+                    typeof value === 'number' ? key : value.value ?? key ?? '',
+                );
+                if (!normalizedValue || !/^\d+$/.test(normalizedValue)) {
+                    return null;
+                }
+
+                if (typeof value === 'number') {
+                    const category = catById.get(normalizedValue);
+                    return {
+                        value: normalizedValue,
+                        label: category?.name ?? undefined,
+                        count: value,
+                    } satisfies FacetEntry;
+                }
+
+                const category = catById.get(normalizedValue);
+                return {
+                    ...value,
+                    value: normalizedValue,
+                    label: value.label ?? category?.name ?? undefined,
+                };
+            })
+            .filter((entry): entry is FacetEntry => Boolean(entry));
+    }, [categoryFacetRaw, catById]);
     const colorFacetEntries = useMemo(
         () =>
             Object.values(colorFacetData).filter(
