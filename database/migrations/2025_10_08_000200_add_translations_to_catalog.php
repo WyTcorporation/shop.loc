@@ -17,8 +17,14 @@ return new class extends Migration
 
         Schema::table('products', function (Blueprint $table) {
             $table->json('name_translations')->nullable()->after('name');
-            $table->json('description_translations')->nullable()->after('description');
         });
+
+        if (Schema::hasColumn('products', 'description')
+            && ! Schema::hasColumn('products', 'description_translations')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->json('description_translations')->nullable();
+            });
+        }
 
         Schema::table('vendors', function (Blueprint $table) {
             $table->json('name_translations')->nullable()->after('name');
