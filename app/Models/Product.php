@@ -148,11 +148,21 @@ class Product extends Model
 
     protected static function jsonTranslationSelect(string $locale): string
     {
-        $path = static::jsonLocalePath($locale);
+        $driver = static::databaseDriver();
 
-        if (static::databaseDriver() === 'sqlite') {
+        if ($driver === 'sqlite') {
+            $path = static::jsonLocalePath($locale);
+
             return "json_extract(name_translations, '{$path}')";
         }
+
+        if ($driver === 'pgsql') {
+            $key = str_replace("'", "''", $locale);
+
+            return "COALESCE(name_translations::jsonb, '{}'::jsonb)->>'{$key}'";
+        }
+
+        $path = static::jsonLocalePath($locale);
 
         return "JSON_UNQUOTE(JSON_EXTRACT(name_translations, '{$path}'))";
     }
@@ -169,6 +179,10 @@ class Product extends Model
     {
         if ($driver === 'sqlite') {
             return '(SELECT value FROM json_each(name_translations) LIMIT 1)';
+        }
+
+        if ($driver === 'pgsql') {
+            return "(SELECT value FROM jsonb_each_text(COALESCE(name_translations::jsonb, '{}'::jsonb)) LIMIT 1)";
         }
 
         $single = "'";
