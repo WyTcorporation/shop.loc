@@ -426,6 +426,13 @@ const messages = {
             delivery: 'Доставка',
             payment: 'Оплата',
         },
+        payOrder: {
+            error: 'Оплата не пройшла',
+            success: 'Оплата успішна',
+            processing: 'Оплата обробляється…',
+            submit: 'Сплатити',
+            submitting: 'Оплата…',
+        },
         notifications: {
             cartUnavailable: 'Кошик порожній або вже оформлено.',
             cartCheckFailed: 'Не вдалося перевірити кошик.',

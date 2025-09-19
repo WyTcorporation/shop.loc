@@ -192,6 +192,12 @@ const keys: Array<{ key: TranslationKey; params?: Record<string, any> }> = [
     { key: 'notify.cart.update.outOfStock' },
     { key: 'notify.cart.update.error' },
     { key: 'notify.cart.remove.success' },
+    // Checkout pay order
+    { key: 'checkout.payOrder.error' },
+    { key: 'checkout.payOrder.success' },
+    { key: 'checkout.payOrder.processing' },
+    { key: 'checkout.payOrder.submit' },
+    { key: 'checkout.payOrder.submitting' },
     // Profile navigation
     { key: 'profile.navigation.overview' },
     { key: 'profile.navigation.orders' },

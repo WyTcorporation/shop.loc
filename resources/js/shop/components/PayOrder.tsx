@@ -3,6 +3,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { useNotify } from '../ui/notify';
+import { useLocale } from '../i18n/LocaleProvider';
 
 function Inner({
     number,
@@ -13,7 +14,8 @@ function Inner({
 }) {
     const stripe = useStripe();
     const elements = useElements();
-    const { error: notifyError, success } = useNotify();
+    const { error: notifyError, success: notifySuccess } = useNotify();
+    const { t } = useLocale();
     const [submitting, setSubmitting] = useState(false);
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -29,19 +31,19 @@ function Inner({
                 redirect: 'if_required',
             });
             if (error) {
-                notifyError({ title: error.message || 'Оплата не пройшла' });
+                notifyError({ title: error.message || t('checkout.payOrder.error') });
             } else {
                 const status = paymentIntent?.status;
                 const paymentIntentId = paymentIntent?.id;
                 if (status === 'succeeded') {
-                    success({ title: 'Оплата успішна' });
+                    notifySuccess({ title: t('checkout.payOrder.success') });
                     onPaid?.(status, paymentIntentId);
                 } else if (status === 'processing') {
-                    success({ title: 'Оплата обробляється…' });
+                    notifySuccess({ title: t('checkout.payOrder.processing') });
                     onPaid?.(status, paymentIntentId);
                 } else {
                     // якщо 3DS або редірект — Stripe сам обробить сценарій
-                    success({ title: 'Оплата обробляється…' });
+                    notifySuccess({ title: t('checkout.payOrder.processing') });
                 }
             }
         } finally {
@@ -53,7 +55,7 @@ function Inner({
         <div className="space-y-3" data-testid="payment-form">
             <PaymentElement data-testid="payment-element" />
             <Button onClick={handlePay} disabled={!stripe || submitting}>
-                {submitting ? 'Оплата…' : 'Сплатити'}
+                {submitting ? t('checkout.payOrder.submitting') : t('checkout.payOrder.submit')}
             </Button>
         </div>
     );

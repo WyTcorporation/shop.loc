@@ -425,6 +425,13 @@ const messages = {
             delivery: 'Delivery',
             payment: 'Payment',
         },
+        payOrder: {
+            error: 'Payment failed',
+            success: 'Payment successful',
+            processing: 'Payment processing…',
+            submit: 'Pay',
+            submitting: 'Paying…',
+        },
         notifications: {
             cartUnavailable: 'Your cart is empty or already checked out.',
             cartCheckFailed: 'We could not verify your cart.',

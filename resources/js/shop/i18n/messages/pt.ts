@@ -426,6 +426,13 @@ const messages = {
             delivery: 'Entrega',
             payment: 'Pagamento',
         },
+        payOrder: {
+            error: 'O pagamento falhou',
+            success: 'Pagamento concluído',
+            processing: 'O pagamento está a ser processado…',
+            submit: 'Pagar',
+            submitting: 'A pagar…',
+        },
         notifications: {
             cartUnavailable: 'O carrinho está vazio ou já foi finalizado.',
             cartCheckFailed: 'Não foi possível verificar o carrinho.',
