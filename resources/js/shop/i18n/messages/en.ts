@@ -769,6 +769,9 @@ const messages = {
             hint: ({ value, max }: { value: number; max: number }) => `${value} of ${max}`,
         },
         similar: {
+            title: 'Similar products',
+            empty: 'No similar products available right now.',
+            noImage: 'No photo',
             count: ({ count }: { count: number }) => `Found similar items: ${count}`,
         },
         reviewForm: {
