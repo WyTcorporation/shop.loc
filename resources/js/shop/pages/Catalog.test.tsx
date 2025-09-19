@@ -208,6 +208,54 @@ describe('Catalog page', () => {
         expect(colorButtons[0]).toHaveTextContent('(7)');
     });
 
+    it('renders category facets provided as numeric counts', async () => {
+        const product = {
+            id: 404,
+            name: 'Категорійний товар',
+            slug: 'category-product',
+            price: 1099,
+            images: [],
+            stock: 3,
+        };
+
+        fetchCategoriesMock.mockResolvedValueOnce([
+            { id: 10, name: 'Кросівки' },
+            { id: 20, name: 'Сандалі' },
+        ]);
+        fetchProductsMock.mockResolvedValueOnce({
+            data: [product],
+            current_page: 1,
+            last_page: 1,
+            per_page: 12,
+            total: 1,
+            from: 1,
+            to: 1,
+            facets: {
+                category_id: {
+                    '10': 4,
+                    '20': 2,
+                    misc: 1,
+                },
+            },
+        });
+
+        render(
+            <MemoryRouter>
+                <Catalog />
+            </MemoryRouter>
+        );
+
+        const firstCategory = await screen.findByTestId('facet-cat-10');
+        expect(firstCategory).toHaveTextContent('Кросівки');
+        expect(firstCategory).toHaveTextContent('(4)');
+
+        const secondCategory = await screen.findByTestId('facet-cat-20');
+        expect(secondCategory).toHaveTextContent('Сандалі');
+        expect(secondCategory).toHaveTextContent('(2)');
+
+        expect(screen.queryByTestId('facet-cat-misc')).not.toBeInTheDocument();
+    });
+
     it('disables buying for products with zero stock', async () => {
         const user = userEvent.setup();
         fetchProductsMock.mockResolvedValueOnce({

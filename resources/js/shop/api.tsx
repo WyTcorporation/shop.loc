@@ -147,12 +147,16 @@ export type Cart = {
 };
 export type FacetEntry = {
     value: string;
-    label: string;
+    label?: string;
     count: number;
     translations?: Record<string, string | null> | null;
 };
 
-export type Facets = Record<string, Record<string, FacetEntry>>;
+export type CategoryFacetPayload = Record<string, FacetEntry | number> | FacetEntry[];
+
+export type Facets = Partial<
+    Record<string, Record<string, FacetEntry> | CategoryFacetPayload>
+>;
 
 export type PaginatedWithFacets<T> = Paginated<T> & {
     facets?: Facets;
@@ -439,7 +443,7 @@ export async function fetchProductFacets(params: { search?: string; category_id?
     const { data } = await api.get(`/products/facets?${sp.toString()}`);
     return data as {
         facets: {
-            ['category_id']?: Record<string, FacetEntry>;
+            ['category_id']?: CategoryFacetPayload;
             ['attrs.color']?: Record<string, FacetEntry>;
             ['attrs.size']?: Record<string, FacetEntry>;
         };
