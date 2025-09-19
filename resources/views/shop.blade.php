@@ -16,6 +16,10 @@
 
 
     @viteReactRefresh
+    <script>
+        window.__APP_SUPPORTED_LOCALES__ = @json(config('app.supported_locales', ['uk', 'en', 'ru', 'pt']));
+        window.__APP_DEFAULT_LOCALE__ = @json(config('app.locale', 'uk'));
+    </script>
     @vite('resources/js/shop/main.tsx')
 </head>
 <body class="bg-gray-50 text-gray-900">

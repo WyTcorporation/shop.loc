@@ -90,6 +90,7 @@ return [
     'locale' => 'uk',
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
     'faker_locale' => 'uk_UA',
+    'supported_locales' => ['uk', 'en', 'ru', 'pt'],
 
     /*
     |--------------------------------------------------------------------------
