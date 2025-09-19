@@ -35,8 +35,12 @@ class SetLocaleFromRequest
         $locale = null;
 
         // 1) prefix /{locale}/...
-        $seg1 = trim($request->segment(1) ?? '', '/');
-        $locale = $this->normalize($seg1);
+        $segment = $request->segment(1);
+        if ($segment === 'api') {
+            $segment = $request->segment(2);
+        }
+
+        $locale = $this->normalize(is_string($segment) ? trim($segment, '/') : null);
 
         // 2) cookie "lang"
         if (!$locale) {
