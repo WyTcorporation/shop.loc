@@ -40,9 +40,13 @@ const el = document.getElementById('shop-root');
 
 const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-function LangGate({ children }: { children: any }) {
-    const seg1 = typeof window !== 'undefined' ? window.location.pathname.split('/').filter(Boolean)[0] : '';
-    const lang = normalizeLang(seg1);
+function LangGate({ children }: { children: React.ReactNode }) {
+    const location = useLocation();
+    const lang = React.useMemo(() => {
+        const [seg1] = location.pathname.split('/').filter(Boolean);
+        return normalizeLang(seg1);
+    }, [location.pathname]);
+
     return <LocaleProvider initial={lang}>{children}</LocaleProvider>;
 }
 
@@ -92,12 +96,12 @@ function RouteToastAutoClear() {
 if (el) {
     createRoot(el).render(
         <React.StrictMode>
-            <LangGate>
-                <NotifyProvider autoCloseMs={0}>
-                    <AuthProvider>
-                        <CartProvider>
-                            <WishlistProvider>
-                                <BrowserRouter>
+            <BrowserRouter>
+                <LangGate>
+                    <NotifyProvider autoCloseMs={0}>
+                        <AuthProvider>
+                            <CartProvider>
+                                <WishlistProvider>
                                     <AppErrorBoundary>
                                         <RouteToastAutoClear />
                                         <CookieConsent />
@@ -105,30 +109,33 @@ if (el) {
                                         <JsonLd data={websiteLd} />
                                         <JsonLd data={orgLd} />
                                         <Routes>
-                                            <Route path="/" element={<CatalogPage />} />
-                                            <Route path="/product/:slug" element={<ProductPage />} />
-                                            <Route path="/seller/:id" element={<SellerPage />} />
-                                            <Route path="/cart" element={<CartPage />} />
-                                            <Route path="/checkout" element={<CheckoutPage />} />
-                                            <Route path="/order/:number" element={<OrderConfirmationPage />} />
-                                            <Route path="/wishlist" element={<WishlistPage />} />
-                                            <Route path="/login" element={<LoginPage />} />
-                                            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                                            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-                                            <Route path="/register" element={<RegisterPage />} />
-                                            <Route path="/profile" element={<ProfilePage />} />
-                                            <Route path="/profile/orders" element={<ProfileOrdersPage />} />
-                                            <Route path="/profile/addresses" element={<ProfileAddressesPage />} />
-                                            <Route path="/profile/points" element={<ProfilePointsPage />} />
+                                            <Route path="/:lang?">
+                                                <Route index element={<CatalogPage />} />
+                                                <Route path="product/:slug" element={<ProductPage />} />
+                                                <Route path="seller/:id" element={<SellerPage />} />
+                                                <Route path="cart" element={<CartPage />} />
+                                                <Route path="checkout" element={<CheckoutPage />} />
+                                                <Route path="order/:number" element={<OrderConfirmationPage />} />
+                                                <Route path="wishlist" element={<WishlistPage />} />
+                                                <Route path="login" element={<LoginPage />} />
+                                                <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                                                <Route path="reset-password/:token" element={<ResetPasswordPage />} />
+                                                <Route path="register" element={<RegisterPage />} />
+                                                <Route path="profile" element={<ProfilePage />} />
+                                                <Route path="profile/orders" element={<ProfileOrdersPage />} />
+                                                <Route path="profile/addresses" element={<ProfileAddressesPage />} />
+                                                <Route path="profile/points" element={<ProfilePointsPage />} />
+                                                <Route path="*" element={<NotFoundPage />} />
+                                            </Route>
                                             <Route path="*" element={<NotFoundPage />} />
                                         </Routes>
                                     </AppErrorBoundary>
-                                </BrowserRouter>
-                            </WishlistProvider>
-                        </CartProvider>
-                    </AuthProvider>
-                </NotifyProvider>
-            </LangGate>
+                                </WishlistProvider>
+                            </CartProvider>
+                        </AuthProvider>
+                    </NotifyProvider>
+                </LangGate>
+            </BrowserRouter>
         </React.StrictMode>,
     );
 }
