@@ -58,7 +58,7 @@ class SetLocaleFromRequest
             $first = Str::of((string) $first)->before(';')->value();
             $candidate = $this->normalize($first);
 
-            if ($candidate && ! ($candidate === 'en' && $this->fallback === 'uk')) {
+            if ($candidate) {
                 $locale = $candidate;
             }
         }
