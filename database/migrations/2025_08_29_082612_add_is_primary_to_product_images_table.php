@@ -16,7 +16,26 @@ return new class extends Migration
         Schema::table('product_images', function (Blueprint $table) {
             $table->boolean('is_primary')->default(false)->index();
         });
-        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS product_images_one_primary_per_product ON product_images (product_id) WHERE is_primary = true;');
+
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS product_images_one_primary_per_product ON product_images (product_id) WHERE is_primary = true;');
+
+            return;
+        }
+
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            Schema::table('product_images', function (Blueprint $table) {
+                $table->unsignedBigInteger('primary_product_id')
+                    ->nullable()
+                    ->storedAs('CASE WHEN is_primary = 1 THEN product_id ELSE NULL END');
+            });
+
+            Schema::table('product_images', function (Blueprint $table) {
+                $table->unique('primary_product_id', 'product_images_one_primary_per_product');
+            });
+        }
     }
 
     /**
@@ -24,11 +43,19 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('product_images', function (Blueprint $table) {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'pgsql') {
             DB::statement('DROP INDEX IF EXISTS product_images_one_primary_per_product;');
+        } elseif (in_array($driver, ['mysql', 'mariadb'], true)) {
             Schema::table('product_images', function (Blueprint $table) {
-                $table->dropColumn('is_primary');
+                $table->dropUnique('product_images_one_primary_per_product');
+                $table->dropColumn('primary_product_id');
             });
+        }
+
+        Schema::table('product_images', function (Blueprint $table) {
+            $table->dropColumn('is_primary');
         });
     }
 };
