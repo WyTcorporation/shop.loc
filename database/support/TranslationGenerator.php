@@ -217,6 +217,33 @@ class TranslationGenerator
         ],
     ];
 
+    private const ATTRIBUTE_VALUES = [
+        'size' => [
+            'xs' => ['uk' => 'XS', 'en' => 'XS', 'ru' => 'XS', 'pt' => 'XS'],
+            's' => ['uk' => 'S', 'en' => 'S', 'ru' => 'S', 'pt' => 'S'],
+            'm' => ['uk' => 'M', 'en' => 'M', 'ru' => 'M', 'pt' => 'M'],
+            'l' => ['uk' => 'L', 'en' => 'L', 'ru' => 'L', 'pt' => 'L'],
+            'xl' => ['uk' => 'XL', 'en' => 'XL', 'ru' => 'XL', 'pt' => 'XL'],
+        ],
+        'color' => [
+            'black' => ['uk' => 'Чорний', 'en' => 'Black', 'ru' => 'Чёрный', 'pt' => 'Preto'],
+            'white' => ['uk' => 'Білий', 'en' => 'White', 'ru' => 'Белый', 'pt' => 'Branco'],
+            'red' => ['uk' => 'Червоний', 'en' => 'Red', 'ru' => 'Красный', 'pt' => 'Vermelho'],
+            'blue' => ['uk' => 'Синій', 'en' => 'Blue', 'ru' => 'Синий', 'pt' => 'Azul'],
+            'green' => ['uk' => 'Зелений', 'en' => 'Green', 'ru' => 'Зелёный', 'pt' => 'Verde'],
+            'amber' => ['uk' => 'Бурштиновий', 'en' => 'Amber', 'ru' => 'Янтарный', 'pt' => 'Âmbar'],
+            'silver' => ['uk' => 'Срібний', 'en' => 'Silver', 'ru' => 'Серебряный', 'pt' => 'Prateado'],
+        ],
+    ];
+
+    private const THEME_COLOR_PREFERENCES = [
+        'coffee' => ['amber', 'black', 'green'],
+        'tech' => ['black', 'silver', 'white', 'blue'],
+        'wellness' => ['green', 'white', 'amber'],
+        'home' => ['amber', 'white', 'green'],
+        'outdoor' => ['green', 'black', 'blue'],
+    ];
+
     private const COUPONS = [
         'welcome' => [
             'name' => [
@@ -351,6 +378,45 @@ class TranslationGenerator
         ];
     }
 
+    public static function productAttributes(?string $theme = null): array
+    {
+        $theme ??= self::randomTheme();
+
+        $size = self::attributeOption('size');
+        $colorKey = self::preferredAttributeValue('color', $theme) ?? self::randomAttributeValue('color');
+        $color = self::attributeOption('color', $colorKey);
+
+        return [$size, $color];
+    }
+
+    public static function attributeOption(string $attribute, ?string $value = null): array
+    {
+        $values = self::ATTRIBUTE_VALUES[$attribute] ?? [];
+
+        if ($values === []) {
+            return [
+                'key' => $attribute,
+                'value' => $value ?? 'value',
+                'translations' => [],
+            ];
+        }
+
+        if ($value === null || !isset($values[$value])) {
+            $value = array_rand($values);
+        }
+
+        return [
+            'key' => $attribute,
+            'value' => $value,
+            'translations' => $values[$value],
+        ];
+    }
+
+    public static function attributeTranslations(string $attribute, string $value): array
+    {
+        return self::ATTRIBUTE_VALUES[$attribute][$value] ?? [];
+    }
+
     public static function vendorSet(?string $theme = null, ?string $brand = null): array
     {
         $theme ??= self::randomTheme();
@@ -481,6 +547,32 @@ class TranslationGenerator
         $company = self::faker('en')->unique()->company();
 
         return Str::title(trim(preg_replace('/[^\pL\d\s]/u', '', $company)));
+    }
+
+    private static function preferredAttributeValue(string $attribute, ?string $theme): ?string
+    {
+        if ($attribute !== 'color' || $theme === null) {
+            return null;
+        }
+
+        $candidates = self::THEME_COLOR_PREFERENCES[$theme] ?? [];
+
+        if ($candidates === []) {
+            return null;
+        }
+
+        return $candidates[array_rand($candidates)];
+    }
+
+    private static function randomAttributeValue(string $attribute): ?string
+    {
+        $values = array_keys(self::ATTRIBUTE_VALUES[$attribute] ?? []);
+
+        if ($values === []) {
+            return null;
+        }
+
+        return $values[array_rand($values)];
     }
 
     private static function randomTheme(): string

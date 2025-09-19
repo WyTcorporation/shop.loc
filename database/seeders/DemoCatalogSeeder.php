@@ -72,6 +72,7 @@ class DemoCatalogSeeder extends Seeder
             $productSet = TranslationGenerator::productSet($theme, $vendorInfo['brand']);
             $name = $this->localized($productSet['name']);
             $description = $this->localized($productSet['description']);
+            $attributes = TranslationGenerator::productAttributes($theme);
 
             $product = Product::factory()->create([
                 'category_id' => $category->id,
@@ -81,6 +82,7 @@ class DemoCatalogSeeder extends Seeder
                 'description' => $description['value'],
                 'description_translations' => $description['translations'],
                 'slug' => Str::slug($name['value']) . '-' . Str::lower(Str::random(6)),
+                'attributes' => $attributes,
             ]);
 
             return [

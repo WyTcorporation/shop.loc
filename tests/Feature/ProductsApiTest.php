@@ -5,6 +5,7 @@ use App\Http\Middleware\SetLocaleFromRequest;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use Database\Support\TranslationGenerator;
 
 beforeEach(function () {
     Product::factory()->count(5)->create();
@@ -18,6 +19,45 @@ it('lists products', function () {
 
 it('filters products by search', function () {
     $this->getJson('/api/products?search=est')->assertOk();
+});
+
+it('filters products by machine attribute value and returns localized attributes', function () {
+    config()->set('scout.driver', 'collection');
+    Product::query()->delete();
+
+    $black = TranslationGenerator::attributeOption('color', 'black');
+    $sizeM = TranslationGenerator::attributeOption('size', 'm');
+    $red = TranslationGenerator::attributeOption('color', 'red');
+
+    $product = Product::factory()->create([
+        'is_active' => true,
+        'name' => 'Localized filter product',
+        'attributes' => [$black, $sizeM],
+    ]);
+
+    Product::factory()->create([
+        'is_active' => true,
+        'attributes' => [$red, TranslationGenerator::attributeOption('size', 'l')],
+    ]);
+
+    app()->setLocale('en');
+
+    $response = $this->getJson('/api/products?color=black&with_facets=1');
+
+    $response->assertOk()->assertJsonPath('total', 1);
+
+    $payload = $response->json();
+    $attributes = collect($payload['data'][0]['attributes'])->keyBy('key');
+
+    expect($payload['data'][0]['id'])->toBe($product->id);
+    expect($payload['data'][0]['attribute_values']['color'])->toBe('black');
+    expect($attributes['color']['label'])->toBe($black['translations']['en']);
+    expect($attributes['color']['translations'])->toMatchArray($black['translations']);
+
+    $colorFacet = $payload['facets']['attrs.color']['black'] ?? null;
+    expect($colorFacet)->not->toBeNull();
+    expect($colorFacet['count'])->toBe(1);
+    expect($colorFacet['label'])->toBe($black['translations']['en']);
 });
 
 it('returns localized descriptions for each supported locale', function () {

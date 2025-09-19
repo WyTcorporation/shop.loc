@@ -334,27 +334,106 @@ class Product extends Model
 
     public function toSearchableArray(): array
     {
-        $attrs = (array) $this->getAttribute('attributes');
+        $attributes = $this->attributeDefinitions();
 
-        $translations = $this->name_translations ?? [];
+        $nameTranslations = $this->name_translations ?? [];
+        $descriptionTranslations = $this->description_translations ?? [];
         $defaultLocale = config('app.locale');
-        $defaultName = parent::getAttribute('name');
-
-        if ($defaultName === null && isset($translations[$defaultLocale])) {
-            $defaultName = $translations[$defaultLocale];
+        $fallbackLocale = config('app.fallback_locale', $defaultLocale);
+        $supportedLocales = config('app.supported_locales');
+        if (!is_array($supportedLocales) || $supportedLocales === []) {
+            $supportedLocales = [$defaultLocale];
         }
 
-        return [
+        $defaultName = parent::getAttribute('name');
+        if ($defaultName === null && isset($nameTranslations[$defaultLocale])) {
+            $defaultName = $nameTranslations[$defaultLocale];
+        }
+
+        $defaultDescription = parent::getAttribute('description');
+        if ($defaultDescription === null && isset($descriptionTranslations[$defaultLocale])) {
+            $defaultDescription = $descriptionTranslations[$defaultLocale];
+        }
+
+        $attrs = $this->buildSearchableAttributes($attributes, $supportedLocales, $defaultLocale, $fallbackLocale);
+
+        $payload = [
             'id' => $this->id,
             'name' => $defaultName,
-            'name_translations' => $translations,
+            'name_translations' => $nameTranslations,
+            'description' => $defaultDescription,
+            'description_translations' => $descriptionTranslations,
             'slug' => $this->slug,
             'sku' => $this->sku,
             'category_id' => $this->category_id,
-            'stock' => (int)$this->stock,
-            'price' => (float)$this->price,
-            'is_active' => (bool)$this->is_active,
-            'attrs' => $attrs
+            'stock' => (int) $this->stock,
+            'price' => (float) $this->price,
+            'is_active' => (bool) $this->is_active,
+            'attrs' => $attrs,
         ];
+
+        foreach ($supportedLocales as $locale) {
+            $payload["name_{$locale}"] = $nameTranslations[$locale]
+                ?? ($fallbackLocale && isset($nameTranslations[$fallbackLocale]) ? $nameTranslations[$fallbackLocale] : $defaultName);
+            $payload["description_{$locale}"] = $descriptionTranslations[$locale]
+                ?? ($fallbackLocale && isset($descriptionTranslations[$fallbackLocale]) ? $descriptionTranslations[$fallbackLocale] : $defaultDescription);
+        }
+
+        return $payload;
+    }
+
+    public function attributeDefinitions(): array
+    {
+        $raw = $this->getAttribute('attributes');
+
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($raw as $item) {
+            if (!is_array($item) || !isset($item['key'], $item['value'])) {
+                continue;
+            }
+
+            $translations = array_filter(
+                (array) ($item['translations'] ?? []),
+                fn ($value) => is_string($value) && $value !== ''
+            );
+
+            $normalized[] = [
+                'key' => (string) $item['key'],
+                'value' => (string) $item['value'],
+                'translations' => $translations,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function buildSearchableAttributes(array $attributes, array $locales, string $defaultLocale, ?string $fallbackLocale): array
+    {
+        $result = [];
+
+        foreach ($attributes as $attribute) {
+            $key = $attribute['key'];
+            $value = $attribute['value'];
+            $translations = $attribute['translations'] ?? [];
+
+            $result[$key] = $value;
+
+            foreach ($locales as $locale) {
+                $label = $translations[$locale]
+                    ?? ($fallbackLocale && isset($translations[$fallbackLocale]) ? $translations[$fallbackLocale] : null)
+                    ?? ($translations[$defaultLocale] ?? null);
+
+                if ($label !== null && $label !== '') {
+                    $result["{$key}_{$locale}"] = $label;
+                }
+            }
+        }
+
+        return $result;
     }
 }

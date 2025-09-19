@@ -19,6 +19,11 @@ it('seeds localized content for demo data', function () {
     $product = Product::with('images')->firstOrFail();
     expect($product->name_translations)->toHaveKeys($locales);
     expect($product->description_translations)->toHaveKeys($locales);
+    $attributeSet = $product->attributes ?? [];
+    expect($attributeSet)->not->toBeEmpty();
+    foreach ($attributeSet as $attribute) {
+        expect($attribute['translations'] ?? [])->toHaveKeys($locales);
+    }
 
     $image = $product->images->first();
     expect($image)->not->toBeNull();
@@ -46,4 +51,9 @@ it('seeds localized content for demo data', function () {
 
     expect($payload['name'])->toBe($product->name_translations[$defaultLocale]);
     expect($payload['name_translations'])->toHaveKeys($locales);
+    foreach ($product->attributeDefinitions() as $attribute) {
+        foreach ($locales as $locale) {
+            expect($payload['attrs'][$attribute['key'] . '_' . $locale] ?? null)->not->toBeNull();
+        }
+    }
 });
