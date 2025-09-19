@@ -111,6 +111,44 @@ return [
         ],
     ],
 
+    'api' => [
+        'common' => [
+            'not_found' => 'Ресурс не найден.',
+        ],
+        'auth' => [
+            'unauthenticated' => 'Пользователь не авторизован.',
+            'verification_link_sent' => 'Ссылка для подтверждения отправлена.',
+            'two_factor_required' => 'Требуется код двухфакторной аутентификации.',
+            'invalid_two_factor_code' => 'Неверный код двухфакторной аутентификации.',
+        ],
+        'verify_email' => [
+            'invalid_signature' => 'Недействительная подпись для подтверждения электронной почты.',
+            'already_verified' => 'Электронная почта уже подтверждена.',
+            'verified' => 'Электронная почта подтверждена.',
+        ],
+        'cart' => [
+            'not_enough_stock' => 'Недостаточно товара на складе',
+            'coupon_not_found' => 'Купон не найден.',
+            'coupon_not_applicable' => 'Купон нельзя применить к этой корзине.',
+            'points_auth_required' => 'Только авторизованные пользователи могут использовать бонусные баллы.',
+        ],
+        'orders' => [
+            'cart_empty' => 'Корзина пуста',
+            'insufficient_stock' => 'Недостаточно товара для продукта №:product',
+            'coupon_unavailable' => 'Купон больше недоступен.',
+            'coupon_usage_limit_reached' => 'Достигнут лимит использования купона.',
+            'not_enough_points' => 'Недостаточно бонусных баллов для списания запрошенной суммы.',
+            'points_redeemed_description' => 'Баллы списаны за заказ :number',
+            'points_earned_description' => 'Баллы начислены за заказ :number',
+        ],
+        'reviews' => [
+            'submitted' => 'Отзыв отправлен на модерацию.',
+        ],
+        'payments' => [
+            'missing_intent' => 'Отсутствует payment_intent.',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двухфакторная аутентификация не настроена.',

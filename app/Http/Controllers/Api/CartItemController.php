@@ -19,7 +19,7 @@ class CartItemController extends Controller
             $product = Product::lockForUpdate()->findOrFail($data['product_id']);
 
             if ($product->stock < $data['qty']) {
-                return response()->json(['message' => 'Not enough stock'], 422);
+                return response()->json(['message' => __('shop.api.cart.not_enough_stock')], 422);
             }
 
             /** @var CartItem $item */

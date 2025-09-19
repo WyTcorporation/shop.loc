@@ -59,7 +59,7 @@ class AuthController extends Controller
 
         if (!$user) {
             return response()->json([
-                'message' => 'Unauthenticated.',
+                'message' => __('shop.api.auth.unauthenticated'),
             ], 401);
         }
 
@@ -68,7 +68,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Verification link sent.',
+            'message' => __('shop.api.auth.verification_link_sent'),
         ], 202);
     }
 
@@ -96,14 +96,14 @@ class AuthController extends Controller
         if ($twoFactor && $twoFactor->isConfirmed()) {
             if (empty($data['otp'])) {
                 return response()->json([
-                    'message' => 'Потрібен код двофакторної автентифікації.',
+                    'message' => __('shop.api.auth.two_factor_required'),
                     'two_factor_required' => true,
                 ], 409);
             }
 
             if (!$twoFactorService->verify($twoFactor->secret, $data['otp'])) {
                 throw ValidationException::withMessages([
-                    'otp' => ['Невірний код двофакторної автентифікації.'],
+                    'otp' => [__('shop.api.auth.invalid_two_factor_code')],
                 ]);
             }
         }
@@ -125,7 +125,7 @@ class AuthController extends Controller
 
         if (!$user) {
             return response()->json([
-                'message' => 'Unauthenticated.',
+                'message' => __('shop.api.auth.unauthenticated'),
             ], 401);
         }
 
@@ -141,7 +141,7 @@ class AuthController extends Controller
 
         if (!$user) {
             return response()->json([
-                'message' => 'Unauthenticated.',
+                'message' => __('shop.api.auth.unauthenticated'),
             ], 401);
         }
 

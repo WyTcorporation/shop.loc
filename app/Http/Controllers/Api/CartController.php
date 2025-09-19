@@ -51,7 +51,7 @@ class CartController extends Controller
             $product = Product::lockForUpdate()->findOrFail($data['product_id']);
 
             if ($qty > (int) $product->stock) {
-                return response()->json(['message' => 'Not enough stock'], 422);
+                return response()->json(['message' => __('shop.api.cart.not_enough_stock')], 422);
             }
 
             $item = CartItem::query()
@@ -87,7 +87,7 @@ class CartController extends Controller
         ]);
 
         if ($item->cart_id !== $id) {
-            abort(404);
+            abort(404, __('shop.api.common.not_found'));
         }
 
         return DB::transaction(function () use ($data, $item) {
@@ -116,7 +116,7 @@ class CartController extends Controller
     public function removeItem(string $id, CartItem $item): JsonResponse
     {
         if ($item->cart_id !== $id) {
-            abort(404);
+            abort(404, __('shop.api.common.not_found'));
         }
 
         $item->delete();
@@ -150,7 +150,7 @@ class CartController extends Controller
 
         if (! $coupon) {
             throw ValidationException::withMessages([
-                'code' => ['Coupon not found.'],
+                'code' => [__('shop.api.cart.coupon_not_found')],
             ]);
         }
 
@@ -158,7 +158,7 @@ class CartController extends Controller
 
         if (! $totals->coupon) {
             throw ValidationException::withMessages([
-                'code' => ['Coupon cannot be applied to this cart.'],
+                'code' => [__('shop.api.cart.coupon_not_applicable')],
             ]);
         }
 
@@ -178,7 +178,7 @@ class CartController extends Controller
 
         if (! $cart->user_id) {
             throw ValidationException::withMessages([
-                'points' => ['Only authenticated users can redeem loyalty points.'],
+                'points' => [__('shop.api.cart.points_auth_required')],
             ]);
         }
 

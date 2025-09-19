@@ -67,7 +67,7 @@ class PaymentController extends Controller
         $piId  = (string) ($r->input('payment_intent') ?: $order->payment_intent_id);
 
         if (!$piId) {
-            return response()->json(['ok' => false, 'error' => 'No payment_intent'], 400);
+            return response()->json(['ok' => false, 'error' => __('shop.api.payments.missing_intent')], 400);
         }
 
         $stripe = new StripeClient(config('services.stripe.secret'));

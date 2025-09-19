@@ -111,6 +111,44 @@ return [
         ],
     ],
 
+    'api' => [
+        'common' => [
+            'not_found' => 'Resource not found.',
+        ],
+        'auth' => [
+            'unauthenticated' => 'Unauthenticated.',
+            'verification_link_sent' => 'Verification link sent.',
+            'two_factor_required' => 'Two-factor authentication code required.',
+            'invalid_two_factor_code' => 'Invalid two-factor authentication code.',
+        ],
+        'verify_email' => [
+            'invalid_signature' => 'Invalid signature for email verification.',
+            'already_verified' => 'Email address already verified.',
+            'verified' => 'Email address verified.',
+        ],
+        'cart' => [
+            'not_enough_stock' => 'Not enough stock',
+            'coupon_not_found' => 'Coupon not found.',
+            'coupon_not_applicable' => 'Coupon cannot be applied to this cart.',
+            'points_auth_required' => 'Only authenticated users can redeem loyalty points.',
+        ],
+        'orders' => [
+            'cart_empty' => 'Cart is empty',
+            'insufficient_stock' => 'Insufficient stock for product #:product',
+            'coupon_unavailable' => 'Coupon is no longer available.',
+            'coupon_usage_limit_reached' => 'Coupon usage limit reached.',
+            'not_enough_points' => 'Not enough loyalty points to redeem the requested amount.',
+            'points_redeemed_description' => 'Points redeemed for order :number',
+            'points_earned_description' => 'Points earned from order :number',
+        ],
+        'reviews' => [
+            'submitted' => 'Review submitted for moderation.',
+        ],
+        'payments' => [
+            'missing_intent' => 'Payment intent is missing.',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Two-factor authentication is not initialized.',

@@ -111,6 +111,44 @@ return [
         ],
     ],
 
+    'api' => [
+        'common' => [
+            'not_found' => 'Ресурс не знайдено.',
+        ],
+        'auth' => [
+            'unauthenticated' => 'Користувач не авторизований.',
+            'verification_link_sent' => 'Посилання для підтвердження надіслано.',
+            'two_factor_required' => 'Потрібен код двофакторної автентифікації.',
+            'invalid_two_factor_code' => 'Невірний код двофакторної автентифікації.',
+        ],
+        'verify_email' => [
+            'invalid_signature' => 'Недійсний підпис для підтвердження електронної адреси.',
+            'already_verified' => 'Електронна адреса вже підтверджена.',
+            'verified' => 'Електронну адресу підтверджено.',
+        ],
+        'cart' => [
+            'not_enough_stock' => 'Недостатньо товару на складі',
+            'coupon_not_found' => 'Купон не знайдено.',
+            'coupon_not_applicable' => 'Купон не можна застосувати до цього кошика.',
+            'points_auth_required' => 'Лише авторизовані користувачі можуть використати бонусні бали.',
+        ],
+        'orders' => [
+            'cart_empty' => 'Кошик порожній',
+            'insufficient_stock' => 'Недостатньо товару для продукту №:product',
+            'coupon_unavailable' => 'Купон більше недоступний.',
+            'coupon_usage_limit_reached' => 'Перевищено ліміт використання купона.',
+            'not_enough_points' => 'Недостатньо бонусних балів для списання запитаної кількості.',
+            'points_redeemed_description' => 'Бали списано за замовлення :number',
+            'points_earned_description' => 'Бали нараховано за замовлення :number',
+        ],
+        'reviews' => [
+            'submitted' => 'Відгук надіслано на модерацію.',
+        ],
+        'payments' => [
+            'missing_intent' => 'Відсутній payment_intent.',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двофакторну автентифікацію не налаштовано.',
