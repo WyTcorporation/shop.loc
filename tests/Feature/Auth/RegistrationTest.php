@@ -4,6 +4,7 @@ use App\Mail\VerifyEmailMail;
 use App\Mail\WelcomeMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\App;
 
 beforeEach(function () {
     config(['auth.guards.sanctum' => [
@@ -12,6 +13,8 @@ beforeEach(function () {
     ]]);
 
     config(['app.frontend_url' => 'https://shop-frontend.example']);
+
+    App::setLocale('uk');
 });
 
 it('sends verification and welcome mails when registering', function () {
@@ -71,6 +74,8 @@ it('sends verification and welcome mails when registering', function () {
 it('resends the verification email for authenticated users', function () {
     Mail::fake();
 
+    App::setLocale('uk');
+
     $user = User::factory()->unverified()->create();
 
     $this->actingAs($user, 'sanctum');
@@ -95,6 +100,8 @@ it('resends the verification email for authenticated users', function () {
 
 it('verifies the email address via the API endpoint', function () {
     Mail::fake();
+
+    App::setLocale('uk');
 
     $user = User::factory()->unverified()->create();
 
@@ -127,6 +134,86 @@ it('verifies the email address via the API endpoint', function () {
         ->assertJson(['message' => __('shop.api.verify_email.verified')]);
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+});
+
+it('resends the verification email with Russian localization', function () {
+    Mail::fake();
+
+    App::setLocale('ru');
+
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user, 'sanctum');
+
+    $this->postJson('/api/email/resend')
+        ->assertStatus(202)
+        ->assertJson(['message' => __('shop.api.auth.verification_link_sent')]);
+});
+
+it('resends the verification email with Portuguese localization', function () {
+    Mail::fake();
+
+    App::setLocale('pt');
+
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user, 'sanctum');
+
+    $this->postJson('/api/email/resend')
+        ->assertStatus(202)
+        ->assertJson(['message' => __('shop.api.auth.verification_link_sent')]);
+});
+
+it('verifies the email address via the API endpoint with Russian localization', function () {
+    Mail::fake();
+
+    App::setLocale('ru');
+
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user, 'sanctum');
+
+    $this->postJson('/api/email/resend')->assertStatus(202);
+
+    $verificationUrl = null;
+
+    Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user, &$verificationUrl) {
+        $verificationUrl = $mail->verificationUrl;
+
+        return $mail->hasTo($user->email);
+    });
+
+    expect($verificationUrl)->not->toBeNull();
+
+    $this->getJson($verificationUrl)
+        ->assertOk()
+        ->assertJson(['message' => __('shop.api.verify_email.verified')]);
+});
+
+it('verifies the email address via the API endpoint with Portuguese localization', function () {
+    Mail::fake();
+
+    App::setLocale('pt');
+
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user, 'sanctum');
+
+    $this->postJson('/api/email/resend')->assertStatus(202);
+
+    $verificationUrl = null;
+
+    Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user, &$verificationUrl) {
+        $verificationUrl = $mail->verificationUrl;
+
+        return $mail->hasTo($user->email);
+    });
+
+    expect($verificationUrl)->not->toBeNull();
+
+    $this->getJson($verificationUrl)
+        ->assertOk()
+        ->assertJson(['message' => __('shop.api.verify_email.verified')]);
 });
 
 function expectedDisplayUrl(?string $url): ?string
