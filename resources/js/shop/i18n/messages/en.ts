@@ -636,6 +636,7 @@ const messages = {
             submit: 'Create account',
             haveAccount: 'Already have an account?',
             signInLink: 'Sign in',
+            passwordTooShort: 'Password must be at least 8 characters.',
             passwordMismatch: 'Passwords do not match.',
             errorFallback: 'Could not sign up. Please try again.',
         },

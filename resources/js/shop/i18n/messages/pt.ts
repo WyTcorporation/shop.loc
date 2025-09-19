@@ -637,6 +637,7 @@ const messages = {
             submit: 'Criar conta',
             haveAccount: 'Já tem conta?',
             signInLink: 'Iniciar sessão',
+            passwordTooShort: 'A palavra-passe deve ter pelo menos 8 caracteres.',
             passwordMismatch: 'As palavras-passe não coincidem.',
             errorFallback: 'Não foi possível concluir o registo. Tente novamente.',
         },

@@ -639,6 +639,7 @@ const messages = {
             submit: 'Создать аккаунт',
             haveAccount: 'Уже есть аккаунт?',
             signInLink: 'Войти',
+            passwordTooShort: 'Пароль должен содержать минимум 8 символов.',
             passwordMismatch: 'Пароли не совпадают.',
             errorFallback: 'Не удалось зарегистрироваться. Попробуйте ещё раз.',
         },
