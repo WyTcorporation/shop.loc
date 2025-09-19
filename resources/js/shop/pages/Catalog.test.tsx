@@ -144,7 +144,7 @@ describe('Catalog page', () => {
         );
     });
 
-    it('deduplicates category and color facets', async () => {
+    it('renders facet counts with localized labels', async () => {
         const product = {
             id: 202,
             name: 'Ще один товар',
@@ -167,13 +167,26 @@ describe('Catalog page', () => {
             to: 1,
             facets: {
                 category_id: {
-                    '10': 5,
-                    misc: 2,
+                    '10': {
+                        value: '10',
+                        label: 'Кросівки',
+                        count: 5,
+                        translations: { uk: 'Кросівки', en: 'Sneakers' },
+                    },
+                    misc: {
+                        value: 'misc',
+                        label: 'Різне',
+                        count: 2,
+                        translations: { uk: 'Різне', en: 'Misc' },
+                    },
                 },
                 'attrs.color': {
-                    Black: 2,
-                    ' black ': 1,
-                    BLACK: 4,
+                    black: {
+                        value: 'black',
+                        label: 'Чорний',
+                        count: 7,
+                        translations: { uk: 'Чорний', en: 'Black' },
+                    },
                 },
             },
         });
@@ -186,11 +199,12 @@ describe('Catalog page', () => {
 
         const categoryButton = await screen.findByTestId('facet-cat-10');
         expect(categoryButton).toBeInTheDocument();
+        expect(categoryButton).toHaveTextContent('Кросівки');
         expect(screen.queryByTestId('facet-cat-misc')).not.toBeInTheDocument();
 
         const colorButtons = await screen.findAllByTestId('facet-color-black');
         expect(colorButtons).toHaveLength(1);
-        expect(colorButtons[0]).toHaveTextContent('Black');
+        expect(colorButtons[0]).toHaveTextContent('Чорний');
         expect(colorButtons[0]).toHaveTextContent('(7)');
     });
 

@@ -6,6 +6,7 @@ import {
     type Product,
     type PaginatedWithFacets,
     type Facets,
+    type FacetEntry,
 } from '../api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -29,8 +30,6 @@ import { Loader2 } from 'lucide-react';
 import { useLocale } from '../i18n/LocaleProvider';
 
 type SortKey = 'price_asc' | 'price_desc' | 'new';
-
-const normalizeFacetValue = (value: string) => value.trim().toLowerCase();
 
 export default function Catalog() {
     const [cats, setCats] = useState<Category[]>([]);
@@ -57,34 +56,18 @@ export default function Catalog() {
     // атрибути у URL (і СЕТЕРИ!)
     const [colorsParam, setColorsParam] = useQueryParam('color', ''); // "?color=red,blue"
     const [sizesParam,  setSizesParam]  = useQueryParam('size',  ''); // "?size=M,L"
-    const selectedColorParamValues = useMemo(
-        () => colorsParam ? colorsParam.split(',').filter(Boolean) : [],
+    const selectedColorValues = useMemo(
+        () => (colorsParam ? colorsParam.split(',').filter(Boolean) : []),
         [colorsParam],
     );
-    const selectedColorKeys = useMemo(() => {
-        const seen = new Set<string>();
-        const keys: string[] = [];
-        selectedColorParamValues.forEach((value) => {
-            const normalized = normalizeFacetValue(value);
-            if (!normalized || seen.has(normalized)) return;
-            seen.add(normalized);
-            keys.push(normalized);
-        });
-        return keys;
-    }, [selectedColorParamValues]);
-    const selectedColorKeySet = useMemo(() => new Set(selectedColorKeys), [selectedColorKeys]);
-    const colorRawValuesByKey = useMemo(() => {
-        const map = new Map<string, string[]>();
-        selectedColorParamValues.forEach((value) => {
-            const normalized = normalizeFacetValue(value);
-            if (!normalized) return;
-            const existing = map.get(normalized);
-            if (existing) existing.push(value);
-            else map.set(normalized, [value]);
-        });
-        return map;
-    }, [selectedColorParamValues]);
-    const selectedSizes  = useMemo(() => sizesParam  ? sizesParam.split(',').filter(Boolean)  : [], [sizesParam]);
+    const selectedColorValueSet = useMemo(
+        () => new Set(selectedColorValues),
+        [selectedColorValues],
+    );
+    const selectedSizes  = useMemo(
+        () => (sizesParam ? sizesParam.split(',').filter(Boolean) : []),
+        [sizesParam],
+    );
 
     // price range у URL
     const [minPriceParam, setMinPriceParam] = useQueryParamNumber('min_price', undefined);
@@ -104,15 +87,11 @@ export default function Catalog() {
         setPage(1);
     }
 
-    function toggleColorFacet(key: string) {
-        const canonical = colorFacetMap.get(key)?.value ?? colorRawValuesByKey.get(key)?.[0] ?? key;
-        const withoutKey = selectedColorParamValues.filter(
-            (value) => normalizeFacetValue(value) !== key,
-        );
-        const has = selectedColorKeySet.has(key);
+    function toggleColorFacet(value: string) {
+        const has = selectedColorValueSet.has(value);
         const nextValues = has
-            ? withoutKey
-            : (canonical ? [...withoutKey, canonical] : withoutKey);
+            ? selectedColorValues.filter((current) => current !== value)
+            : [...selectedColorValues, value];
         setColorsParam(nextValues.length ? nextValues.join(',') : undefined);
         setPage(1);
     }
@@ -174,49 +153,39 @@ export default function Catalog() {
 
     // безпечне читання фасетів
     const catById = new Map(cats.map(c => [String(c.id), c]));
-    const catCounts   = facets?.['category_id'] ?? {};
-    const colorCounts = facets?.['attrs.color'] ?? {};
-    const sizeCounts  = facets?.['attrs.size'] ?? {};
+    const categoryFacetData = facets?.['category_id'] ?? {};
+    const colorFacetData = facets?.['attrs.color'] ?? {};
+    const sizeFacetData = facets?.['attrs.size'] ?? {};
     const categoryFacetEntries = useMemo(
-        () => Object.entries(catCounts).filter(([id]) => typeof id === 'string' && /^\d+$/.test(id)),
-        [catCounts],
+        () =>
+            Object.values(categoryFacetData).filter(
+                (entry): entry is FacetEntry =>
+                    Boolean(entry?.value) && /^\d+$/.test(entry.value),
+            ),
+        [categoryFacetData],
+    );
+    const colorFacetEntries = useMemo(
+        () =>
+            Object.values(colorFacetData).filter(
+                (entry): entry is FacetEntry => Boolean(entry?.value) && entry.value !== 'null',
+            ),
+        [colorFacetData],
     );
     const colorFacetMap = useMemo(() => {
-        const map = new Map<string, { normalized: string; label: string; value: string; count: number }>();
-        Object.entries(colorCounts).forEach(([rawValue, rawCount]) => {
-            if (!rawValue || rawValue === 'null') return;
-            const normalized = normalizeFacetValue(rawValue);
-            if (!normalized) return;
-            const trimmed = rawValue.trim();
-            if (!trimmed) return;
-            const display = trimmed;
-            const numericCount = typeof rawCount === 'number' ? rawCount : Number(rawCount) || 0;
-            const existing = map.get(normalized);
-            if (existing) {
-                existing.count += numericCount;
-            } else {
-                map.set(normalized, {
-                    normalized,
-                    label: display,
-                    value: display,
-                    count: numericCount,
-                });
-            }
+        const map = new Map<string, FacetEntry>();
+        colorFacetEntries.forEach((entry) => {
+            map.set(entry.value, entry);
         });
         return map;
-    }, [colorCounts]);
-    const colorFacetList = useMemo(() => Array.from(colorFacetMap.values()), [colorFacetMap]);
-    const colorDisplayByKey = useMemo(() => {
-        const map = new Map<string, string>();
-        colorFacetList.forEach(({ normalized, label }) => {
-            map.set(normalized, label);
-        });
-        return map;
-    }, [colorFacetList]);
-    const selectedColorApiValues = useMemo(
-        () => selectedColorKeys.map((key) => colorFacetMap.get(key)?.value ?? colorRawValuesByKey.get(key)?.[0] ?? key),
-        [selectedColorKeys, colorFacetMap, colorRawValuesByKey],
+    }, [colorFacetEntries]);
+    const sizeFacetEntries = useMemo(
+        () =>
+            Object.values(sizeFacetData).filter(
+                (entry): entry is FacetEntry => Boolean(entry?.value) && entry.value !== 'null',
+            ),
+        [sizeFacetData],
     );
+    const selectedColorApiValues = selectedColorValues;
 
     function clearAll() {
         setQ('');
@@ -237,12 +206,12 @@ export default function Catalog() {
             label: cats.find(c => c.id === categoryId)?.name ?? `#${categoryId}`,
             onClear: () => { setCategoryId(undefined); setCategoryParam(undefined); setPage(1); },
         }] : []),
-        ...selectedColorKeys.map((key) => {
-            const label = colorDisplayByKey.get(key) ?? colorRawValuesByKey.get(key)?.[0] ?? key;
+        ...selectedColorValues.map((value) => {
+            const label = colorFacetMap.get(value)?.label ?? value;
             return {
-                key: `color:${key}`,
+                key: `color:${value}`,
                 label: t('catalog.filters.active.color', { value: label }),
-                onClear: () => toggleColorFacet(key),
+                onClear: () => toggleColorFacet(value),
             };
         }),
         ...selectedSizes.map((s) => ({
@@ -311,7 +280,7 @@ export default function Catalog() {
     const hasFilters =
         !!q ||
         !!categoryId ||
-        (selectedColorKeys.length > 0) ||
+        (selectedColorValues.length > 0) ||
         (selectedSizes.length > 0) ||
         (minPriceParam != null) ||
         (maxPriceParam != null) ||
@@ -452,10 +421,11 @@ export default function Catalog() {
                 <div>
                     <div className="mb-2 text-sm font-medium">{t('catalog.filters.facets.categories')}</div>
                     <div className="flex flex-wrap gap-2">
-                        {categoryFacetEntries.map(([id, cnt]) => {
+                        {categoryFacetEntries.map((entry) => {
+                            const id = entry.value;
                             const c = catById.get(String(id));
                             const active = Number(categoryId) === Number(id);
-                            const label = c?.name ?? `#${id}`;
+                            const label = entry.label ?? c?.name ?? `#${id}`;
                             return (
                                 <button
                                     key={id}
@@ -470,7 +440,7 @@ export default function Catalog() {
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
                                     title={t('catalog.filters.facets.tooltip.category', { value: label })}
                                 >
-                                    {label} <span className="opacity-70">({cnt})</span>
+                                    {label} <span className="opacity-70">({entry.count})</span>
                                 </button>
                             );
                         })}
@@ -484,22 +454,22 @@ export default function Catalog() {
                 <div>
                     <div className="mb-2 text-sm font-medium">{t('catalog.filters.facets.colors')}</div>
                     <div className="flex flex-wrap gap-2">
-                        {colorFacetList.map(({ normalized, label, value, count }) => {
-                            const active = selectedColorKeySet.has(normalized);
+                        {colorFacetEntries.map((entry) => {
+                            const active = selectedColorValueSet.has(entry.value);
                             return (
                                 <button
-                                    key={normalized}
+                                    key={entry.value}
                                     type="button"
-                                    data-testid={`facet-color-${normalized}`}
-                                    onClick={() => toggleColorFacet(normalized)}
+                                    data-testid={`facet-color-${entry.value}`}
+                                    onClick={() => toggleColorFacet(entry.value)}
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
-                                    title={t('catalog.filters.facets.tooltip.color', { value: label })}
+                                    title={t('catalog.filters.facets.tooltip.color', { value: entry.label ?? entry.value })}
                                 >
-                                    {label} <span className="opacity-70">({count})</span>
+                                    {entry.label ?? entry.value} <span className="opacity-70">({entry.count})</span>
                                 </button>
                             );
                         })}
-                        {colorFacetList.length === 0 && (
+                        {colorFacetEntries.length === 0 && (
                             <span className="text-xs text-muted-foreground">{t('catalog.filters.facets.empty')}</span>
                         )}
                     </div>
@@ -509,22 +479,22 @@ export default function Catalog() {
                 <div>
                     <div className="mb-2 text-sm font-medium">{t('catalog.filters.facets.sizes')}</div>
                     <div className="flex flex-wrap gap-2">
-                        {Object.entries(sizeCounts).filter(([v]) => v && v !== 'null').map(([v, cnt]) => {
-                            const active = selectedSizes.includes(v);
+                        {sizeFacetEntries.map((entry) => {
+                            const active = selectedSizes.includes(entry.value);
                             return (
                                 <button
-                                    key={v}
+                                    key={entry.value}
                                     type="button"
-                                    data-testid={`facet-size-${v}`}
-                                    onClick={() => toggleListParam(v, selectedSizes, setSizesParam)}
+                                    data-testid={`facet-size-${entry.value}`}
+                                    onClick={() => toggleListParam(entry.value, selectedSizes, setSizesParam)}
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${active ? 'bg-black text-white' : ''}`}
-                                    title={t('catalog.filters.facets.tooltip.size', { value: v })}
+                                    title={t('catalog.filters.facets.tooltip.size', { value: entry.label ?? entry.value })}
                                 >
-                                    {v} <span className="opacity-70">({cnt})</span>
+                                    {entry.label ?? entry.value} <span className="opacity-70">({entry.count})</span>
                                 </button>
                             );
                         })}
-                        {Object.keys(sizeCounts).length === 0 && (
+                        {sizeFacetEntries.length === 0 && (
                             <span className="text-xs text-muted-foreground">{t('catalog.filters.facets.empty')}</span>
                         )}
                     </div>
