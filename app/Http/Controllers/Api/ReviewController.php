@@ -33,7 +33,7 @@ class ReviewController extends Controller
 
         $user = $request->user();
 
-        abort_if($user === null, 401);
+        abort_if($user === null, 401, __('shop.api.auth.unauthenticated'));
 
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
@@ -49,7 +49,7 @@ class ReviewController extends Controller
 
         return response()->json([
             'data' => $review->load('user:id,name'),
-            'message' => 'Review submitted for moderation.',
+            'message' => __('shop.api.reviews.submitted'),
         ], 201);
     }
 }

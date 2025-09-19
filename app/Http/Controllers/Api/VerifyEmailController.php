@@ -17,15 +17,15 @@ class VerifyEmailController extends Controller
         $user = User::query()->find($id);
 
         if (! $user) {
-            abort(404);
+            abort(404, __('shop.api.common.not_found'));
         }
 
         if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
-            abort(403, 'Недійсний підпис для підтвердження електронної адреси.');
+            abort(403, __('shop.api.verify_email.invalid_signature'));
         }
 
         if ($user->hasVerifiedEmail()) {
-            return $this->respond($request, 'Електронна адреса вже підтверджена.', true);
+            return $this->respond($request, __('shop.api.verify_email.already_verified'), true);
         }
 
         $user->forceFill([
@@ -34,7 +34,7 @@ class VerifyEmailController extends Controller
 
         event(new Verified($user));
 
-        return $this->respond($request, 'Електронну адресу підтверджено.');
+        return $this->respond($request, __('shop.api.verify_email.verified'));
     }
 
     private function respond(Request $request, string $message, bool $alreadyVerified = false): JsonResponse|RedirectResponse

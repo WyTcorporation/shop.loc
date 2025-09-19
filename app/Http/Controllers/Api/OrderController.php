@@ -24,7 +24,7 @@ class OrderController extends Controller
         $user = $request->user();
 
         if (! $user) {
-            abort(401);
+            abort(401, __('shop.api.auth.unauthenticated'));
         }
 
         $currency = $this->resolveCurrency($request);
@@ -70,14 +70,14 @@ class OrderController extends Controller
                 ->findOrFail($data['cart_id']);
 
             if ($cart->items->isEmpty()) {
-                abort(422, 'Cart is empty');
+                abort(422, __('shop.api.orders.cart_empty'));
             }
 
             $warehouse = Warehouse::getDefault();
 
             foreach ($cart->items as $item) {
                 if ($item->product->availableStock($warehouse->id) < $item->qty) {
-                    abort(422, "Insufficient stock for product #{$item->product_id}");
+                    abort(422, __('shop.api.orders.insufficient_stock', ['product' => $item->product_id]));
                 }
             }
 
@@ -90,7 +90,7 @@ class OrderController extends Controller
                 CartPricingService::syncCartAdjustments($cart, $totals);
 
                 throw ValidationException::withMessages([
-                    'coupon' => ['Coupon is no longer available.'],
+                    'coupon' => [__('shop.api.orders.coupon_unavailable')],
                 ]);
             }
 
@@ -98,7 +98,7 @@ class OrderController extends Controller
                 CartPricingService::syncCartAdjustments($cart, $totals);
 
                 throw ValidationException::withMessages([
-                    'points' => ['Not enough loyalty points to redeem the requested amount.'],
+                    'points' => [__('shop.api.orders.not_enough_points')],
                 ]);
             }
 
@@ -108,7 +108,7 @@ class OrderController extends Controller
                 try {
                     $item->product->reserveStock($item->qty, $warehouse->id);
                 } catch (DomainException $e) {
-                    abort(422, "Insufficient stock for product #{$item->product_id}");
+                    abort(422, __('shop.api.orders.insufficient_stock', ['product' => $item->product_id]));
                 }
             }
 
@@ -123,13 +123,13 @@ class OrderController extends Controller
                     $cart->save();
 
                     throw ValidationException::withMessages([
-                        'coupon' => ['Coupon is no longer available.'],
+                        'coupon' => [__('shop.api.orders.coupon_unavailable')],
                     ]);
                 }
 
                 if ($coupon->usage_limit !== null && $coupon->used + 1 > $coupon->usage_limit) {
                     throw ValidationException::withMessages([
-                        'coupon' => ['Coupon usage limit reached.'],
+                        'coupon' => [__('shop.api.orders.coupon_usage_limit_reached')],
                     ]);
                 }
             }
@@ -193,7 +193,7 @@ class OrderController extends Controller
                     'type' => LoyaltyPointTransaction::TYPE_REDEEM,
                     'points' => -$totals->pointsUsed,
                     'amount' => $totals->pointsValue,
-                    'description' => 'Points redeemed for order ' . $order->number,
+                    'description' => __('shop.api.orders.points_redeemed_description', ['number' => $order->number]),
                 ]);
             }
 
@@ -204,7 +204,7 @@ class OrderController extends Controller
                     'type' => LoyaltyPointTransaction::TYPE_EARN,
                     'points' => $pointsEarned,
                     'amount' => $totals->total,
-                    'description' => 'Points earned from order ' . $order->number,
+                    'description' => __('shop.api.orders.points_earned_description', ['number' => $order->number]),
                 ]);
             }
 

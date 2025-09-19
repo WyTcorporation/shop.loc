@@ -77,7 +77,7 @@ it('resends the verification email for authenticated users', function () {
 
     $this->postJson('/api/email/resend')
         ->assertStatus(202)
-        ->assertJson(['message' => 'Verification link sent.']);
+        ->assertJson(['message' => __('shop.api.auth.verification_link_sent')]);
 
     Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
         expect($mail->displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
@@ -124,7 +124,7 @@ it('verifies the email address via the API endpoint', function () {
 
     $this->getJson($verificationUrl)
         ->assertOk()
-        ->assertJson(['message' => 'Електронну адресу підтверджено.']);
+        ->assertJson(['message' => __('shop.api.verify_email.verified')]);
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });

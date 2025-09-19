@@ -111,6 +111,44 @@ return [
         ],
     ],
 
+    'api' => [
+        'common' => [
+            'not_found' => 'Recurso não encontrado.',
+        ],
+        'auth' => [
+            'unauthenticated' => 'Não autenticado.',
+            'verification_link_sent' => 'Link de verificação enviado.',
+            'two_factor_required' => 'É necessário o código de autenticação em duas etapas.',
+            'invalid_two_factor_code' => 'Código de autenticação em duas etapas inválido.',
+        ],
+        'verify_email' => [
+            'invalid_signature' => 'Assinatura inválida para verificação de e-mail.',
+            'already_verified' => 'E-mail já verificado.',
+            'verified' => 'E-mail verificado.',
+        ],
+        'cart' => [
+            'not_enough_stock' => 'Estoque insuficiente',
+            'coupon_not_found' => 'Cupom não encontrado.',
+            'coupon_not_applicable' => 'O cupom não pode ser aplicado a este carrinho.',
+            'points_auth_required' => 'Apenas usuários autenticados podem resgatar pontos de fidelidade.',
+        ],
+        'orders' => [
+            'cart_empty' => 'Carrinho vazio',
+            'insufficient_stock' => 'Estoque insuficiente para o produto nº :product',
+            'coupon_unavailable' => 'O cupom não está mais disponível.',
+            'coupon_usage_limit_reached' => 'Limite de uso do cupom atingido.',
+            'not_enough_points' => 'Pontos de fidelidade insuficientes para resgatar o valor solicitado.',
+            'points_redeemed_description' => 'Pontos resgatados para o pedido :number',
+            'points_earned_description' => 'Pontos acumulados no pedido :number',
+        ],
+        'reviews' => [
+            'submitted' => 'Avaliação enviada para moderação.',
+        ],
+        'payments' => [
+            'missing_intent' => 'payment_intent ausente.',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'A autenticação em duas etapas não está configurada.',
