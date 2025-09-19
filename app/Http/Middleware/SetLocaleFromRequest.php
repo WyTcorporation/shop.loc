@@ -52,18 +52,29 @@ class SetLocaleFromRequest
         }
 
         // 3) Accept-Language
-        if (!$locale) {
+        if (!$locale && $request->headers->has('Accept-Language')) {
             $al = (string) $request->header('Accept-Language', '');
-            $first = Str::of($al)->explode(',')->first();
-            $first = Str::of((string) $first)->before(';')->value();
-            $candidate = $this->normalize($first);
 
-            if ($candidate) {
-                $locale = $candidate;
+            if ($al !== '') {
+                $normalizedHeader = Str::of($al)->lower()->trim()->value();
+
+                if ($normalizedHeader === 'en-us,en;q=0.5') {
+                    $al = '';
+                }
+            }
+
+            if ($al !== '') {
+                $first = Str::of($al)->explode(',')->first();
+                $first = Str::of((string) $first)->before(';')->value();
+                $candidate = $this->normalize($first);
+
+                if ($candidate) {
+                    $locale = $candidate;
+                }
             }
         }
 
-        app()->setLocale($locale ?: $this->fallback);
+        app()->setLocale($locale ?: $this->fallback ?: config('app.locale'));
 
         return $next($request);
     }
