@@ -7,6 +7,10 @@ return [
         'order' => 'Заказ',
     ],
 
+    'meta' => [
+        'brand' => 'Shop',
+    ],
+
     'conversation' => [
         'heading' => 'Переписка',
         'system' => 'Система',

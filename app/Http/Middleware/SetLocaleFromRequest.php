@@ -26,8 +26,12 @@ class SetLocaleFromRequest
             $configured,
         )));
 
-        $fallback = (string) config('app.fallback_locale', 'uk');
-        $this->fallback = $this->normalize($fallback) ?? ($this->supported[0] ?? 'uk');
+        $primary = $this->normalize((string) config('app.locale'));
+        $fallback = $this->normalize((string) config('app.fallback_locale'));
+
+        $this->fallback = $primary
+            ?? $fallback
+            ?? ($this->supported[0] ?? 'uk');
     }
 
     public function handle(Request $request, Closure $next)
@@ -52,7 +56,11 @@ class SetLocaleFromRequest
             $al = (string) $request->header('Accept-Language', '');
             $first = Str::of($al)->explode(',')->first();
             $first = Str::of((string) $first)->before(';')->value();
-            $locale = $this->normalize($first);
+            $candidate = $this->normalize($first);
+
+            if ($candidate && ! ($candidate === 'en' && $this->fallback === 'uk')) {
+                $locale = $candidate;
+            }
         }
 
         app()->setLocale($locale ?: $this->fallback);

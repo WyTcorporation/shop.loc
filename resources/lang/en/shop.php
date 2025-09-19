@@ -7,6 +7,10 @@ return [
         'order' => 'Order',
     ],
 
+    'meta' => [
+        'brand' => 'Shop',
+    ],
+
     'conversation' => [
         'heading' => 'Conversation',
         'system' => 'System',
