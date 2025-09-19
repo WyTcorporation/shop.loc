@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { normalizeLang, resolveLocale, type Lang } from './i18n/config';
 import type { WishItem } from './ui/wishlist';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080/api';
@@ -7,6 +8,23 @@ export const api = axios.create({
     baseURL: API_BASE,
     withCredentials: true, // потрібні cookie (cart_id)
 });
+
+export function setApiLocale(lang: Lang) {
+    const locale = resolveLocale(lang);
+
+    api.defaults.headers.common['Accept-Language'] = locale;
+
+    const headers = api.defaults.headers as typeof api.defaults.headers & { set?: (name: string, value: string) => void };
+    headers.set?.('Accept-Language', locale);
+}
+
+const initialDocumentLang = typeof document !== 'undefined' ? document.documentElement.getAttribute('lang') : '';
+const initialNavigatorLang = typeof navigator !== 'undefined' ? navigator.language : '';
+const initialLangCandidate = initialDocumentLang || initialNavigatorLang;
+
+if (initialLangCandidate) {
+    setApiLocale(normalizeLang(initialLangCandidate));
+}
 
 /* ==================== TYPES ==================== */
 export type AuthUser = {

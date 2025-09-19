@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { DEFAULT_LANG, Lang, normalizeLang, resolveLocale } from './config';
+import { setApiLocale } from '../api';
 import { createTranslator, getMessages, type Messages, type Translator } from './messages';
 
 type Ctx = { lang: Lang; locale: string; setLang: (l: Lang) => void; messages: Messages; t: Translator };
@@ -24,6 +25,8 @@ export default function LocaleProvider({ initial, children }: { initial?: string
     }, [initial]);
 
     useEffect(() => {
+        setApiLocale(lang);
+
         // <html lang="...">
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('lang', lang);
