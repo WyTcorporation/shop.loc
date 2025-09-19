@@ -7,6 +7,10 @@ return [
         'order' => 'Замовлення',
     ],
 
+    'meta' => [
+        'brand' => 'Shop',
+    ],
+
     'conversation' => [
         'heading' => 'Розмова',
         'system' => 'Система',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Shop</title>
+    <title>{{ config('app.name', __('shop.meta.brand')) }}</title>
 
     <!-- Performance hints -->
     <link rel="preconnect" href="http://localhost:8080" crossorigin>
