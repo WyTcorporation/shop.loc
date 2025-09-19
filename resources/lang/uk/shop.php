@@ -113,6 +113,17 @@ return [
         'status_updated' => [
             'subject_line' => 'Ваше замовлення №:number: статус оновлено',
         ],
+        'statuses' => [
+            'new' => 'нове',
+            'paid' => 'оплачене',
+            'shipped' => 'відправлене',
+            'cancelled' => 'скасоване',
+        ],
+        'errors' => [
+            'only_new_can_be_marked_paid' => 'Позначати оплаченим можна лише замовлення зі статусом ":required". Замовлення №:number зараз має статус ":status".',
+            'only_paid_can_be_marked_shipped' => 'Позначати відправленим можна лише замовлення зі статусом ":required". Замовлення №:number зараз має статус ":status".',
+            'only_new_or_paid_can_be_cancelled' => 'Скасувати можна лише замовлення зі статусами: :allowed. Замовлення №:number зараз має статус ":status".',
+        ],
     ],
 
     'api' => [

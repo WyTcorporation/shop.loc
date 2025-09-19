@@ -212,8 +212,14 @@ class Order extends Model
     public function markPaid(): void
     {
         DB::transaction(function () {
-            if ($this->status !== OrderStatus::New) {
-                throw new \RuntimeException('Only NEW orders can be marked paid.');
+            $currentStatus = $this->currentStatus();
+
+            if ($currentStatus !== OrderStatus::New) {
+                throw new \RuntimeException(__('shop.orders.errors.only_new_can_be_marked_paid', [
+                    'required' => $this->localizedStatus(OrderStatus::New),
+                    'status' => $this->localizedStatus($currentStatus),
+                    'number' => $this->orderNumber(),
+                ]));
             }
             $this->reserveInventory();
             $this->update(['status' => OrderStatus::Paid]);
@@ -223,8 +229,14 @@ class Order extends Model
     /** @throws \RuntimeException */
     public function markShipped(): void
     {
-        if ($this->status !== OrderStatus::Paid) {
-            throw new \RuntimeException('Only PAID orders can be marked shipped.');
+        $currentStatus = $this->currentStatus();
+
+        if ($currentStatus !== OrderStatus::Paid) {
+            throw new \RuntimeException(__('shop.orders.errors.only_paid_can_be_marked_shipped', [
+                'required' => $this->localizedStatus(OrderStatus::Paid),
+                'status' => $this->localizedStatus($currentStatus),
+                'number' => $this->orderNumber(),
+            ]));
         }
         $this->transitionTo(OrderStatus::Shipped);
     }
@@ -233,8 +245,14 @@ class Order extends Model
     public function cancel(): void
     {
         DB::transaction(function () {
-            if (in_array($this->status, [OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
-                throw new \RuntimeException('Cannot cancel shipped/canceled order.');
+            $currentStatus = $this->currentStatus();
+
+            if (! in_array($currentStatus, [OrderStatus::New, OrderStatus::Paid], true)) {
+                throw new \RuntimeException(__('shop.orders.errors.only_new_or_paid_can_be_cancelled', [
+                    'allowed' => $this->localizedStatuses([OrderStatus::New, OrderStatus::Paid]),
+                    'status' => $this->localizedStatus($currentStatus),
+                    'number' => $this->orderNumber(),
+                ]));
             }
             if ($this->inventoryCommitted()) {
                 $this->releaseInventory();
@@ -388,5 +406,30 @@ class Order extends Model
         $shipment->save();
 
         $this->setRelation('shipment', $shipment);
+    }
+
+    private function currentStatus(): OrderStatus
+    {
+        return $this->status instanceof OrderStatus
+            ? $this->status
+            : OrderStatus::from((string) $this->status);
+    }
+
+    private function localizedStatus(OrderStatus $status): string
+    {
+        return __('shop.orders.statuses.' . $status->value);
+    }
+
+    /**
+     * @param OrderStatus[] $statuses
+     */
+    private function localizedStatuses(array $statuses): string
+    {
+        return implode(', ', array_map(fn (OrderStatus $status) => $this->localizedStatus($status), $statuses));
+    }
+
+    private function orderNumber(): string
+    {
+        return (string) ($this->number ?? $this->id);
     }
 }

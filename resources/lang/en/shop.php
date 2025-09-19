@@ -113,6 +113,17 @@ return [
         'status_updated' => [
             'subject_line' => 'Your order #:number status was updated',
         ],
+        'statuses' => [
+            'new' => 'new',
+            'paid' => 'paid',
+            'shipped' => 'shipped',
+            'cancelled' => 'cancelled',
+        ],
+        'errors' => [
+            'only_new_can_be_marked_paid' => 'Only orders with the ":required" status can be marked as paid. Order #:number is currently ":status".',
+            'only_paid_can_be_marked_shipped' => 'Only orders with the ":required" status can be marked as shipped. Order #:number is currently ":status".',
+            'only_new_or_paid_can_be_cancelled' => 'Only orders with the following statuses can be cancelled: :allowed. Order #:number is currently ":status".',
+        ],
     ],
 
     'api' => [

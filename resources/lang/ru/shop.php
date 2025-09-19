@@ -113,6 +113,17 @@ return [
         'status_updated' => [
             'subject_line' => 'Статус вашего заказа №:number обновлён',
         ],
+        'statuses' => [
+            'new' => 'новый',
+            'paid' => 'оплачен',
+            'shipped' => 'отправлен',
+            'cancelled' => 'отменён',
+        ],
+        'errors' => [
+            'only_new_can_be_marked_paid' => 'Отметить оплаченным можно только заказ со статусом ":required". Заказ №:number сейчас имеет статус ":status".',
+            'only_paid_can_be_marked_shipped' => 'Отметить отправленным можно только заказ со статусом ":required". Заказ №:number сейчас имеет статус ":status".',
+            'only_new_or_paid_can_be_cancelled' => 'Отменить можно только заказы со статусами: :allowed. Заказ №:number сейчас имеет статус ":status".',
+        ],
     ],
 
     'api' => [
