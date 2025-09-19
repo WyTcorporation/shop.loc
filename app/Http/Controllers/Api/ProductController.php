@@ -591,7 +591,10 @@ class ProductController extends Controller
     public function facets(Request $r): JsonResponse
     {
         if (config('scout.driver') !== 'meilisearch') {
-            $payload = Cache::remember('products:facets:db', now()->addMinutes(10), function () {
+            $locale = app()->getLocale() ?: config('app.locale');
+            $cacheKey = 'products:facets:db:' . ($locale ?: 'default');
+
+            $payload = Cache::remember($cacheKey, now()->addMinutes(10), function () {
                 $base = Product::query()->where('is_active', true);
 
                 return [
@@ -681,11 +684,14 @@ class ProductController extends Controller
 
         $version = (int) Cache::get(Product::FACETS_CACHE_VERSION_KEY, 1);
 
+        $locale = app()->getLocale() ?: config('app.locale');
+
         return 'products:facets:' . $version . ':' . md5(json_encode([
             'search' => $search,
             'category' => $categoryId,
             'colors' => $colors,
             'sizes' => $sizes,
+            'locale' => $locale,
         ]));
     }
 }
