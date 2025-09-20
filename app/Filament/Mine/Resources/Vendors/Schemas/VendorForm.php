@@ -36,9 +36,15 @@ class VendorForm
                     ->required()
                     ->maxLength(255)
                     ->hidden()
-                    ->afterStateHydrated(function (TextInput $component, $state, Set $set) use ($primaryLocale): void {
-                        if (filled($state)) {
-                            $set("name_translations.{$primaryLocale}", $state);
+                    ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($primaryLocale): void {
+                        if (filled($get("name_translations.{$primaryLocale}"))) {
+                            return;
+                        }
+
+                        $rawName = $component->getRecord()?->getRawOriginal('name');
+
+                        if (filled($rawName)) {
+                            $set("name_translations.{$primaryLocale}", $rawName);
                         }
                     })
                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
@@ -57,9 +63,15 @@ class VendorForm
                     ->rows(4)
                     ->columnSpanFull()
                     ->hidden()
-                    ->afterStateHydrated(function (Textarea $component, $state, Set $set) use ($primaryLocale): void {
-                        if (filled($state)) {
-                            $set("description_translations.{$primaryLocale}", $state);
+                    ->afterStateHydrated(function (Textarea $component, $state, Set $set, Get $get) use ($primaryLocale): void {
+                        if (filled($get("description_translations.{$primaryLocale}"))) {
+                            return;
+                        }
+
+                        $rawDescription = $component->getRecord()?->getRawOriginal('description');
+
+                        if (filled($rawDescription)) {
+                            $set("description_translations.{$primaryLocale}", $rawDescription);
                         }
                     })
                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('description_translations.' . $primaryLocale) ?? $state),
