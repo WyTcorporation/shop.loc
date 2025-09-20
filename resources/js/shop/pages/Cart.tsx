@@ -12,13 +12,15 @@ export default function CartPage() {
 
     const brand = t('header.brand');
 
+    useEffect(() => {
+        if (!cart) return;
+
+        GA.view_cart(cart);
+    }, [cart]);
+
     if (!cart) return <div className="max-w-4xl mx-auto p-6">{t('cart.loading')}</div>
 
     const currency = cart.currency ?? 'EUR';
-
-    useEffect(() => {
-        GA.view_cart(cart);
-    }, [cart]);
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
