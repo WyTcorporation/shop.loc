@@ -290,6 +290,14 @@ return [
         ],
     ],
 
+    'currencies' => [
+        'navigation_group' => 'Configurações',
+        'code' => 'Código',
+        'rate' => 'Taxa',
+        'rate_vs_base' => 'Taxa (vs base)',
+        'updated' => 'Atualizado',
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'A autenticação em duas etapas não está configurada.',

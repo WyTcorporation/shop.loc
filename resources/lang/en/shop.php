@@ -290,6 +290,14 @@ return [
         ],
     ],
 
+    'currencies' => [
+        'navigation_group' => 'Settings',
+        'code' => 'Code',
+        'rate' => 'Rate',
+        'rate_vs_base' => 'Rate (vs base)',
+        'updated' => 'Updated',
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Two-factor authentication is not initialized.',
