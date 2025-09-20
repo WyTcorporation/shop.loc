@@ -19,6 +19,29 @@ class EditVendor extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $primaryLocale = config('app.locale');
+
+        if (blank($data['name_translations'][$primaryLocale] ?? null)) {
+            $rawName = $this->record?->getRawOriginal('name');
+
+            if (filled($rawName)) {
+                $data['name_translations'][$primaryLocale] = $rawName;
+            }
+        }
+
+        if (array_key_exists('description_translations', $data) && blank($data['description_translations'][$primaryLocale] ?? null)) {
+            $rawDescription = $this->record?->getRawOriginal('description');
+
+            if (filled($rawDescription)) {
+                $data['description_translations'][$primaryLocale] = $rawDescription;
+            }
+        }
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         if ($user = Auth::user()) {

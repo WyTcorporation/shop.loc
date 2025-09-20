@@ -16,4 +16,19 @@ class EditCategory extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $primaryLocale = config('app.locale');
+
+        if (blank($data['name_translations'][$primaryLocale] ?? null)) {
+            $rawName = $this->record?->getRawOriginal('name');
+
+            if (filled($rawName)) {
+                $data['name_translations'][$primaryLocale] = $rawName;
+            }
+        }
+
+        return $data;
+    }
 }

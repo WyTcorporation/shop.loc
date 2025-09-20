@@ -27,17 +27,6 @@ class CategoryForm
                     ->label(__('shop.categories.fields.name'))
                     ->required()
                     ->hidden()
-                    ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($primaryLocale): void {
-                        if (filled($get("name_translations.{$primaryLocale}"))) {
-                            return;
-                        }
-
-                        $rawName = $component->getRecord()?->getRawOriginal('name');
-
-                        if (filled($rawName)) {
-                            $set("name_translations.{$primaryLocale}", $rawName);
-                        }
-                    })
                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
                 Tabs::make('translations')
                     ->columnSpanFull()
