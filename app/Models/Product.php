@@ -437,8 +437,9 @@ class Product extends Model
             return null;
         }
 
-        $disk = $img->disk ?: 'public';
-        return \Storage::disk($disk)->url($img->path);
+        $disk = $img->disk ?: ProductImage::defaultDisk();
+
+        return Storage::disk($disk)->url($img->path);
     }
 
     public function shouldBeSearchable(): bool
@@ -471,8 +472,15 @@ class Product extends Model
 
     public function getCoverUrlAttribute(): ?string
     {
-        $p = $this->coverImage()?->path;
-        return $p ? Storage::disk('public')->url($p) : null;
+        $image = $this->coverImage();
+
+        if (! $image || blank($image->path)) {
+            return null;
+        }
+
+        $disk = $image->disk ?: ProductImage::defaultDisk();
+
+        return Storage::disk($disk)->url($image->path);
     }
 
     public function toSearchableArray(): array
