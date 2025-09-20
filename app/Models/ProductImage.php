@@ -35,7 +35,7 @@ class ProductImage extends Model
     protected static function booted(): void
     {
         static::saving(function (self $image) {
-            $image->disk = $image->disk ?: config('shop.product_images_disk', 'public');
+            $image->disk = $image->disk ?: static::defaultDisk();
         });
 
         static::saving(function (self $image) {
@@ -52,9 +52,14 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        $disk = $this->disk ?: config('shop.product_images_disk', 'public');
+        $disk = $this->disk ?: static::defaultDisk();
 
         return Storage::disk($disk)->url($this->path);
+    }
+
+    public static function defaultDisk(): string
+    {
+        return config('shop.product_images_disk', 'public');
     }
 
     public function product(): BelongsTo

@@ -38,7 +38,7 @@ class ImagesRelationManager extends RelationManager
         return $schema->schema([
             FileUpload::make('path')
                 ->label('Image')
-                ->disk('public')
+                ->disk(fn (): string => ProductImage::defaultDisk())
                 ->directory(fn () => 'products/' . $this->getOwnerRecord()->id)
                 ->image()
                 ->imageEditor()
@@ -79,7 +79,7 @@ class ImagesRelationManager extends RelationManager
                             ]))
                         ->toArray(),
                 ),
-            Hidden::make('disk')->default('public'),
+            Hidden::make('disk')->default(fn (): string => ProductImage::defaultDisk()),
             TextInput::make('sort')->numeric()->default(0),
             Toggle::make('is_primary')
                 ->label('Primary')
@@ -95,7 +95,7 @@ class ImagesRelationManager extends RelationManager
             ->columns([
                 ImageColumn::make('path')
                     ->label('Preview')
-                    ->disk(fn (ProductImage $record) => $record->disk ?: 'public')
+                    ->disk(fn (ProductImage $record): string => $record->disk ?: ProductImage::defaultDisk())
                     ->circular(),
                 ToggleColumn::make('is_primary')
                     ->label('Primary')
