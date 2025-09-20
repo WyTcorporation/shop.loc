@@ -25,7 +25,7 @@ vi.mock('axios', () => {
     };
 });
 
-import { CartApi, resetCartCache } from './api';
+import { CartApi, resetCartCache } from '../api';
 
 describe('CartApi', () => {
     const { getMock, postMock, patchMock, deleteMock } = mocks;

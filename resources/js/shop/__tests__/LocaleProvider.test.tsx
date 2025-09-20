@@ -2,9 +2,9 @@ import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-import LocaleProvider, { useLocale } from './LocaleProvider';
-import { SUPPORTED_LANGS, resolveLocale } from './config';
-import { localeMessages } from './messages';
+import LocaleProvider, { useLocale } from '../i18n/LocaleProvider';
+import { SUPPORTED_LANGS, resolveLocale } from '../i18n/config';
+import { localeMessages } from '../i18n/messages';
 
 function MessagesProbe() {
     const { messages, locale } = useLocale();

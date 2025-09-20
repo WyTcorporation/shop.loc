@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { AppErrorBoundary } from '../ErrorBoundary';
-import { createTranslator, getMessages } from '../../i18n/messages';
-import { DEFAULT_LANG } from '../../i18n/config';
+import { AppErrorBoundary } from '../ui/ErrorBoundary';
+import { createTranslator, getMessages } from '../i18n/messages';
+import { DEFAULT_LANG } from '../i18n/config';
 
 const t = createTranslator(getMessages(DEFAULT_LANG));
 

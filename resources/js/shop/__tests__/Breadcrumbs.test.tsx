@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
-import Breadcrumbs from './Breadcrumbs';
-import ImageLightbox from './ImageLightbox';
+import Breadcrumbs from '../components/Breadcrumbs';
+import ImageLightbox from '../components/ImageLightbox';
 import LocaleProvider, { useLocale } from '../i18n/LocaleProvider';
 
 describe('localized accessibility labels', () => {

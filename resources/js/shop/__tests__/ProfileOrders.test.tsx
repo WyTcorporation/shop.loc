@@ -3,8 +3,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
-import ProfileOrdersPage from '../ProfileOrders';
-import { OrdersApi } from '../../api';
+import ProfileOrdersPage from '../pages/ProfileOrders';
+import { OrdersApi } from '../api';
 
 vi.mock('../../components/ProfileNavigation', () => ({
     __esModule: true,
@@ -25,8 +25,8 @@ vi.mock('../../i18n/LocaleProvider', () => ({
     useLocale: vi.fn(),
 }));
 
-const useAuth = (await import('../../hooks/useAuth')).default as Mock;
-const { useLocale } = await import('../../i18n/LocaleProvider');
+const useAuth = (await import('../hooks/useAuth')).default as Mock;
+const { useLocale } = await import('../i18n/LocaleProvider');
 const useLocaleMock = useLocale as Mock;
 
 describe('ProfileOrdersPage localization', () => {

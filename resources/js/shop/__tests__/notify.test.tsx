@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import LocaleProvider, { useLocale } from '../i18n/LocaleProvider';
-import { NotifyProvider, useNotify } from './notify';
+import { NotifyProvider, useNotify } from '../ui/notify';
 
 function ToastTestbed() {
     const notify = useNotify();

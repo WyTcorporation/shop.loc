@@ -3,10 +3,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import RatingStars from '../RatingStars';
-import LocaleProvider from '../../i18n/LocaleProvider';
-import { createTranslator, localeMessages } from '../../i18n/messages';
-import { DEFAULT_LANG, type Lang } from '../../i18n/config';
+import RatingStars from '../components/RatingStars';
+import LocaleProvider from '../i18n/LocaleProvider';
+import { createTranslator, localeMessages } from '../i18n/messages';
+import { DEFAULT_LANG, type Lang } from '../i18n/config';
 
 type ControlledProps = {
     initialValue?: number;

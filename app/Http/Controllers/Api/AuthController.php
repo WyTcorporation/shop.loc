@@ -38,7 +38,7 @@ class AuthController extends Controller
 
         $user->loadMissing('twoFactorSecret');
 
-        $verificationUrl = $this->queueEmailVerification($user, true);
+        $verificationUrl = $this->queueEmailVerification($user);
 
         Mail::to($user)->queue(new WelcomeMail($user, $verificationUrl));
 

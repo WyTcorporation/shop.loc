@@ -3,7 +3,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import LanguageSwitcher, { swapLangInPath } from './LanguageSwitcher';
+import LanguageSwitcher, { swapLangInPath } from '../components/LanguageSwitcher';
 import LocaleProvider from '../i18n/LocaleProvider';
 import { SUPPORTED_LANGS, type Lang } from '../i18n/config';
 

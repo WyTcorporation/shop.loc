@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import {MemoryRouter} from 'react-router-dom';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import WishlistPage from '../Wishlist';
-import {WishlistApi} from '../../api';
+import WishlistPage from '../pages/Wishlist';
+import {WishlistApi} from '../api';
 
 const mockUseWishlist = vi.fn();
 const { useAuthMock } = vi.hoisted(() => ({

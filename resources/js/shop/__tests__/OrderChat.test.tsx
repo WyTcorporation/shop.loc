@@ -4,8 +4,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import OrderChat from '../OrderChat';
-import LocaleProvider, { useLocale } from '../../i18n/LocaleProvider';
+import OrderChat from '../components/OrderChat';
+import LocaleProvider, { useLocale } from '../i18n/LocaleProvider';
 
 const { authState, useAuthMock, listMessagesMock, sendMessageMock } = vi.hoisted(() => {
     const authState = {

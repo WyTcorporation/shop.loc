@@ -89,7 +89,7 @@ vi.mock('../ui/recentlyViewed', () => ({
     addRecentlyViewed: vi.fn(),
 }));
 
-const { default: ProductPage } = await import('./Product');
+const { default: ProductPage } = await import('../pages/Product');
 
 type Scenario = {
     lang: Lang;

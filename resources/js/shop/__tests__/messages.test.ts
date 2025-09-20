@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTranslator, localeMessages, type TranslationKey } from './index';
+import { createTranslator, localeMessages, type TranslationKey } from '../i18n/messages';
 
 const keys: Array<{ key: TranslationKey; params?: Record<string, any> }> = [
     { key: 'common.navigation.breadcrumbAria' },

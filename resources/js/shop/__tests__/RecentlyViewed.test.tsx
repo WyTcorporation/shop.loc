@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
-import RecentlyViewed from './RecentlyViewed';
+import RecentlyViewed from '../components/RecentlyViewed';
 import LocaleProvider, { useLocale } from '../i18n/LocaleProvider';
 
 type RecentlyViewedProps = React.ComponentProps<typeof RecentlyViewed>;

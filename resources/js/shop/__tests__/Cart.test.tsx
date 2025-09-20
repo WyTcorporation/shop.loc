@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { Mock } from 'vitest';
 
-import CartPage from '../Cart';
+import CartPage from '../pages/Cart';
 
 vi.mock('../../useCart', () => ({
     __esModule: true,
@@ -25,8 +25,8 @@ vi.mock('../../i18n/LocaleProvider', () => ({
     useLocale: vi.fn(),
 }));
 
-const useCart = (await import('../../useCart')).default as Mock;
-const { useLocale } = await import('../../i18n/LocaleProvider');
+const useCart = (await import('../useCart')).default as Mock;
+const { useLocale } = await import('../i18n/LocaleProvider');
 const useLocaleMock = useLocale as Mock;
 
 describe('CartPage currency formatting', () => {

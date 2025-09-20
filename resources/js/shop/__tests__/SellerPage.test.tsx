@@ -3,19 +3,19 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import LocaleProvider, { useLocale } from '../../i18n/LocaleProvider';
-import type { Lang } from '../../i18n/config';
-import SellerPage from '../SellerPage';
-import type { Product, SellerProductsResponse, Vendor } from '../../api';
+import LocaleProvider, { useLocale } from '../i18n/LocaleProvider';
+import type { Lang } from '../i18n/config';
+import SellerPage from '../pages/SellerPage';
+import type { Product, SellerProductsResponse, Vendor } from '../api';
 
-type FetchSellerProducts = typeof import('../../api').fetchSellerProducts;
+type FetchSellerProducts = typeof import('../api').fetchSellerProducts;
 
 const fetchSellerProductsMock = vi.fn<ReturnType<FetchSellerProducts>, Parameters<FetchSellerProducts>>();
 const viewItemListMock = vi.fn();
 const seoHeadCalls: Array<{ title: string; description: string }> = [];
 
 vi.mock('../../api', async () => {
-    const actual = await vi.importActual<typeof import('../../api')>('../../api');
+    const actual = await vi.importActual<typeof import('../api')>('../../api');
     return {
         __esModule: true,
         ...actual,

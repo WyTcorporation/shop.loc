@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import OrderConfirmation from '../OrderConfirmation';
-import { OrdersApi } from '../../api';
+import OrderConfirmation from '../pages/OrderConfirmation';
+import { OrdersApi } from '../api';
 
 type OrderResponse = Awaited<ReturnType<typeof OrdersApi.show>>;
 

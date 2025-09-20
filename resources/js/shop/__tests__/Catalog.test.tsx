@@ -78,7 +78,7 @@ vi.mock('@/components/ui/select', () => {
     return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };
 }, { virtual: true });
 
-const { default: Catalog } = await import('./Catalog');
+const { default: Catalog } = await import('../pages/Catalog');
 
 function createDeferred<T>() {
     let resolve!: (value: T | PromiseLike<T>) => void;

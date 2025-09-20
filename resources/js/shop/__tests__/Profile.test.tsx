@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ProfilePage from '../Profile';
-import { AuthApi, TwoFactorApi } from '../../api';
+import ProfilePage from '../pages/Profile';
+import { AuthApi, TwoFactorApi } from '../api';
 
 const mockUseAuth = vi.fn();
 

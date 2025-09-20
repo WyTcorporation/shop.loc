@@ -4,9 +4,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import LocaleProvider from '../../i18n/LocaleProvider';
-import type { Product } from '../../api';
-import ProductPage from '../Product';
+import LocaleProvider from '../i18n/LocaleProvider';
+import type { Product } from '../api';
+import ProductPage from '../pages/Product';
 
 const productsShowMock = vi.fn();
 const productsRelatedMock = vi.fn();

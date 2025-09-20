@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import ForgotPasswordPage from '../ForgotPassword';
-import { createTranslator, getMessages } from '../../i18n/messages';
-import { DEFAULT_LANG } from '../../i18n/config';
+import ForgotPasswordPage from '../pages/ForgotPassword';
+import { createTranslator, getMessages } from '../i18n/messages';
+import { DEFAULT_LANG } from '../i18n/config';
 
 const t = createTranslator(getMessages(DEFAULT_LANG));
 
