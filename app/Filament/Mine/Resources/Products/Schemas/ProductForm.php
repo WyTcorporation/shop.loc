@@ -18,6 +18,7 @@ use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use function currencySymbol;
+use function data_get;
 
 class ProductForm
 {
@@ -107,12 +108,24 @@ class ProductForm
                             ->required()
                             ->live(onBlur: true)
                             ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($primaryLocale): void {
-                                if (filled($state) && blank($get("translations.{$primaryLocale}"))) {
+                                $primaryTranslation = data_get($get('translations'), $primaryLocale);
+
+                                if (filled($state) && blank($primaryTranslation)) {
                                     $set("translations.{$primaryLocale}", $state);
                                 }
                             })
-                            ->afterStateUpdated(function (Set $set, $state) use ($primaryLocale): void {
-                                $set("translations.{$primaryLocale}", $state);
+                            ->afterStateUpdated(function (Set $set, Get $get, $state) use ($primaryLocale): void {
+                                if (blank($state)) {
+                                    $set("translations.{$primaryLocale}", $state);
+
+                                    return;
+                                }
+
+                                $primaryTranslation = data_get($get('translations'), $primaryLocale);
+
+                                if (blank($primaryTranslation)) {
+                                    $set("translations.{$primaryLocale}", $state);
+                                }
                             }),
                         Fieldset::make('translations')
                             ->schema(
@@ -121,11 +134,14 @@ class ProductForm
                                         ->label(strtoupper($locale))
                                         ->live(onBlur: true)
                                         ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($locale, $primaryLocale): void {
-                                            if ($locale === $primaryLocale && blank($state)) {
-                                                $value = $get('value');
-                                                if (filled($value)) {
-                                                    $set("translations.{$locale}", $value);
-                                                }
+                                            if ($locale !== $primaryLocale || filled($state)) {
+                                                return;
+                                            }
+
+                                            $value = $get('value');
+
+                                            if (filled($value)) {
+                                                $set("translations.{$locale}", $value);
                                             }
                                         })
                                         ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
