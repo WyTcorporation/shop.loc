@@ -24,8 +24,6 @@ class CurrencyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Settings';
-
     protected static ?string $recordTitleAttribute = 'code';
 
     protected static bool $shouldRegisterNavigation = true;
@@ -42,7 +40,7 @@ class CurrencyResource extends Resource
                 ->afterStateUpdated(fn (Set $set, ?string $state) => $set('code', strtoupper((string) $state)))
                 ->rule('alpha:ascii'),
             TextInput::make('rate')
-                ->label('Rate (vs base)')
+                ->label(__('shop.currencies.rate_vs_base'))
                 ->numeric()
                 ->required()
                 ->minValue(0.00000001)
@@ -55,16 +53,16 @@ class CurrencyResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('code')
-                    ->label('Code')
+                    ->label(__('shop.currencies.code'))
                     ->searchable()
                     ->sortable()
                     ->formatStateUsing(fn (string $state) => Str::upper($state)),
                 TextColumn::make('rate')
-                    ->label('Rate')
+                    ->label(__('shop.currencies.rate'))
                     ->numeric(precision: 8)
                     ->sortable(),
                 TextColumn::make('updated_at')
-                    ->label('Updated')
+                    ->label(__('shop.currencies.updated'))
                     ->dateTime()
                     ->sortable(),
             ])
@@ -87,6 +85,11 @@ class CurrencyResource extends Resource
             'create' => CreateCurrency::route('/create'),
             'edit' => EditCurrency::route('/{record}/edit'),
         ];
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.currencies.navigation_group');
     }
 
     public static function getNavigationBadge(): ?string

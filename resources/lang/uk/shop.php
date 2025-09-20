@@ -290,6 +290,14 @@ return [
         ],
     ],
 
+    'currencies' => [
+        'navigation_group' => 'Налаштування',
+        'code' => 'Код',
+        'rate' => 'Курс',
+        'rate_vs_base' => 'Курс (до базової)',
+        'updated' => 'Оновлено',
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двофакторну автентифікацію не налаштовано.',
