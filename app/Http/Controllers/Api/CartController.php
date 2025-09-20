@@ -16,14 +16,36 @@ class CartController extends Controller
 {
     public function getOrCreate(Request $request): JsonResponse
     {
+        $user = $request->user('sanctum') ?? $request->user();
+        $userId = $user?->getAuthIdentifier() ?? auth()->id();
+        $relations = ['items.product.vendor', 'coupon', 'user'];
+
         $id = $request->cookie('cart_id');
-        $cart = $id
-            ? Cart::active()->with(['items.product.vendor', 'coupon', 'user'])->find($id)
-            : null;
+        $cart = null;
+
+        if ($id) {
+            $cart = Cart::active()->with($relations)->find($id);
+
+            if ($cart && $userId) {
+                if ($cart->user_id === null) {
+                    $cart->forceFill(['user_id' => $userId])->save();
+                    $cart->load($relations);
+                } elseif ((string) $cart->user_id !== (string) $userId) {
+                    $cart = null;
+                }
+            }
+        }
+
+        if (! $cart && $userId) {
+            $cart = Cart::active()
+                ->with($relations)
+                ->where('user_id', $userId)
+                ->first();
+        }
 
         if (! $cart) {
-            $cart = Cart::create(['user_id' => auth()->id()]);
-            $cart->load(['items.product.vendor', 'coupon', 'user']);
+            $cart = Cart::create(['user_id' => $userId]);
+            $cart->load($relations);
         }
 
         return $this->cartResponse($cart)
