@@ -5,6 +5,7 @@ services:
             dockerfile: docker/php/Dockerfile
         image: shop-php:dev
         container_name: shop-app
+        command: sh -lc "/usr/local/bin/fix-storage-perms && php-fpm"
         volumes:
             - .:/var/www/html
         depends_on:
@@ -15,7 +16,7 @@ services:
     horizon:
         image: shop-php:dev
         container_name: shop-horizon
-        command: sh -lc "php artisan horizon"
+        command: sh -lc "/usr/local/bin/fix-storage-perms && php artisan horizon"
         working_dir: /var/www/html
         volumes:
             - .:/var/www/html

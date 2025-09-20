@@ -30,6 +30,8 @@ app (php-fpm для artisan, web), horizon (черги), nginx (порт 8080), 
     docker compose exec app php artisan migrate --seed
 ```
 
+`app` і `horizon` автоматично виставляють права доступу до `storage/*` та `bootstrap/cache` під час старту контейнерів, тому додаткові `chown`/`mkdir` виконувати не потрібно.
+
 Vite hot reload для Laravel:    
 public/hot вказує на http://localhost:5173 (ми виставляли руками при потребі).
 
