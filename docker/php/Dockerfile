@@ -24,3 +24,6 @@ RUN apk del .build-deps
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
+COPY docker/php/fix-storage-perms.sh /usr/local/bin/fix-storage-perms
+RUN chmod +x /usr/local/bin/fix-storage-perms
