@@ -59,7 +59,7 @@ class CurrencyResource extends Resource
                     ->formatStateUsing(fn (string $state) => Str::upper($state)),
                 TextColumn::make('rate')
                     ->label(__('shop.currencies.rate'))
-                    ->numeric(precision: 8)
+                    ->numeric(decimalPlaces: 8)
                     ->sortable(),
                 TextColumn::make('updated_at')
                     ->label(__('shop.currencies.updated'))
