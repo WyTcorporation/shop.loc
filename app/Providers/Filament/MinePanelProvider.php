@@ -48,12 +48,12 @@ class MinePanelProvider extends PanelProvider
                 OrderResource::class,
             ])
             ->navigationGroups([
-                'Catalog',
-                'Sales',
-                'Inventory',
-                'Settings',
+                __('shop.admin.navigation.catalog'),
+                __('shop.admin.navigation.sales'),
+                __('shop.admin.navigation.inventory'),
+                __('shop.admin.navigation.settings'),
             ])
-            ->brandName('Shop Admin')
+            ->brandName(__('shop.admin.brand'))
             ->discoverResources(in: app_path('Filament/Mine/Resources'), for: 'App\Filament\Mine\Resources')
             ->discoverPages(in: app_path('Filament/Mine/Pages'), for: 'App\Filament\Mine\Pages')
             ->pages([

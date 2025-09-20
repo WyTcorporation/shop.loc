@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'admin' => [
+        'brand' => 'Shop Admin',
+        'navigation' => [
+            'catalog' => 'Catalog',
+            'sales' => 'Sales',
+            'inventory' => 'Inventory',
+            'settings' => 'Settings',
+        ],
+    ],
+
     'navigation' => [
         'catalog' => 'Catalog',
         'cart' => 'Cart',

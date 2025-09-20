@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'admin' => [
+        'brand' => 'Панель магазину',
+        'navigation' => [
+            'catalog' => 'Каталог',
+            'sales' => 'Продажі',
+            'inventory' => 'Запаси',
+            'settings' => 'Налаштування',
+        ],
+    ],
+
     'navigation' => [
         'catalog' => 'Каталог',
         'cart' => 'Кошик',
