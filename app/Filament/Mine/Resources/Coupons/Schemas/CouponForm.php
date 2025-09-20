@@ -8,6 +8,10 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use function currencySymbol;
 
@@ -15,6 +19,11 @@ class CouponForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $primaryLocale = config('app.locale');
+        $supportedLocales = collect(config('app.supported_locales', [$primaryLocale]))
+            ->filter()
+            ->values();
+
         return $schema->components([
             TextInput::make('code')
                 ->required()
@@ -22,10 +31,52 @@ class CouponForm
                 ->maxLength(64)
                 ->helperText('Unique coupon code customers will enter.'),
             TextInput::make('name')
-                ->maxLength(255),
+                ->maxLength(255)
+                ->hidden()
+                ->afterStateHydrated(function (TextInput $component, $state, Set $set) use ($primaryLocale): void {
+                    if (filled($state)) {
+                        $set("name_translations.{$primaryLocale}", $state);
+                    }
+                })
+                ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
             Textarea::make('description')
                 ->rows(3)
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->hidden()
+                ->afterStateHydrated(function (Textarea $component, $state, Set $set) use ($primaryLocale): void {
+                    if (filled($state)) {
+                        $set("description_translations.{$primaryLocale}", $state);
+                    }
+                })
+                ->dehydrateStateUsing(fn ($state, Get $get) => $get('description_translations.' . $primaryLocale) ?? $state),
+            Tabs::make('translations')
+                ->columnSpanFull()
+                ->tabs(
+                    $supportedLocales
+                        ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                            ->schema([
+                                TextInput::make("name_translations.{$locale}")
+                                    ->label(__('shop.common.name'))
+                                    ->required($locale === $primaryLocale)
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                        if ($locale === $primaryLocale) {
+                                            $set('name', $state);
+                                        }
+                                    }),
+                                Textarea::make("description_translations.{$locale}")
+                                    ->label(__('shop.products.fields.description'))
+                                    ->columnSpanFull()
+                                    ->live(onBlur: true)
+                                    ->required($locale === $primaryLocale)
+                                    ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                        if ($locale === $primaryLocale) {
+                                            $set('description', $state);
+                                        }
+                                    }),
+                            ]))
+                        ->toArray(),
+                ),
             Select::make('type')
                 ->required()
                 ->options([

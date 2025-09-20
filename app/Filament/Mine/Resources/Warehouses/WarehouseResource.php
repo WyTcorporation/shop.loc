@@ -12,9 +12,13 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Set;
+use Filament\Forms\Set as FormsSet;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get as SchemaGet;
+use Filament\Schemas\Components\Utilities\Set as SchemaSet;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -31,6 +35,11 @@ class WarehouseResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $primaryLocale = config('app.locale');
+        $supportedLocales = collect(config('app.supported_locales', [$primaryLocale]))
+            ->filter()
+            ->values();
+
         return $schema->components([
             TextInput::make('code')
                 ->required()
@@ -38,12 +47,54 @@ class WarehouseResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->rule('alpha_dash')
                 ->live(onBlur: true)
-                ->afterStateUpdated(fn (Set $set, ?string $state) => $set('code', strtoupper((string) $state))),
+                ->afterStateUpdated(fn (FormsSet $set, ?string $state) => $set('code', strtoupper((string) $state))),
             TextInput::make('name')
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->hidden()
+                ->afterStateHydrated(function (TextInput $component, $state, SchemaSet $set) use ($primaryLocale): void {
+                    if (filled($state)) {
+                        $set("name_translations.{$primaryLocale}", $state);
+                    }
+                })
+                ->dehydrateStateUsing(fn ($state, SchemaGet $get) => $get('name_translations.' . $primaryLocale) ?? $state),
             Textarea::make('description')
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->hidden()
+                ->afterStateHydrated(function (Textarea $component, $state, SchemaSet $set) use ($primaryLocale): void {
+                    if (filled($state)) {
+                        $set("description_translations.{$primaryLocale}", $state);
+                    }
+                })
+                ->dehydrateStateUsing(fn ($state, SchemaGet $get) => $get('description_translations.' . $primaryLocale) ?? $state),
+            Tabs::make('translations')
+                ->columnSpanFull()
+                ->tabs(
+                    $supportedLocales
+                        ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                            ->schema([
+                                TextInput::make("name_translations.{$locale}")
+                                    ->label(__('shop.common.name'))
+                                    ->required($locale === $primaryLocale)
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (SchemaSet $set, $state) use ($locale, $primaryLocale): void {
+                                        if ($locale === $primaryLocale) {
+                                            $set('name', $state);
+                                        }
+                                    }),
+                                Textarea::make("description_translations.{$locale}")
+                                    ->label(__('shop.products.fields.description'))
+                                    ->columnSpanFull()
+                                    ->required($locale === $primaryLocale)
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (SchemaSet $set, $state) use ($locale, $primaryLocale): void {
+                                        if ($locale === $primaryLocale) {
+                                            $set('description', $state);
+                                        }
+                                    }),
+                            ]))
+                        ->toArray(),
+                ),
         ]);
     }
 

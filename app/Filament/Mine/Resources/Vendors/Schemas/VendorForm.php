@@ -5,6 +5,10 @@ namespace App\Filament\Mine\Resources\Vendors\Schemas;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,6 +17,10 @@ class VendorForm
     public static function configure(Schema $schema): Schema
     {
         $user = Auth::user();
+        $primaryLocale = config('app.locale');
+        $supportedLocales = collect(config('app.supported_locales', [$primaryLocale]))
+            ->filter()
+            ->values();
 
         return $schema
             ->components([
@@ -26,7 +34,14 @@ class VendorForm
                     ->disabled(fn () => (bool) $user?->vendor),
                 TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->hidden()
+                    ->afterStateHydrated(function (TextInput $component, $state, Set $set) use ($primaryLocale): void {
+                        if (filled($state)) {
+                            $set("name_translations.{$primaryLocale}", $state);
+                        }
+                    })
+                    ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
                 TextInput::make('slug')
                     ->required()
                     ->maxLength(255)
@@ -40,7 +55,42 @@ class VendorForm
                     ->maxLength(255),
                 Textarea::make('description')
                     ->rows(4)
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->hidden()
+                    ->afterStateHydrated(function (Textarea $component, $state, Set $set) use ($primaryLocale): void {
+                        if (filled($state)) {
+                            $set("description_translations.{$primaryLocale}", $state);
+                        }
+                    })
+                    ->dehydrateStateUsing(fn ($state, Get $get) => $get('description_translations.' . $primaryLocale) ?? $state),
+                Tabs::make('translations')
+                    ->columnSpanFull()
+                    ->tabs(
+                        $supportedLocales
+                            ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                                ->schema([
+                                    TextInput::make("name_translations.{$locale}")
+                                        ->label(__('shop.common.name'))
+                                        ->required($locale === $primaryLocale)
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                            if ($locale === $primaryLocale) {
+                                                $set('name', $state);
+                                            }
+                                        }),
+                                    Textarea::make("description_translations.{$locale}")
+                                        ->label(__('shop.products.fields.description'))
+                                        ->required($locale === $primaryLocale)
+                                        ->columnSpanFull()
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                            if ($locale === $primaryLocale) {
+                                                $set('description', $state);
+                                            }
+                                        }),
+                                ]))
+                            ->toArray(),
+                    ),
             ])
             ->columns(2);
     }
