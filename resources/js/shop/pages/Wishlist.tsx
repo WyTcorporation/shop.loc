@@ -1,6 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import useWishlist from '../hooks/useWishlist';
+import useAuth from '../hooks/useAuth';
 import {Card} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
@@ -15,9 +16,15 @@ export default function WishlistPage() {
     const [removingIds, setRemovingIds] = React.useState<Record<number, boolean>>({});
     const hasItems = items.length > 0;
     const { t } = useLocale();
+    const { isAuthenticated } = useAuth();
 
     const handleRemove = React.useCallback(
         async (productId: number) => {
+            if (!isAuthenticated) {
+                remove(productId);
+                return;
+            }
+
             setRemovingIds(prev => ({...prev, [productId]: true}));
             try {
                 await WishlistApi.remove(productId);
@@ -31,7 +38,7 @@ export default function WishlistPage() {
                 });
             }
         },
-        [remove],
+        [isAuthenticated, remove],
     );
 
     return (
