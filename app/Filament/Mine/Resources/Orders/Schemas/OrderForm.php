@@ -24,9 +24,9 @@ class OrderForm
     {
         return $schema
             ->components([
-                Section::make('General')->schema([
+                Section::make(__('shop.orders.sections.general'))->schema([
                     Select::make('user_id')
-                        ->label('User')
+                        ->label(__('shop.orders.fields.user'))
                         ->relationship('user', 'email')
                         ->searchable()
                         ->preload()
@@ -37,59 +37,56 @@ class OrderForm
                         }),
 
                     TextInput::make('email')
-                        ->label('Email')
+                        ->label(__('shop.common.email'))
                         ->email()
                         ->required(fn (Get $get) => blank($get('user_id')))
-                        ->helperText('Якщо вибрано користувача — поле підставиться автоматично.'),
+                        ->helperText(__('shop.orders.helpers.email_auto')),
 
                     Select::make('status')
-                        ->label('Status')
-                        ->options([
-                            OrderStatus::New->value     => 'New',
-                            OrderStatus::Paid->value    => 'Paid',
-                            OrderStatus::Shipped->value => 'Shipped',
-                            OrderStatus::Cancelled->value=> 'Cancelled',
-                        ])
+                        ->label(__('shop.common.status'))
+                        ->options(collect(OrderStatus::cases())->mapWithKeys(
+                            fn (OrderStatus $case) => [$case->value => __('shop.orders.statuses.' . $case->value)]
+                        )->all())
                         ->default(OrderStatus::New->value)
                         ->required(),
 
                     TextInput::make('number')
-                        ->label('Number')
+                        ->label(__('shop.orders.fields.number'))
                         ->disabled()
                         ->dehydrated(false)
-                        ->hint('Згенерується автоматично'),
+                        ->hint(__('shop.orders.hints.number_generated')),
 
                     TextInput::make('total')
-                        ->label('Total')
+                        ->label(__('shop.common.total'))
                         ->prefix(fn (?Order $record) => currencySymbol($record?->currency))
                         ->disabled()
                         ->dehydrated(false)
 
                 ])->columns(2),
 
-                Section::make('Shipping')->schema([
-                    Fieldset::make('Shipping address')->schema([
-                        TextInput::make('shipping_address.name')->label('Name'),
-                        TextInput::make('shipping_address.city')->label('City'),
-                        TextInput::make('shipping_address.addr')->label('Address'),
-                        TextInput::make('shipping_address.postal_code')->label('Postal code'),
-                        TextInput::make('shipping_address.phone')->label('Phone')->tel(),
+                Section::make(__('shop.orders.sections.shipping'))->schema([
+                    Fieldset::make(__('shop.orders.fieldsets.shipping_address'))->schema([
+                        TextInput::make('shipping_address.name')->label(__('shop.common.name')),
+                        TextInput::make('shipping_address.city')->label(__('shop.common.city')),
+                        TextInput::make('shipping_address.addr')->label(__('shop.common.address')),
+                        TextInput::make('shipping_address.postal_code')->label(__('shop.common.postal_code')),
+                        TextInput::make('shipping_address.phone')->label(__('shop.common.phone'))->tel(),
                     ])->columns(2),
 
-                    Fieldset::make('Billing address')->schema([
-                        TextInput::make('billing_address.name')->label('Name'),
-                        TextInput::make('billing_address.city')->label('City'),
-                        TextInput::make('billing_address.addr')->label('Address'),
-                        TextInput::make('billing_address.postal_code')->label('Postal code'),
-                        TextInput::make('billing_address.phone')->label('Phone')->tel(),
+                    Fieldset::make(__('shop.orders.fieldsets.billing_address'))->schema([
+                        TextInput::make('billing_address.name')->label(__('shop.common.name')),
+                        TextInput::make('billing_address.city')->label(__('shop.common.city')),
+                        TextInput::make('billing_address.addr')->label(__('shop.common.address')),
+                        TextInput::make('billing_address.postal_code')->label(__('shop.common.postal_code')),
+                        TextInput::make('billing_address.phone')->label(__('shop.common.phone'))->tel(),
                     ])->columns(2),
                 ])->columns(1),
 
-                TextInput::make('note')->label('Note')->columnSpanFull(),
+                TextInput::make('note')->label(__('shop.common.note'))->columnSpanFull(),
 
-                Section::make('Shipment')->schema([
+                Section::make(__('shop.orders.sections.shipment'))->schema([
                     TextInput::make('shipment_tracking_number')
-                        ->label('Tracking number')
+                        ->label(__('shop.common.tracking_number'))
                         ->maxLength(255)
                         ->afterStateHydrated(function (TextInput $component, ?Order $record) {
                             $component->state($record?->shipment?->tracking_number);
@@ -97,7 +94,7 @@ class OrderForm
                         ->dehydrateStateUsing(fn ($state) => blank($state) ? null : $state),
 
                     Select::make('shipment_status')
-                        ->label('Shipment status')
+                        ->label(__('shop.orders.fields.shipment_status'))
                         ->options(collect(ShipmentStatus::cases())->mapWithKeys(fn (ShipmentStatus $case) => [$case->value => $case->label()])->all())
                         ->default(ShipmentStatus::Pending->value)
                         ->native(false)
@@ -108,7 +105,7 @@ class OrderForm
                         ->dehydrateStateUsing(fn ($state) => $state ?? ShipmentStatus::Pending->value),
                 ])->columns(2),
 
-                Section::make('Summary')
+                Section::make(__('shop.orders.sections.summary'))
                     ->collapsible()
                     ->schema([
                         ViewField::make('orderSummary')
