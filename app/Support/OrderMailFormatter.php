@@ -19,15 +19,16 @@ class OrderMailFormatter
         $formatCurrency = static function (float $value, string $code): string {
             $formatted = number_format($value, 2, ',', ' ');
 
-            return $code === 'UAH'
-                ? sprintf('%s грн', $formatted)
-                : sprintf('%s %s', $formatted, $code);
+            return sprintf('%s %s', $formatted, $code);
         };
 
         $amounts = [
-            'UAH' => $formatCurrency($converter->convertFromBase($baseAmount, 'UAH'), 'UAH'),
-            $baseCurrency => $formatCurrency($baseAmount, $baseCurrency),
+            $orderCurrency => $formatCurrency($converter->convertFromBase($baseAmount, $orderCurrency), $orderCurrency),
         ];
+
+        if ($orderCurrency !== $baseCurrency) {
+            $amounts[$baseCurrency] = $formatCurrency($baseAmount, $baseCurrency);
+        }
 
         return implode(' / ', array_unique(array_values($amounts)));
     }
