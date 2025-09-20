@@ -33,7 +33,7 @@ class ProductsTable
             })
             ->columns([
                 ImageColumn::make('preview')
-                    ->label('Preview')
+                    ->label(__('shop.products.fields.preview'))
                     // важливо: саме getStateUsing для ImageColumn
                     ->getStateUsing(fn (Product $record) => $record->preview_url)
                     ->circular()
@@ -41,7 +41,7 @@ class ProductsTable
 
                 // (за бажанням) дебаг-колонка з URL
                 TextColumn::make('preview_url_debug')
-                    ->label('url?')
+                    ->label(__('shop.products.fields.preview_url_debug'))
                     ->getStateUsing(fn (Product $r) => $r->preview_url ?? '—')
                     ->toggleable(isToggledHiddenByDefault: true),
 //                \Filament\Tables\Columns\ImageColumn::make('preview')
@@ -90,10 +90,13 @@ class ProductsTable
 //                    ->searchable(),
 
                 TextColumn::make('sku')
-                    ->label('SKU')
+                    ->label(__('shop.products.fields.sku'))
                     ->searchable(),
 
-                TextColumn::make('category.name')->label('Category')->toggleable()->sortable(),
+                TextColumn::make('category.name')
+                    ->label(__('shop.products.fields.category'))
+                    ->toggleable()
+                    ->sortable(),
 
 //                TextColumn::make('attributes')
 //                    ->label('Attrs')
@@ -109,7 +112,7 @@ class ProductsTable
 //                    ->tooltip(fn ($state) => is_array($state) ? json_encode($state, JSON_UNESCAPED_UNICODE) : (string) $state)
 //                    ->wrap(),
                 TextColumn::make('vendor.name')
-                    ->label('Vendor')
+                    ->label(__('shop.products.fields.vendor'))
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query
                         ->orderBy(
                             Vendor::query()
@@ -121,7 +124,7 @@ class ProductsTable
                     ->visible(fn () => Auth::user()?->vendor === null),
 
                 TextColumn::make('stock')
-                    ->label('Stock')
+                    ->label(__('shop.products.fields.stock'))
                     ->state(fn (Product $record): int => $record->relationLoaded('stocks')
                         ? (int) $record->stocks->sum('available')
                         : (int) $record->stock)
@@ -130,13 +133,13 @@ class ProductsTable
                     ->extraAttributes(['class' => 'text-right tabular-nums font-mono']),
 
                 TextColumn::make('price')
-                    ->label('Price')
+                    ->label(__('shop.products.fields.price'))
                     ->formatStateUsing(fn ($state): string => formatCurrency($state))
                     ->sortable()
                     ->extraAttributes(['class' => 'text-right tabular-nums font-mono']),
 
                 ToggleColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('shop.products.fields.is_active'))
                     ->sortable(),
 
 
@@ -161,14 +164,14 @@ class ProductsTable
             ])
             ->filters([
                 SelectFilter::make('category_id')
-                    ->label('Category')
+                    ->label(__('shop.products.filters.category'))
                     ->relationship('category', 'name')
                     ->preload()
                     ->searchable(),
                 TernaryFilter::make('is_active')
-                    ->label('Active')
-                    ->trueLabel('Active')
-                    ->falseLabel('Inactive')
+                    ->label(__('shop.products.filters.is_active.label'))
+                    ->trueLabel(__('shop.products.filters.is_active.true'))
+                    ->falseLabel(__('shop.products.filters.is_active.false'))
                     ->queries(
                         true: fn ($q) => $q->where('is_active', true),
                         false: fn ($q) => $q->where('is_active', false),

@@ -193,6 +193,50 @@ return [
         ],
     ],
 
+    'products' => [
+        'fields' => [
+            'name' => 'Nome',
+            'slug' => 'Slug',
+            'sku' => 'SKU',
+            'category' => 'Categoria',
+            'vendor' => 'Fornecedor',
+            'preview' => 'Pré-visualização',
+            'preview_url_debug' => 'URL?',
+            'stock' => 'Estoque',
+            'price' => 'Preço',
+            'price_old' => 'Preço antigo',
+            'is_active' => 'Ativo',
+        ],
+        'attributes' => [
+            'label' => 'Atributos',
+            'name' => 'Nome',
+            'value' => 'Valor',
+            'add' => 'Adicionar atributo',
+        ],
+        'placeholders' => [
+            'available_stock' => 'Estoque disponível',
+        ],
+        'filters' => [
+            'category' => 'Categoria',
+            'is_active' => [
+                'label' => 'Atividade',
+                'true' => 'Ativos',
+                'false' => 'Inativos',
+            ],
+        ],
+    ],
+
+    'categories' => [
+        'fields' => [
+            'name' => 'Nome',
+            'slug' => 'Slug',
+            'parent' => 'Categoria pai',
+            'deleted_at' => 'Excluído em',
+            'created_at' => 'Criado em',
+            'updated_at' => 'Atualizado em',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'A autenticação em duas etapas não está configurada.',

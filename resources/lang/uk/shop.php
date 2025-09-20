@@ -193,6 +193,50 @@ return [
         ],
     ],
 
+    'products' => [
+        'fields' => [
+            'name' => 'Назва',
+            'slug' => 'Слаг',
+            'sku' => 'Артикул',
+            'category' => 'Категорія',
+            'vendor' => 'Постачальник',
+            'preview' => 'Зображення',
+            'preview_url_debug' => 'URL?',
+            'stock' => 'Залишок',
+            'price' => 'Ціна',
+            'price_old' => 'Стара ціна',
+            'is_active' => 'Активний',
+        ],
+        'attributes' => [
+            'label' => 'Атрибути',
+            'name' => 'Назва',
+            'value' => 'Значення',
+            'add' => 'Додати атрибут',
+        ],
+        'placeholders' => [
+            'available_stock' => 'Доступний залишок',
+        ],
+        'filters' => [
+            'category' => 'Категорія',
+            'is_active' => [
+                'label' => 'Активність',
+                'true' => 'Активні',
+                'false' => 'Неактивні',
+            ],
+        ],
+    ],
+
+    'categories' => [
+        'fields' => [
+            'name' => 'Назва',
+            'slug' => 'Слаг',
+            'parent' => 'Батьківська категорія',
+            'deleted_at' => 'Видалено',
+            'created_at' => 'Створено',
+            'updated_at' => 'Оновлено',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двофакторну автентифікацію не налаштовано.',

@@ -15,11 +15,13 @@ class CategoryForm
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('shop.categories.fields.name'))
                     ->required(),
                 TextInput::make('slug')
+                    ->label(__('shop.categories.fields.slug'))
                     ->required(),
                 Select::make('parent_id')
-                    ->label('Parent category')
+                    ->label(__('shop.categories.fields.parent'))
                     ->relationship('parent', 'name')
                     ->searchable()
                     ->preload()
