@@ -51,67 +51,69 @@ class OrdersTable
 //                        default => 'gray',
 //                    })->searchable(),
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('shop.common.status'))
                     ->badge()
                     ->state(fn ($record) => $record->status instanceof OrderStatus
                         ? $record->status->value
                         : (string) $record->status)
-                    ->formatStateUsing(fn (string $state) => ucfirst($state))
+                    ->formatStateUsing(fn (string $state) => __('shop.orders.statuses.' . $state))
 
                     ->color(fn ($record) => $record->status instanceof OrderStatus
                         ? $record->status->badgeColor()
                         : OrderStatus::from((string) $record->status)->badgeColor()),
-                TextColumn::make('shipping_address.city')->label('City')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('shipping_address.city')->label(__('shop.common.city'))->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->options(collect(OrderStatus::cases())->mapWithKeys(fn ($c) => [$c->value => ucfirst($c->value)])->all()),
+                    ->options(collect(OrderStatus::cases())->mapWithKeys(
+                        fn (OrderStatus $case) => [$case->value => __('shop.orders.statuses.' . $case->value)]
+                    )->all()),
             ])
             ->recordActions([
                 EditAction::make(),
                 Action::make('messages')
-                    ->label('Messages')
+                    ->label(__('shop.orders.actions.messages'))
                     ->icon('heroicon-o-chat-bubble-left-right')
                     ->color('gray')
                     ->url(fn (Order $record) => OrderResource::getUrl('messages', ['record' => $record]))
                     ->visible(fn (Order $record) => auth()->user()?->can('view', $record)),
                 Action::make('markPaid')
-                    ->label('Mark paid')
+                    ->label(__('shop.orders.actions.mark_paid'))
                     ->icon('heroicon-o-banknotes')
                     ->visible(fn (Order $record) => $record->status === OrderStatus::New->value)
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->markPaid();
-                        Notification::make()->title('Order marked as paid')->success()->send();
+                        Notification::make()->title(__('shop.orders.notifications.marked_paid'))->success()->send();
                     }),
                 Action::make('markShipped')
-                    ->label('Mark shipped')
+                    ->label(__('shop.orders.actions.mark_shipped'))
                     ->icon('heroicon-o-truck')
                     ->visible(fn (Order $record) => $record->status === OrderStatus::Paid->value)
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->markShipped();
-                        Notification::make()->title('Order marked as shipped')->success()->send();
+                        Notification::make()->title(__('shop.orders.notifications.marked_shipped'))->success()->send();
                     }),
                 Action::make('cancel')
-                    ->label('Cancel')
+                    ->label(__('shop.orders.actions.cancel'))
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->visible(fn (Order $record) => in_array($record->status, [OrderStatus::New->value, OrderStatus::Paid->value], true))
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->cancel();
-                        Notification::make()->title('Order canceled')->success()->send();
+                        Notification::make()->title(__('shop.orders.notifications.cancelled'))->success()->send();
                     }),
                 Action::make('resend')
-                    ->label('Resend confirmation')
+                    ->label(__('shop.orders.actions.resend_confirmation'))
                     ->icon('heroicon-o-paper-airplane')
                     ->requiresConfirmation()
                     ->visible(fn ($record) => filled($record->email))
                     ->action(function ($record) {
                         SendOrderConfirmation::dispatch($record);
                         \Filament\Notifications\Notification::make()
-                            ->title('Лист повторно відправлено')
+                            ->title(__('shop.orders.notifications.confirmation_resent'))
                             ->success()
                             ->send();
                     }),

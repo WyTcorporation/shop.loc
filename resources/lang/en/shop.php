@@ -58,6 +58,13 @@ return [
         'price' => 'Price',
         'sum' => 'Total',
         'items_subtotal' => 'Items subtotal',
+        'name' => 'Name',
+        'city' => 'City',
+        'address' => 'Address',
+        'postal_code' => 'Postal code',
+        'note' => 'Note',
+        'total' => 'Total',
+        'tracking_number' => 'Tracking number',
     ],
 
     'auth' => [
@@ -122,6 +129,52 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Your order #:number status was updated',
+        ],
+        'sections' => [
+            'general' => 'General',
+            'shipping' => 'Shipping',
+            'shipment' => 'Shipment',
+            'summary' => 'Summary',
+        ],
+        'fieldsets' => [
+            'shipping_address' => 'Shipping address',
+            'billing_address' => 'Billing address',
+        ],
+        'fields' => [
+            'user' => 'User',
+            'number' => 'Number',
+            'shipment_status' => 'Shipment status',
+        ],
+        'helpers' => [
+            'email_auto' => 'If a user is selected, the email will be filled automatically.',
+        ],
+        'hints' => [
+            'number_generated' => 'Generated automatically',
+        ],
+        'actions' => [
+            'messages' => 'Messages',
+            'mark_paid' => 'Mark paid',
+            'mark_shipped' => 'Mark shipped',
+            'cancel' => 'Cancel',
+            'resend_confirmation' => 'Resend confirmation',
+        ],
+        'notifications' => [
+            'marked_paid' => 'Order marked as paid',
+            'marked_shipped' => 'Order marked as shipped',
+            'cancelled' => 'Order canceled',
+            'confirmation_resent' => 'Confirmation email resent',
+        ],
+        'summary' => [
+            'positions' => 'Positions',
+            'subtotal' => 'Subtotal',
+            'total_order' => 'Total (order)',
+        ],
+        'shipment_status' => [
+            'pending' => 'Pending',
+            'processing' => 'Processing',
+            'shipped' => 'Shipped',
+            'delivered' => 'Delivered',
+            'cancelled' => 'Cancelled',
         ],
         'statuses' => [
             'new' => 'new',

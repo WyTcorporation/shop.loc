@@ -58,6 +58,13 @@ return [
         'price' => 'Цена',
         'sum' => 'Итого',
         'items_subtotal' => 'Итого за товары',
+        'name' => 'Имя',
+        'city' => 'Город',
+        'address' => 'Адрес',
+        'postal_code' => 'Почтовый индекс',
+        'note' => 'Примечание',
+        'total' => 'Итого',
+        'tracking_number' => 'Номер отслеживания',
     ],
 
     'auth' => [
@@ -122,6 +129,52 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Статус вашего заказа №:number обновлён',
+        ],
+        'sections' => [
+            'general' => 'Общее',
+            'shipping' => 'Доставка',
+            'shipment' => 'Отгрузка',
+            'summary' => 'Сводка',
+        ],
+        'fieldsets' => [
+            'shipping_address' => 'Адрес доставки',
+            'billing_address' => 'Платежный адрес',
+        ],
+        'fields' => [
+            'user' => 'Пользователь',
+            'number' => 'Номер',
+            'shipment_status' => 'Статус отгрузки',
+        ],
+        'helpers' => [
+            'email_auto' => 'Если выбран пользователь, адрес заполнится автоматически.',
+        ],
+        'hints' => [
+            'number_generated' => 'Сгенерируется автоматически',
+        ],
+        'actions' => [
+            'messages' => 'Сообщения',
+            'mark_paid' => 'Отметить оплаченным',
+            'mark_shipped' => 'Отметить отправленным',
+            'cancel' => 'Отменить',
+            'resend_confirmation' => 'Отправить подтверждение снова',
+        ],
+        'notifications' => [
+            'marked_paid' => 'Заказ отмечен как оплаченный',
+            'marked_shipped' => 'Заказ отмечен как отправленный',
+            'cancelled' => 'Заказ отменён',
+            'confirmation_resent' => 'Письмо-подтверждение отправлено повторно',
+        ],
+        'summary' => [
+            'positions' => 'Позиции',
+            'subtotal' => 'Промежуточный итог',
+            'total_order' => 'Итого (заказ)',
+        ],
+        'shipment_status' => [
+            'pending' => 'В ожидании',
+            'processing' => 'Обрабатывается',
+            'shipped' => 'Отправлено',
+            'delivered' => 'Доставлено',
+            'cancelled' => 'Отменено',
         ],
         'statuses' => [
             'new' => 'новый',

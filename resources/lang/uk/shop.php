@@ -58,6 +58,13 @@ return [
         'price' => 'Ціна',
         'sum' => 'Сума',
         'items_subtotal' => 'Разом за товари',
+        'name' => 'Імʼя',
+        'city' => 'Місто',
+        'address' => 'Адреса',
+        'postal_code' => 'Поштовий індекс',
+        'note' => 'Примітка',
+        'total' => 'Разом',
+        'tracking_number' => 'Номер відстеження',
     ],
 
     'auth' => [
@@ -122,6 +129,52 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Ваше замовлення №:number: статус оновлено',
+        ],
+        'sections' => [
+            'general' => 'Загальне',
+            'shipping' => 'Доставка',
+            'shipment' => 'Відправлення',
+            'summary' => 'Підсумок',
+        ],
+        'fieldsets' => [
+            'shipping_address' => 'Адреса доставки',
+            'billing_address' => 'Платіжна адреса',
+        ],
+        'fields' => [
+            'user' => 'Користувач',
+            'number' => 'Номер',
+            'shipment_status' => 'Статус відправлення',
+        ],
+        'helpers' => [
+            'email_auto' => 'Якщо вибрано користувача, електронна адреса заповниться автоматично.',
+        ],
+        'hints' => [
+            'number_generated' => 'Згенерується автоматично',
+        ],
+        'actions' => [
+            'messages' => 'Повідомлення',
+            'mark_paid' => 'Позначити оплаченим',
+            'mark_shipped' => 'Позначити відправленим',
+            'cancel' => 'Скасувати',
+            'resend_confirmation' => 'Надіслати підтвердження ще раз',
+        ],
+        'notifications' => [
+            'marked_paid' => 'Замовлення позначене як оплачене',
+            'marked_shipped' => 'Замовлення позначене як відправлене',
+            'cancelled' => 'Замовлення скасовано',
+            'confirmation_resent' => 'Лист-підтвердження повторно надіслано',
+        ],
+        'summary' => [
+            'positions' => 'Позиції',
+            'subtotal' => 'Проміжна сума',
+            'total_order' => 'Разом (замовлення)',
+        ],
+        'shipment_status' => [
+            'pending' => 'Очікує',
+            'processing' => 'Опрацьовується',
+            'shipped' => 'Відправлено',
+            'delivered' => 'Доставлено',
+            'cancelled' => 'Скасовано',
         ],
         'statuses' => [
             'new' => 'нове',

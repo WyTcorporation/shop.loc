@@ -58,6 +58,13 @@ return [
         'price' => 'Preço',
         'sum' => 'Total',
         'items_subtotal' => 'Subtotal dos itens',
+        'name' => 'Nome',
+        'city' => 'Cidade',
+        'address' => 'Endereço',
+        'postal_code' => 'CEP',
+        'note' => 'Observação',
+        'total' => 'Total',
+        'tracking_number' => 'Código de rastreamento',
     ],
 
     'auth' => [
@@ -122,6 +129,52 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Status do pedido nº :number atualizado',
+        ],
+        'sections' => [
+            'general' => 'Geral',
+            'shipping' => 'Envio',
+            'shipment' => 'Remessa',
+            'summary' => 'Resumo',
+        ],
+        'fieldsets' => [
+            'shipping_address' => 'Endereço de entrega',
+            'billing_address' => 'Endereço de cobrança',
+        ],
+        'fields' => [
+            'user' => 'Usuário',
+            'number' => 'Número',
+            'shipment_status' => 'Status da remessa',
+        ],
+        'helpers' => [
+            'email_auto' => 'Se um usuário for selecionado, o e-mail será preenchido automaticamente.',
+        ],
+        'hints' => [
+            'number_generated' => 'Gerado automaticamente',
+        ],
+        'actions' => [
+            'messages' => 'Mensagens',
+            'mark_paid' => 'Marcar como pago',
+            'mark_shipped' => 'Marcar como enviado',
+            'cancel' => 'Cancelar',
+            'resend_confirmation' => 'Reenviar confirmação',
+        ],
+        'notifications' => [
+            'marked_paid' => 'Pedido marcado como pago',
+            'marked_shipped' => 'Pedido marcado como enviado',
+            'cancelled' => 'Pedido cancelado',
+            'confirmation_resent' => 'E-mail de confirmação reenviado',
+        ],
+        'summary' => [
+            'positions' => 'Itens',
+            'subtotal' => 'Subtotal',
+            'total_order' => 'Total (pedido)',
+        ],
+        'shipment_status' => [
+            'pending' => 'Pendente',
+            'processing' => 'Processando',
+            'shipped' => 'Enviado',
+            'delivered' => 'Entregue',
+            'cancelled' => 'Cancelado',
         ],
         'statuses' => [
             'new' => 'novo',
