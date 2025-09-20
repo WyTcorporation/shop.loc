@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $defaultDisk = 'public';
+        $defaultDisk = config('shop.product_images_disk', 'public');
 
         $driver = DB::getDriverName();
 
@@ -36,7 +36,7 @@ return new class extends Migration
             match ($driver) {
                 'pgsql' => DB::statement("ALTER TABLE product_images ALTER COLUMN disk SET DEFAULT '{$defaultDisk}'"),
                 'mysql' => DB::statement("ALTER TABLE product_images MODIFY disk VARCHAR(255) NOT NULL DEFAULT '{$defaultDisk}'"),
-                'sqlsrv' => DB::unprepared(<<<'SQL'
+                'sqlsrv' => DB::unprepared(<<<SQL
 DECLARE @constraintName NVARCHAR(200);
 SELECT @constraintName = df.name
 FROM sys.default_constraints df
@@ -47,21 +47,20 @@ WHERE t.name = 'product_images' AND c.name = 'disk';
 IF @constraintName IS NOT NULL
     EXEC('ALTER TABLE product_images DROP CONSTRAINT ' + QUOTENAME(@constraintName));
 
-ALTER TABLE product_images ADD CONSTRAINT DF_product_images_disk DEFAULT 'public' FOR disk;
+ALTER TABLE product_images ADD CONSTRAINT DF_product_images_disk DEFAULT '{$defaultDisk}' FOR disk;
 SQL),
                 default => null,
             };
         }
 
         DB::table('product_images')
-            ->where('disk', 's3')
-            ->update(['disk' => $defaultDisk]);
-
-        DB::table('product_images')
             ->where(function ($query) {
                 $query->whereNull('disk')->orWhere('disk', '');
             })
             ->update(['disk' => $defaultDisk]);
+        // Environments that need to move assets between disks should run a
+        // dedicated operation (such as a one-off command) to copy files to the
+        // new storage disk before updating the records.
     }
 
     /**
@@ -93,7 +92,7 @@ SQL),
             match ($driver) {
                 'pgsql' => DB::statement("ALTER TABLE product_images ALTER COLUMN disk SET DEFAULT '{$defaultDisk}'"),
                 'mysql' => DB::statement("ALTER TABLE product_images MODIFY disk VARCHAR(255) NOT NULL DEFAULT '{$defaultDisk}'"),
-                'sqlsrv' => DB::unprepared(<<<'SQL'
+                'sqlsrv' => DB::unprepared(<<<SQL
 DECLARE @constraintName NVARCHAR(200);
 SELECT @constraintName = df.name
 FROM sys.default_constraints df
@@ -111,7 +110,9 @@ SQL),
         }
 
         DB::table('product_images')
-            ->where('disk', 'public')
+            ->where(function ($query) {
+                $query->whereNull('disk')->orWhere('disk', '');
+            })
             ->update(['disk' => $defaultDisk]);
     }
 };

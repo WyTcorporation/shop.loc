@@ -155,6 +155,14 @@ docker compose exec app php artisan optimize:clear
 docker compose exec app php artisan view:clear
 docker compose exec app php artisan route:clear
 
+## Product image disk migration
+
+When switching the storage disk used for product images, copy assets between
+disks (for example with a bespoke Artisan command or storage sync) before
+running the migration `2025_10_09_020000_update_product_image_disk_default`.
+The migration intentionally keeps existing non-empty `disk` values unchanged so
+files stay pointed at their current storage backend.
+
 Searchable
 docker compose exec app php artisan optimize:clear
 # опційно повна реіндексація:

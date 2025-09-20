@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -76,5 +77,24 @@ class ProductImageDiskTest extends TestCase
         $this->assertNotNull($image);
         $this->assertSame('s3', $image->disk);
         Storage::disk('s3')->assertExists($image->path);
+    }
+
+    public function test_migration_does_not_overwrite_existing_disk_values(): void
+    {
+        config(['shop.product_images_disk' => 'public']);
+
+        Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+
+        $product = Product::factory()->create();
+
+        $image = ProductImage::factory()
+            ->for($product)
+            ->create(['disk' => 's3']);
+
+        Artisan::call('migrate', ['--step' => 1, '--force' => true]);
+
+        $image->refresh();
+
+        $this->assertSame('s3', $image->disk);
     }
 }
