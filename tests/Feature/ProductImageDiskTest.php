@@ -79,6 +79,50 @@ class ProductImageDiskTest extends TestCase
         Storage::disk('s3')->assertExists($image->path);
     }
 
+    public function test_missing_product_directory_is_recreated_on_upload(): void
+    {
+        Storage::fake('public');
+        config(['shop.product_images_disk' => 'public']);
+
+        $product = Product::factory()->create();
+
+        Storage::disk(ProductImage::defaultDisk())->deleteDirectory('products');
+
+        $file = UploadedFile::fake()->image('photo.jpg');
+
+        $translations = collect(config('app.supported_locales'))
+            ->filter()
+            ->unique()
+            ->mapWithKeys(fn (string $locale): array => [
+                $locale => $locale === config('app.locale') ? 'Alt' : null,
+            ])
+            ->all();
+
+        $component = Livewire::test(ImagesRelationManager::class, [
+            'ownerRecord' => $product,
+            'pageClass' => EditProduct::class,
+        ])->mountTableAction('create');
+
+        $component->set('mountedActions.0.data.path', $file);
+        $component->set('mountedActions.0.data.disk', ProductImage::defaultDisk());
+        $component->set('mountedActions.0.data.alt_translations', $translations);
+        $component->set('mountedActions.0.data.alt_translations.uk', 'Alt');
+        $component->set('mountedActions.0.data.alt', 'Alt');
+
+        $component->callMountedTableAction()->assertHasNoFormErrors();
+
+        $product->refresh();
+        $image = $product->images()->first();
+
+        $this->assertNotNull($image);
+        $this->assertSame('public', $image->disk);
+
+        $this->assertTrue(
+            Storage::disk('public')->exists("products/{$product->id}")
+        );
+        Storage::disk('public')->assertExists($image->path);
+    }
+
     public function test_migration_does_not_overwrite_existing_disk_values(): void
     {
         config(['shop.product_images_disk' => 'public']);

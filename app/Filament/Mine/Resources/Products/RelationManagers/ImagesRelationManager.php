@@ -21,6 +21,8 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ImagesRelationManager extends RelationManager
 {
@@ -39,7 +41,35 @@ class ImagesRelationManager extends RelationManager
             FileUpload::make('path')
                 ->label('Image')
                 ->disk(fn (): string => ProductImage::defaultDisk())
-                ->directory(fn () => 'products/' . $this->getOwnerRecord()->id)
+                ->directory(function (): string {
+                    $directory = 'products/' . $this->getOwnerRecord()->id;
+                    $diskName = ProductImage::defaultDisk();
+                    $storage = Storage::disk($diskName);
+
+                    $ensureDirectory = function (string $path) use ($storage): bool {
+                        if ($storage->exists($path)) {
+                            return true;
+                        }
+
+                        try {
+                            return (bool) $storage->makeDirectory($path);
+                        } catch (Throwable $exception) {
+                            report($exception);
+
+                            return false;
+                        }
+                    };
+
+                    if ($ensureDirectory($directory)) {
+                        return $directory;
+                    }
+
+                    $fallbackDirectory = 'products';
+
+                    $ensureDirectory($fallbackDirectory);
+
+                    return $fallbackDirectory;
+                })
                 ->image()
                 ->imageEditor()
                 ->preserveFilenames()
