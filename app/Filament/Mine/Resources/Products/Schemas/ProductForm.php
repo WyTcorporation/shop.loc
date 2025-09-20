@@ -107,12 +107,14 @@ class ProductForm
                             ->required()
                             ->live(onBlur: true)
                             ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($primaryLocale): void {
-                                if (filled($state) && blank($get("translations.{$primaryLocale}"))) {
+                                if (blank($get("translations.{$primaryLocale}")) && filled($state)) {
                                     $set("translations.{$primaryLocale}", $state);
                                 }
                             })
-                            ->afterStateUpdated(function (Set $set, $state) use ($primaryLocale): void {
-                                $set("translations.{$primaryLocale}", $state);
+                            ->afterStateUpdated(function (Set $set, Get $get, $state) use ($primaryLocale): void {
+                                if (blank($get("translations.{$primaryLocale}"))) {
+                                    $set("translations.{$primaryLocale}", $state);
+                                }
                             }),
                         Fieldset::make('translations')
                             ->schema(
@@ -121,7 +123,7 @@ class ProductForm
                                         ->label(strtoupper($locale))
                                         ->live(onBlur: true)
                                         ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($locale, $primaryLocale): void {
-                                            if ($locale === $primaryLocale && blank($state)) {
+                                            if ($locale === $primaryLocale && blank($get("translations.{$locale}")) && blank($state)) {
                                                 $value = $get('value');
                                                 if (filled($value)) {
                                                     $set("translations.{$locale}", $value);
