@@ -3,8 +3,9 @@
 namespace App\Filament\Mine\Resources\Products\Schemas;
 
 use App\Models\Product;
-use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -104,10 +105,49 @@ class ProductForm
                     ->default(fn () => Auth::user()?->vendor?->id)
                     ->disabled(fn () => Auth::user()?->vendor !== null)
                     ->dehydrated(fn () => Auth::user()?->vendor === null),
-                KeyValue::make('attributes')
+                Repeater::make('attributes')
                     ->label(__('shop.products.attributes.label'))
-                    ->keyLabel(__('shop.products.attributes.name'))
-                    ->valueLabel(__('shop.products.attributes.value'))
+                    ->schema([
+                        TextInput::make('key')
+                            ->label(__('shop.products.attributes.name'))
+                            ->required()
+                            ->live(onBlur: true),
+                        TextInput::make('value')
+                            ->label(__('shop.products.attributes.value'))
+                            ->required()
+                            ->live(onBlur: true)
+                            ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($primaryLocale): void {
+                                if (filled($state) && blank($get("translations.{$primaryLocale}"))) {
+                                    $set("translations.{$primaryLocale}", $state);
+                                }
+                            })
+                            ->afterStateUpdated(function (Set $set, $state) use ($primaryLocale): void {
+                                $set("translations.{$primaryLocale}", $state);
+                            }),
+                        Fieldset::make('translations')
+                            ->schema(
+                                $supportedLocales
+                                    ->map(fn (string $locale): TextInput => TextInput::make($locale)
+                                        ->label(strtoupper($locale))
+                                        ->live(onBlur: true)
+                                        ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($locale, $primaryLocale): void {
+                                            if ($locale === $primaryLocale && blank($state)) {
+                                                $value = $get('value');
+                                                if (filled($value)) {
+                                                    $set("translations.{$locale}", $value);
+                                                }
+                                            }
+                                        })
+                                        ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                            if ($locale === $primaryLocale) {
+                                                $set('value', $state);
+                                            }
+                                        }))
+                                    ->toArray()
+                            )
+                            ->columns(2)
+                            ->statePath('translations'),
+                    ])
                     ->reorderable()
                     ->addActionLabel(__('shop.products.attributes.add'))
                     ->columnSpanFull(),
