@@ -1,0 +1,59 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "3D-Print Shop" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Каталог" [ref=e7] [cursor=pointer]:
+          - /url: /shop
+        - link "Кошик" [ref=e8] [cursor=pointer]:
+          - /url: /cart
+        - link "Кошик 0,00 EUR 0" [ref=e9] [cursor=pointer]:
+          - /url: /cart
+          - generic [ref=e10] [cursor=pointer]: Кошик
+          - generic [ref=e11] [cursor=pointer]: 0,00 EUR
+          - generic [ref=e12] [cursor=pointer]: "0"
+        - button "🛒 0" [ref=e13]
+        - link "Обране" [ref=e14] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e15] [cursor=pointer]
+          - generic [ref=e17] [cursor=pointer]: Обране
+  - generic [ref=e18]:
+    - navigation "Breadcrumb" [ref=e19]:
+      - list [ref=e20]:
+        - listitem [ref=e21]:
+          - generic [ref=e22]: Каталог
+    - banner [ref=e23]:
+      - heading "Каталог" [level=1] [ref=e24]
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - combobox [ref=e27]:
+            - generic: Всі категорії
+            - img
+          - combobox [ref=e28]:
+            - generic: Новинки
+            - img
+        - generic [ref=e29]:
+          - textbox "Пошук товарів…" [ref=e30]
+          - spinbutton [ref=e31]
+          - spinbutton [ref=e32]
+          - button "Застосувати" [ref=e33]
+          - button "Скинути все" [ref=e34]
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - generic [ref=e37]: Категорії
+        - generic [ref=e39]: нема даних
+      - generic [ref=e40]:
+        - generic [ref=e41]: Колір
+        - generic [ref=e43]: нема даних
+      - generic [ref=e44]:
+        - generic [ref=e45]: Розмір
+        - generic [ref=e47]: нема даних
+    - contentinfo [ref=e81]:
+      - button "Назад" [disabled]
+      - generic [ref=e82]: Сторінка 1 із 1
+      - button "Далі" [disabled]
+```
