@@ -35,6 +35,10 @@ class ProductImage extends Model
     protected static function booted(): void
     {
         static::saving(function (self $image) {
+            $image->disk = $image->disk ?: config('filesystems.default', 'public');
+        });
+
+        static::saving(function (self $image) {
             if ($image->is_primary) {
                 static::where('product_id', $image->product_id)
                     ->when($image->exists, fn ($q) => $q->whereKeyNot($image->getKey()))
@@ -48,7 +52,9 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->path);
+        $disk = $this->disk ?: config('filesystems.default', 'public');
+
+        return Storage::disk($disk)->url($this->path);
     }
 
     public function product(): BelongsTo

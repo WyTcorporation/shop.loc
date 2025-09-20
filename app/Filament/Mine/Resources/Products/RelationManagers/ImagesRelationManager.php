@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Products\RelationManagers;
 
+use App\Models\ProductImage;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -12,7 +13,6 @@ use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Illuminate\Support\Facades\Storage;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
@@ -28,7 +28,7 @@ class ImagesRelationManager extends RelationManager
         return $schema->schema([
             FileUpload::make('path')
                 ->label('Image')
-                ->disk('public')
+                ->disk(config('filesystems.default', 'public'))
                 ->directory(fn () => 'products/' . $this->getOwnerRecord()->id)
                 ->image()
                 ->imageEditor()
@@ -37,7 +37,7 @@ class ImagesRelationManager extends RelationManager
                 ->required(),
 
             TextInput::make('alt')->maxLength(255),
-            Hidden::make('disk')->default('public'),
+            Hidden::make('disk')->default(fn () => config('filesystems.default', 'public')),
             TextInput::make('sort')->numeric()->default(0),
             Toggle::make('is_primary')
                 ->label('Primary')
@@ -53,7 +53,7 @@ class ImagesRelationManager extends RelationManager
             ->columns([
                 ImageColumn::make('path')
                     ->label('Preview')
-                    ->disk('public')
+                    ->disk(fn (ProductImage $record) => $record->disk ?: config('filesystems.default', 'public'))
                     ->circular(),
                 ToggleColumn::make('is_primary')
                     ->label('Primary')
