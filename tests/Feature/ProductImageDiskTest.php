@@ -97,4 +97,33 @@ class ProductImageDiskTest extends TestCase
 
         $this->assertSame('s3', $image->disk);
     }
+
+    public function test_product_image_urls_respect_custom_disk(): void
+    {
+        config(['shop.product_images_disk' => 'public']);
+
+        Storage::fake('public');
+        Storage::fake('s3');
+
+        $product = Product::factory()->create();
+
+        $path = "products/{$product->id}/cover.jpg";
+
+        Storage::disk('s3')->put($path, 'fake-image');
+
+        $image = ProductImage::factory()
+            ->for($product)
+            ->create([
+                'disk' => 's3',
+                'path' => $path,
+                'is_primary' => true,
+            ]);
+
+        $product->refresh()->load('images');
+
+        $expectedUrl = Storage::disk('s3')->url($image->path);
+
+        $this->assertSame($expectedUrl, $product->preview_url);
+        $this->assertSame($expectedUrl, $product->cover_url);
+    }
 }
