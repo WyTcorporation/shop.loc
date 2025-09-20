@@ -207,6 +207,16 @@ CI/CD (build, тест, deploy), prod Dockerfile.
 
 4000 0000 0000 0002 - bad
 
+4000 0000 0000 9995- Your card has insufficient funds. Try a different card.
+
+4000 0027 6000 3184 - Test card: 3DS authentication needed
+
+4000000000009987 - Lost card decline
+
+4000000000009979 - Stolen card decline
+
+
+
 Випадково закомітив
 git rm --cached .env
 git commit -m "Stop tracking .env and ignore it"
