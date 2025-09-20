@@ -193,6 +193,50 @@ return [
         ],
     ],
 
+    'products' => [
+        'fields' => [
+            'name' => 'Name',
+            'slug' => 'Slug',
+            'sku' => 'SKU',
+            'category' => 'Category',
+            'vendor' => 'Vendor',
+            'preview' => 'Preview',
+            'preview_url_debug' => 'URL?',
+            'stock' => 'Stock',
+            'price' => 'Price',
+            'price_old' => 'Old price',
+            'is_active' => 'Active',
+        ],
+        'attributes' => [
+            'label' => 'Attributes',
+            'name' => 'Name',
+            'value' => 'Value',
+            'add' => 'Add attribute',
+        ],
+        'placeholders' => [
+            'available_stock' => 'Available stock',
+        ],
+        'filters' => [
+            'category' => 'Category',
+            'is_active' => [
+                'label' => 'Active',
+                'true' => 'Active',
+                'false' => 'Inactive',
+            ],
+        ],
+    ],
+
+    'categories' => [
+        'fields' => [
+            'name' => 'Name',
+            'slug' => 'Slug',
+            'parent' => 'Parent category',
+            'deleted_at' => 'Deleted at',
+            'created_at' => 'Created at',
+            'updated_at' => 'Updated at',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Two-factor authentication is not initialized.',

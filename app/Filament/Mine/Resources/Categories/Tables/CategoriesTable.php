@@ -15,21 +15,27 @@ class CategoriesTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('shop.categories.fields.name'))
                     ->searchable(),
                 TextColumn::make('slug')
+                    ->label(__('shop.categories.fields.slug'))
                     ->searchable(),
                 TextColumn::make('parent_id')
+                    ->label(__('shop.categories.fields.parent'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('deleted_at')
+                    ->label(__('shop.categories.fields.deleted_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
+                    ->label(__('shop.categories.fields.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('shop.categories.fields.updated_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

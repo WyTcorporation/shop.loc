@@ -193,6 +193,50 @@ return [
         ],
     ],
 
+    'products' => [
+        'fields' => [
+            'name' => 'Название',
+            'slug' => 'Слаг',
+            'sku' => 'Артикул',
+            'category' => 'Категория',
+            'vendor' => 'Поставщик',
+            'preview' => 'Превью',
+            'preview_url_debug' => 'URL?',
+            'stock' => 'Остаток',
+            'price' => 'Цена',
+            'price_old' => 'Старая цена',
+            'is_active' => 'Активен',
+        ],
+        'attributes' => [
+            'label' => 'Атрибуты',
+            'name' => 'Название',
+            'value' => 'Значение',
+            'add' => 'Добавить атрибут',
+        ],
+        'placeholders' => [
+            'available_stock' => 'Доступный остаток',
+        ],
+        'filters' => [
+            'category' => 'Категория',
+            'is_active' => [
+                'label' => 'Активность',
+                'true' => 'Активные',
+                'false' => 'Неактивные',
+            ],
+        ],
+    ],
+
+    'categories' => [
+        'fields' => [
+            'name' => 'Название',
+            'slug' => 'Слаг',
+            'parent' => 'Родительская категория',
+            'deleted_at' => 'Удалено',
+            'created_at' => 'Создано',
+            'updated_at' => 'Обновлено',
+        ],
+    ],
+
     'security' => [
         'two_factor' => [
             'not_initialized' => 'Двухфакторная аутентификация не настроена.',
