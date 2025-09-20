@@ -2,6 +2,7 @@
 
 return [
     'admin_email' => env('SHOP_ADMIN_EMAIL'), // опціонально
+    'product_images_disk' => env('SHOP_PRODUCT_IMAGES_DISK', 'public'),
     'loyalty' => [
         'earn_rate' => (float) env('SHOP_LOYALTY_EARN_RATE', 1),
         'redeem_value' => (float) env('SHOP_LOYALTY_REDEEM_VALUE', 0.1),
