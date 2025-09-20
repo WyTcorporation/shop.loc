@@ -6,8 +6,13 @@ use App\Models\Product;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -17,11 +22,61 @@ class ProductForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $primaryLocale = config('app.locale');
+        $supportedLocales = collect(config('app.supported_locales', [$primaryLocale]))
+            ->filter()
+            ->values();
+
         return $schema
             ->components([
                 TextInput::make('name')
                     ->label(__('shop.products.fields.name'))
-                    ->required(),
+                    ->required()
+                    ->hidden()
+                    ->afterStateHydrated(function (TextInput $component, $state, Set $set) use ($primaryLocale): void {
+                        if (filled($state)) {
+                            $set("name_translations.{$primaryLocale}", $state);
+                        }
+                    })
+                    ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
+                Textarea::make('description')
+                    ->label(__('shop.products.fields.description'))
+                    ->columnSpanFull()
+                    ->hidden()
+                    ->afterStateHydrated(function (Textarea $component, $state, Set $set) use ($primaryLocale): void {
+                        if (filled($state)) {
+                            $set("description_translations.{$primaryLocale}", $state);
+                        }
+                    })
+                    ->dehydrateStateUsing(fn ($state, Get $get) => $get('description_translations.' . $primaryLocale) ?? $state),
+                Tabs::make('translations')
+                    ->columnSpanFull()
+                    ->tabs(
+                        $supportedLocales
+                            ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                                ->schema([
+                                    TextInput::make("name_translations.{$locale}")
+                                        ->label(__('shop.products.fields.name'))
+                                        ->required($locale === $primaryLocale)
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                            if ($locale === $primaryLocale) {
+                                                $set('name', $state);
+                                            }
+                                        }),
+                                    Textarea::make("description_translations.{$locale}")
+                                        ->label(__('shop.products.fields.description'))
+                                        ->required($locale === $primaryLocale)
+                                        ->columnSpanFull()
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (Set $set, $state) use ($locale, $primaryLocale): void {
+                                            if ($locale === $primaryLocale) {
+                                                $set('description', $state);
+                                            }
+                                        }),
+                                ]))
+                            ->toArray(),
+                    ),
                 TextInput::make('slug')
                     ->label(__('shop.products.fields.slug'))
                     ->required(),
