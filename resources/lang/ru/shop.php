@@ -250,6 +250,7 @@ return [
         'fields' => [
             'name' => 'Название',
             'slug' => 'Слаг',
+            'description' => 'Описание',
             'sku' => 'Артикул',
             'category' => 'Категория',
             'vendor' => 'Поставщик',
