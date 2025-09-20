@@ -67,6 +67,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Currency::class, CurrencyPolicy::class);
 
+        if (
+            Config::get('filesystems.disks.public.driver') === 'local'
+            && (! app()->runningInConsole() || app()->runningUnitTests())
+            && ! file_exists(public_path('storage'))
+        ) {
+            try {
+                app('files')->link(storage_path('app/public'), public_path('storage'));
+            } catch (\Throwable) {
+                // Immutable filesystems may not allow creating the link. That's fine.
+            }
+        }
+
         if (Config::get('scout.driver') === 'meilisearch') {
             Product::created(fn($p) => $p->searchable());
             Product::updated(fn($p) => $p->searchable());
