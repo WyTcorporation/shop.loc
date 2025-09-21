@@ -27,7 +27,12 @@ use function formatCurrency;
 class ItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
-    protected static ?string $title = __('shop.orders.items.title');
+    protected static ?string $title = null;
+
+    public static function getTitle(): ?string
+    {
+        return __('shop.orders.items.title');
+    }
 
     public function form(Schema $schema): Schema
     {
