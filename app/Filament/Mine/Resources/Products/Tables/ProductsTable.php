@@ -84,6 +84,7 @@ class ProductsTable
 //                    ->getStateUsing(fn ($record) => $record->preview_url ?: asset('images/no-image.svg'))
 //                    ->circular(),
                 TextColumn::make('name')
+                    ->label(__('shop.products.fields.name'))
                     ->searchable(),
 
 //                TextColumn::make('slug')
