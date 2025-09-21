@@ -53,6 +53,10 @@ return [
                 'label' => 'Склад',
                 'plural_label' => 'Склады',
             ],
+            'currencies' => [
+                'label' => 'Валюта',
+                'plural_label' => 'Валюты',
+            ],
         ],
     ],
 
@@ -117,6 +121,8 @@ return [
         'note' => 'Примечание',
         'total' => 'Итого',
         'tracking_number' => 'Номер отслеживания',
+        'created' => 'Создано',
+        'updated' => 'Обновлено',
     ],
 
     'auth' => [
@@ -195,6 +201,7 @@ return [
         'fields' => [
             'user' => 'Пользователь',
             'number' => 'Номер',
+            'total' => 'Итого',
             'shipment_status' => 'Статус отгрузки',
         ],
         'helpers' => [
@@ -234,6 +241,33 @@ return [
             'shipped' => 'отправлен',
             'cancelled' => 'отменён',
         ],
+        'items' => [
+            'title' => 'Товары в заказе',
+            'fields' => [
+                'product' => 'Товар',
+                'qty' => 'Количество',
+                'price' => 'Цена',
+                'subtotal' => 'Промежуточный итог',
+            ],
+            'empty_state' => [
+                'heading' => 'Пока нет товаров',
+            ],
+        ],
+        'logs' => [
+            'title' => 'История статусов',
+            'fields' => [
+                'from' => 'Было',
+                'to' => 'Стало',
+                'by' => 'Кем изменено',
+                'note' => 'Примечание',
+                'deleted_at' => 'Удалено',
+                'created_at' => 'Создано',
+                'updated_at' => 'Обновлено',
+            ],
+            'empty_state' => [
+                'heading' => 'Статус ещё не изменялся',
+            ],
+        ],
         'errors' => [
             'only_new_can_be_marked_paid' => 'Отметить оплаченным можно только заказ со статусом ":required". Заказ №:number сейчас имеет статус ":status".',
             'only_paid_can_be_marked_shipped' => 'Отметить отправленным можно только заказ со статусом ":required". Заказ №:number сейчас имеет статус ":status".',
@@ -245,6 +279,8 @@ return [
         'not_enough_stock' => 'Недостаточно товара для продукта №:product_id на складе №:warehouse_id.',
         'not_enough_reserved_stock' => 'Недостаточно зарезервированного товара для продукта №:product_id на складе №:warehouse_id.',
         'fields' => [
+            'product' => 'Продукт',
+            'warehouse' => 'Склад',
             'quantity' => 'Количество',
             'reserved' => 'Зарезервировано',
             'available' => 'Доступно',
@@ -372,6 +408,7 @@ return [
                 'type' => 'Тип',
                 'points' => 'Баллы',
                 'amount' => 'Сумма',
+                'description' => 'Описание',
             ],
             'types' => [
                 'earn' => 'Начисление',
@@ -415,6 +452,7 @@ return [
             'name' => 'Название',
             'value' => 'Значение',
             'add' => 'Добавить атрибут',
+            'translations' => 'Переводы',
         ],
         'placeholders' => [
             'available_stock' => 'Доступный остаток',
@@ -427,6 +465,30 @@ return [
                 'false' => 'Неактивные',
             ],
         ],
+        'images' => [
+            'title' => 'Изображения',
+            'fields' => [
+                'image' => 'Изображение',
+                'alt_text' => 'Альтернативный текст',
+                'is_primary' => 'Основное изображение',
+                'preview' => 'Превью',
+                'disk' => 'Диск',
+                'sort' => 'Порядок',
+                'created_at' => 'Создано',
+            ],
+            'helper_texts' => [
+                'is_primary' => 'Используется как превью товара.',
+            ],
+            'actions' => [
+                'create' => 'Добавить',
+                'edit' => 'Редактировать',
+                'delete' => 'Удалить',
+            ],
+            'empty' => [
+                'heading' => 'Пока нет изображений',
+                'description' => 'Добавьте изображения товара, чтобы увидеть их здесь.',
+            ],
+        ],
     ],
 
     'categories' => [
@@ -434,6 +496,18 @@ return [
             'name' => 'Название',
             'slug' => 'Слаг',
             'parent' => 'Родительская категория',
+            'deleted_at' => 'Удалено',
+            'created_at' => 'Создано',
+            'updated_at' => 'Обновлено',
+        ],
+    ],
+
+    'vendor' => [
+        'fields' => [
+            'name' => 'Название',
+            'slug' => 'Слаг',
+            'description' => 'Описание',
+
             'deleted_at' => 'Удалено',
             'created_at' => 'Создано',
             'updated_at' => 'Обновлено',
