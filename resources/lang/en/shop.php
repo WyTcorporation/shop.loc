@@ -433,6 +433,26 @@ return [
                 'false' => 'Inactive',
             ],
         ],
+        'images' => [
+            'fields' => [
+                'image' => 'Image',
+                'alt_text' => 'Alt text',
+                'is_primary' => 'Primary image',
+                'preview' => 'Preview',
+            ],
+            'helper_texts' => [
+                'is_primary' => 'Used as the product preview.',
+            ],
+            'actions' => [
+                'create' => 'Add image',
+                'edit' => 'Edit image',
+                'delete' => 'Delete image',
+            ],
+            'empty' => [
+                'heading' => 'No images yet',
+                'description' => 'Upload product images to see them here.',
+            ],
+        ],
     ],
 
     'categories' => [
