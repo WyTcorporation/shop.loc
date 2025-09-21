@@ -11,7 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 class LogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'logs';
-    protected static ?string $title = 'Status history';
+    protected static ?string $title = __('shop.orders.logs.title');
 
     public function form(Schema $schema): Schema
     {
@@ -23,14 +23,14 @@ class LogsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('to_status')
             ->columns([
-                TextColumn::make('from_status')->label('From')->badge(),
-                TextColumn::make('to_status')->label('To')->badge(),
-                TextColumn::make('user.name')->label('By')->placeholder('—'),
+                TextColumn::make('from_status')->label(__('shop.orders.logs.fields.from'))->badge(),
+                TextColumn::make('to_status')->label(__('shop.orders.logs.fields.to'))->badge(),
+                TextColumn::make('user.name')->label(__('shop.orders.logs.fields.by'))->placeholder('—'),
                 TextColumn::make('note')->limit(60)->wrap(),
                 TextColumn::make('created_at')->dateTime('Y-m-d H:i'),
             ])
             ->paginated(false)
-            ->emptyStateHeading('No status changes yet')
+            ->emptyStateHeading(__('shop.orders.logs.empty_state.heading'))
             ->headerActions([])
             ->recordActions([]);
     }
