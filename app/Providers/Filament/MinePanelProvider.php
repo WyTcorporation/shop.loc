@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Mine\Widgets\ConversionRateWidget;
 use App\Filament\Mine\Widgets\InventoryStatusWidget;
+use App\Filament\Mine\Widgets\MarketingPerformanceWidget;
 use App\Filament\Mine\Widgets\SalesOverviewWidget;
 use App\Filament\Mine\Widgets\TopProductsTable;
 use App\Filament\Mine\Widgets\TrafficSourcesChart;
@@ -58,6 +59,7 @@ class MinePanelProvider extends PanelProvider
                 __('shop.admin.navigation.sales'),
                 __('shop.admin.navigation.accounting'),
                 __('shop.admin.navigation.inventory'),
+                __('Marketing'),
                 __('shop.admin.navigation.settings'),
             ])
             ->brandName(__('shop.admin.brand'))
@@ -74,6 +76,7 @@ class MinePanelProvider extends PanelProvider
                 TrafficSourcesChart::class,
                 TopProductsTable::class,
                 InventoryStatusWidget::class,
+                MarketingPerformanceWidget::class,
             ])
             ->renderHook('panels::user-menu.after', fn () => view('filament.mine.components.language-switcher'))
             ->middleware([
