@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductStock;
 use App\Services\Currency\CurrencyConverter;
+use App\Services\Marketing\MarketingAnalyticsService;
 use App\Support\Dashboard\DashboardPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -15,7 +16,10 @@ use Illuminate\Support\Collection;
 
 class DashboardMetricsService
 {
-    public function __construct(private readonly CurrencyConverter $converter)
+    public function __construct(
+        private readonly CurrencyConverter $converter,
+        private readonly MarketingAnalyticsService $marketingAnalytics,
+    )
     {
     }
 
@@ -154,6 +158,11 @@ class DashboardMetricsService
             'low_stock' => $lowStock,
             'threshold' => $threshold,
         ];
+    }
+
+    public function getMarketingPerformance(DashboardPeriod $period): array
+    {
+        return $this->marketingAnalytics->getCampaignPerformance($period);
     }
 
     public function topProductsQuery(): Builder
