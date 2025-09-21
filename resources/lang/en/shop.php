@@ -245,6 +245,7 @@ return [
             'title' => 'Order items',
             'fields' => [
                 'product' => 'Product',
+                'qty' => 'Quantity',
                 'price' => 'Price',
                 'subtotal' => 'Subtotal',
             ],
@@ -258,6 +259,10 @@ return [
                 'from' => 'From',
                 'to' => 'To',
                 'by' => 'By',
+                'note' => 'Note',
+                'deleted_at' => 'Deleted at',
+                'created_at' => 'Created at',
+                'updated_at' => 'Updated at',
             ],
             'empty_state' => [
                 'heading' => 'No status changes yet',
@@ -274,6 +279,8 @@ return [
         'not_enough_stock' => 'Not enough stock for product #:product_id at warehouse #:warehouse_id.',
         'not_enough_reserved_stock' => 'Not enough reserved stock for product #:product_id at warehouse #:warehouse_id.',
         'fields' => [
+            'product' => 'Product',
+            'warehouse' => 'Warehouse',
             'quantity' => 'Quantity',
             'reserved' => 'Reserved',
             'available' => 'Available',
@@ -445,6 +452,7 @@ return [
             'name' => 'Name',
             'value' => 'Value',
             'add' => 'Add attribute',
+            'translations' => 'Translations',
         ],
         'placeholders' => [
             'available_stock' => 'Available stock',
@@ -458,11 +466,15 @@ return [
             ],
         ],
         'images' => [
+            'title' => 'Images',
             'fields' => [
                 'image' => 'Image',
                 'alt_text' => 'Alt text',
                 'is_primary' => 'Primary image',
                 'preview' => 'Preview',
+                'disk' => 'Disk',
+                'sort' => 'Sort order',
+                'created_at' => 'Created at',
             ],
             'helper_texts' => [
                 'is_primary' => 'Used as the product preview.',
@@ -484,6 +496,17 @@ return [
             'name' => 'Name',
             'slug' => 'Slug',
             'parent' => 'Parent category',
+            'deleted_at' => 'Deleted at',
+            'created_at' => 'Created at',
+            'updated_at' => 'Updated at',
+        ],
+    ],
+
+    'vendor' => [
+        'fields' => [
+            'name' => 'Name',
+            'slug' => 'Slug',
+            'description' => 'Description',
             'deleted_at' => 'Deleted at',
             'created_at' => 'Created at',
             'updated_at' => 'Updated at',
