@@ -18,6 +18,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rule;
 
 class InventoryResource extends Resource
 {
@@ -40,6 +42,23 @@ class InventoryResource extends Resource
                 ->preload()
                 ->native(false)
                 ->required()
+                ->live(onBlur: true)
+                ->rule(function (callable $get, ?Model $record) {
+                    $warehouseId = $get('warehouse_id');
+
+                    if (! $warehouseId) {
+                        return null;
+                    }
+
+                    $rule = Rule::unique('product_stocks', 'product_id')
+                        ->where(fn ($query) => $query->where('warehouse_id', $warehouseId));
+
+                    if ($record) {
+                        $rule->ignore($record->getKey());
+                    }
+
+                    return $rule;
+                })
                 ->disabledOn('edit'),
             Select::make('warehouse_id')
                 ->relationship('warehouse', 'name')
@@ -47,6 +66,23 @@ class InventoryResource extends Resource
                 ->preload()
                 ->native(false)
                 ->required()
+                ->live(onBlur: true)
+                ->rule(function (callable $get, ?Model $record) {
+                    $productId = $get('product_id');
+
+                    if (! $productId) {
+                        return null;
+                    }
+
+                    $rule = Rule::unique('product_stocks', 'warehouse_id')
+                        ->where(fn ($query) => $query->where('product_id', $productId));
+
+                    if ($record) {
+                        $rule->ignore($record->getKey());
+                    }
+
+                    return $rule;
+                })
                 ->disabledOn('edit'),
             TextInput::make('qty')
                 ->label('Quantity')
