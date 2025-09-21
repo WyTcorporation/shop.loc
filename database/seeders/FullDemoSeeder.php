@@ -7,12 +7,16 @@ use App\Enums\Permission as PermissionEnum;
 use App\Enums\Role as RoleEnum;
 use App\Enums\ShipmentStatus;
 use App\Models\Address;
+use App\Models\CampaignTemplate;
+use App\Models\CampaignTest;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\Category;
 use App\Models\Currency;
+use App\Models\CustomerSegment;
 use App\Models\LoyaltyPointTransaction;
+use App\Models\MarketingCampaign;
 use App\Models\Message;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -50,6 +54,10 @@ class FullDemoSeeder extends Seeder
         $this->seedWarehouseStock($warehouses);
         $this->seedCarts($users, $coupons);
         $orders = $this->seedOrders($users, $coupons, $currencies, $warehouses);
+        $templates = $this->seedCampaignTemplates();
+        $segments = $this->seedCustomerSegments();
+        $campaigns = $this->seedMarketingCampaigns($templates, $segments);
+        $this->seedCampaignTests($campaigns, $templates);
         $this->seedLoyaltyTransactions($users, $orders);
         $this->seedMessages($orders, $users);
         $this->seedReviewsAndWishlists($users);
@@ -557,6 +565,388 @@ class FullDemoSeeder extends Seeder
         }
 
         return $orders;
+    }
+
+    private function seedCampaignTemplates(): Collection
+    {
+        $templateConfigs = [
+            MarketingCampaign::TYPE_EMAIL => [
+                'welcome_series' => [
+                    'name' => 'Welcome Series Email',
+                    'subject' => 'Welcome to ShopWave! Start your journey',
+                    'content' => implode(PHP_EOL, [
+                        '<h1>Welcome to ShopWave</h1>',
+                        '<p>Thanks for joining our community! Discover curated picks chosen for you and enjoy member-only perks.</p>',
+                        '<p><a href="https://shop.example.com/new-arrivals">Browse the latest arrivals</a> and claim your 10% welcome perk.</p>',
+                    ]),
+                    'meta' => [
+                        'preview_text' => 'Meet your new favorite products and enjoy a welcome perk.',
+                        'cta' => 'Shop new arrivals',
+                    ],
+                ],
+                'weekly_digest' => [
+                    'name' => 'Weekly Highlights Digest',
+                    'subject' => 'This week’s best sellers & stories',
+                    'content' => implode(PHP_EOL, [
+                        '<h2>Your weekly ShopWave round-up</h2>',
+                        '<ul>',
+                        '    <li>Top-selling essentials picked by our community.</li>',
+                        '    <li>Fresh editorial guides to inspire your next purchase.</li>',
+                        '    <li>Member-only deals expiring this weekend.</li>',
+                        '</ul>',
+                        '<p>See everything that’s trending before it’s gone.</p>',
+                    ]),
+                    'meta' => [
+                        'preview_text' => 'Handpicked deals, editorials, and community favorites—just for you.',
+                        'cta' => 'Explore the digest',
+                    ],
+                ],
+                'loyalty_spotlight' => [
+                    'name' => 'Loyalty Spotlight Email',
+                    'subject' => 'You’re only one order away from Platinum status',
+                    'content' => implode(PHP_EOL, [
+                        '<h2>Unlock Platinum perks</h2>',
+                        '<p>Your loyalty balance is climbing fast. Check out exclusive bundles that earn double points this week.</p>',
+                        '<p><a href="https://shop.example.com/loyalty">View your rewards dashboard</a> and turn points into savings.</p>',
+                    ]),
+                    'meta' => [
+                        'preview_text' => 'Earn double points on curated bundles—limited time only.',
+                        'cta' => 'See rewards',
+                    ],
+                ],
+            ],
+            MarketingCampaign::TYPE_PUSH => [
+                'flash_sale' => [
+                    'name' => 'Flash Sale Push Notification',
+                    'subject' => '⏰ 4-hour flash sale!',
+                    'content' => 'Tap to unlock 25% off sitewide before the timer ends.',
+                    'meta' => [
+                        'cta' => 'Shop the flash sale',
+                        'deep_link' => 'shopwave://flash-sale',
+                    ],
+                ],
+                'winback_nudge' => [
+                    'name' => 'Win-back Reminder Push',
+                    'subject' => 'We saved something you’ll love',
+                    'content' => 'Come back for curated picks waiting in your account—plus a surprise treat.',
+                    'meta' => [
+                        'cta' => 'See your picks',
+                        'deep_link' => 'shopwave://home',
+                    ],
+                ],
+                'back_in_stock' => [
+                    'name' => 'Back in Stock Push Alert',
+                    'subject' => 'It’s back! Grab it before it sells out again',
+                    'content' => 'A wishlist favorite just returned. Reserve yours now before the next wave sells out.',
+                    'meta' => [
+                        'cta' => 'Reserve now',
+                        'deep_link' => 'shopwave://wishlist',
+                    ],
+                ],
+            ],
+        ];
+
+        return collect($templateConfigs)->map(function (array $templates, string $channel) {
+            return collect($templates)->map(function (array $config) use ($channel) {
+                return CampaignTemplate::updateOrCreate(
+                    [
+                        'name' => $config['name'],
+                        'channel' => $channel,
+                    ],
+                    [
+                        'subject' => $config['subject'],
+                        'content' => $config['content'],
+                        'meta' => $config['meta'],
+                    ]
+                );
+            });
+        });
+    }
+
+    private function seedCustomerSegments(): Collection
+    {
+        $segmentConfigs = [
+            'new_customers' => [
+                'name' => 'New customers (last 30 days)',
+                'description' => 'Recently registered shoppers with verified email addresses.',
+                'conditions' => [
+                    'created_after' => now()->subDays(30)->toDateString(),
+                    'email_verified' => true,
+                ],
+                'is_active' => true,
+            ],
+            'vip_verified' => [
+                'name' => 'VIP verified customers',
+                'description' => 'Long-term customers from our VIP domain with verified accounts.',
+                'conditions' => [
+                    'created_before' => now()->subMonths(6)->toDateString(),
+                    'email_verified' => true,
+                    'email_domain' => 'vip.example.com',
+                ],
+                'is_active' => true,
+            ],
+            'lapsed_accounts' => [
+                'name' => 'Lapsed accounts',
+                'description' => 'Contacts who joined more than a year ago and need a win-back.',
+                'conditions' => [
+                    'created_before' => now()->subYear()->toDateString(),
+                    'email_verified' => false,
+                ],
+                'is_active' => false,
+            ],
+        ];
+
+        return collect($segmentConfigs)->map(function (array $config) {
+            return CustomerSegment::updateOrCreate(
+                ['name' => $config['name']],
+                [
+                    'description' => $config['description'],
+                    'conditions' => $config['conditions'],
+                    'is_active' => $config['is_active'],
+                ]
+            );
+        });
+    }
+
+    private function seedMarketingCampaigns(Collection $templates, Collection $segments): Collection
+    {
+        $emailTemplates = $templates->get(MarketingCampaign::TYPE_EMAIL, collect());
+        $pushTemplates = $templates->get(MarketingCampaign::TYPE_PUSH, collect());
+
+        $campaignConfigs = [
+            'welcome_drip' => [
+                'name' => 'Welcome Drip Series',
+                'type' => MarketingCampaign::TYPE_EMAIL,
+                'template' => $emailTemplates->get('welcome_series'),
+                'status' => 'draft',
+                'settings' => [
+                    'utm_campaign' => 'welcome-drip',
+                    'sender' => 'community@shopwave.test',
+                ],
+                'audience_filters' => [
+                    'include_segments' => ['new_customers'],
+                ],
+                'scheduled_for' => now()->addDays(2),
+                'last_dispatched_at' => null,
+                'last_synced_at' => null,
+                'metrics' => [
+                    'open_count' => 0,
+                    'click_count' => 0,
+                    'conversion_count' => 0,
+                ],
+                'segments' => ['new_customers'],
+                'schedule' => [
+                    'cron_expression' => '0 9 * * MON',
+                    'timezone' => config('app.timezone', 'UTC'),
+                    'starts_at' => now()->addDays(2),
+                    'ends_at' => now()->addWeeks(4),
+                    'next_run_at' => now()->addDays(2),
+                    'is_active' => false,
+                ],
+            ],
+            'vip_flash_sale_email' => [
+                'name' => 'VIP Flash Sale Email',
+                'type' => MarketingCampaign::TYPE_EMAIL,
+                'template' => $emailTemplates->get('loyalty_spotlight'),
+                'status' => 'scheduled',
+                'settings' => [
+                    'utm_campaign' => 'vip-flash-sale',
+                    'offer_code' => 'FLASH25',
+                ],
+                'audience_filters' => [
+                    'minimum_orders' => 3,
+                ],
+                'scheduled_for' => now()->addHours(6),
+                'last_dispatched_at' => null,
+                'last_synced_at' => now()->subHours(1),
+                'metrics' => [
+                    'open_count' => 240,
+                    'click_count' => 96,
+                    'conversion_count' => 28,
+                ],
+                'segments' => ['vip_verified'],
+                'schedule' => [
+                    'cron_expression' => '30 7 * * FRI',
+                    'timezone' => config('app.timezone', 'UTC'),
+                    'starts_at' => now()->addHours(6),
+                    'ends_at' => now()->addWeeks(2),
+                    'next_run_at' => now()->addHours(6),
+                    'is_active' => true,
+                ],
+            ],
+            'weekly_digest' => [
+                'name' => 'Weekly Digest Newsletter',
+                'type' => MarketingCampaign::TYPE_EMAIL,
+                'template' => $emailTemplates->get('weekly_digest'),
+                'status' => 'running',
+                'settings' => [
+                    'utm_campaign' => 'weekly-digest',
+                    'content_blocks' => ['editorial', 'top_sellers', 'community_story'],
+                ],
+                'audience_filters' => [
+                    'include_segments' => ['new_customers', 'vip_verified'],
+                ],
+                'scheduled_for' => now()->subDays(1),
+                'last_dispatched_at' => now()->subDay(),
+                'last_synced_at' => now()->subHours(2),
+                'metrics' => [
+                    'open_count' => 1280,
+                    'click_count' => 412,
+                    'conversion_count' => 96,
+                ],
+                'segments' => ['new_customers', 'vip_verified'],
+                'schedule' => [
+                    'cron_expression' => '0 8 * * MON',
+                    'timezone' => config('app.timezone', 'UTC'),
+                    'starts_at' => now()->subWeeks(3),
+                    'ends_at' => now()->addWeeks(5),
+                    'last_run_at' => now()->subDay(),
+                    'next_run_at' => now()->addWeek(),
+                    'is_active' => true,
+                ],
+            ],
+            'winback_push' => [
+                'name' => 'Win-back Push Journey',
+                'type' => MarketingCampaign::TYPE_PUSH,
+                'template' => $pushTemplates->get('winback_nudge'),
+                'status' => 'completed',
+                'settings' => [
+                    'utm_campaign' => 'winback-push',
+                    'reminder_window_days' => 14,
+                ],
+                'audience_filters' => [
+                    'include_segments' => ['lapsed_accounts'],
+                ],
+                'scheduled_for' => now()->subWeeks(2),
+                'last_dispatched_at' => now()->subWeek(),
+                'last_synced_at' => now()->subDays(3),
+                'metrics' => [
+                    'open_count' => 640,
+                    'click_count' => 205,
+                    'conversion_count' => 62,
+                ],
+                'segments' => ['lapsed_accounts'],
+                'schedule' => [
+                    'cron_expression' => '*/30 * * * *',
+                    'timezone' => 'UTC',
+                    'starts_at' => now()->subWeeks(3),
+                    'ends_at' => now()->subDays(2),
+                    'last_run_at' => now()->subWeek(),
+                    'next_run_at' => null,
+                    'is_active' => false,
+                ],
+            ],
+        ];
+
+        $campaigns = collect();
+
+        foreach ($campaignConfigs as $key => $config) {
+            $template = $config['template'];
+
+            if (! $template instanceof CampaignTemplate) {
+                continue;
+            }
+
+            $campaign = MarketingCampaign::updateOrCreate(
+                ['name' => $config['name']],
+                [
+                    'type' => $config['type'],
+                    'template_id' => $template->id,
+                    'status' => $config['status'],
+                    'settings' => $config['settings'],
+                    'audience_filters' => $config['audience_filters'],
+                    'scheduled_for' => $config['scheduled_for'],
+                    'last_dispatched_at' => $config['last_dispatched_at'],
+                    'last_synced_at' => $config['last_synced_at'],
+                    'open_count' => $config['metrics']['open_count'],
+                    'click_count' => $config['metrics']['click_count'],
+                    'conversion_count' => $config['metrics']['conversion_count'],
+                ]
+            );
+
+            $segmentIds = $segments
+                ->only($config['segments'])
+                ->pluck('id')
+                ->values()
+                ->all();
+
+            $campaign->segments()->sync($segmentIds);
+
+            $schedule = $config['schedule'] ?? [];
+
+            if (! empty($schedule)) {
+                $campaign->schedule()->updateOrCreate([], $schedule);
+            }
+
+            $campaigns->put($key, $campaign->fresh(['template', 'segments', 'schedule']));
+        }
+
+        return $campaigns;
+    }
+
+    private function seedCampaignTests(Collection $campaigns, Collection $templates): void
+    {
+        $emailTemplates = $templates->get(MarketingCampaign::TYPE_EMAIL, collect());
+        $pushTemplates = $templates->get(MarketingCampaign::TYPE_PUSH, collect());
+
+        $testsConfig = [
+            [
+                'campaign' => $campaigns->get('weekly_digest'),
+                'name' => 'Digest subject line test',
+                'variant_a' => $emailTemplates->get('weekly_digest'),
+                'variant_b' => $emailTemplates->get('loyalty_spotlight'),
+                'traffic_split_a' => 60,
+                'traffic_split_b' => 40,
+                'status' => 'running',
+                'metrics' => [
+                    'opens' => 920,
+                    'clicks' => 348,
+                    'conversions' => 72,
+                ],
+                'winning' => null,
+            ],
+            [
+                'campaign' => $campaigns->get('winback_push'),
+                'name' => 'Win-back push copy test',
+                'variant_a' => $pushTemplates->get('winback_nudge'),
+                'variant_b' => $pushTemplates->get('flash_sale'),
+                'traffic_split_a' => 50,
+                'traffic_split_b' => 50,
+                'status' => 'completed',
+                'metrics' => [
+                    'opens' => 470,
+                    'clicks' => 168,
+                    'conversions' => 51,
+                ],
+                'winning' => $pushTemplates->get('winback_nudge'),
+            ],
+        ];
+
+        foreach ($testsConfig as $config) {
+            $campaign = $config['campaign'];
+            $variantA = $config['variant_a'];
+            $variantB = $config['variant_b'];
+
+            if (! $campaign || ! $variantA || ! $variantB) {
+                continue;
+            }
+
+            CampaignTest::updateOrCreate(
+                [
+                    'campaign_id' => $campaign->id,
+                    'name' => $config['name'],
+                ],
+                [
+                    'variant_a_template_id' => $variantA->id,
+                    'variant_b_template_id' => $variantB->id,
+                    'traffic_split_a' => $config['traffic_split_a'],
+                    'traffic_split_b' => $config['traffic_split_b'],
+                    'status' => $config['status'],
+                    'metrics' => $config['metrics'],
+                    'winning_template_id' => $config['winning']?->id,
+                ]
+            );
+        }
     }
 
     private function seedLoyaltyTransactions(Collection $users, Collection $orders): void
