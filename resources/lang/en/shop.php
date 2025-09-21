@@ -53,6 +53,10 @@ return [
                 'label' => 'Warehouse',
                 'plural_label' => 'Warehouses',
             ],
+            'currencies' => [
+                'label' => 'Currency',
+                'plural_label' => 'Currencies',
+            ],
         ],
     ],
 

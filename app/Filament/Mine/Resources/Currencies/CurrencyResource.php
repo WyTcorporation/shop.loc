@@ -30,6 +30,21 @@ class CurrencyResource extends Resource
 
     protected static bool $shouldRegisterNavigation = true;
 
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.currencies.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.currencies.plural_label');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('shop.admin.resources.currencies.plural_label');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([

@@ -53,6 +53,10 @@ return [
                 'label' => 'Склад',
                 'plural_label' => 'Склади',
             ],
+            'currencies' => [
+                'label' => 'Валюта',
+                'plural_label' => 'Валюти',
+            ],
         ],
     ],
 
