@@ -16,6 +16,47 @@ return [
             'label' => 'Idioma da interface',
             'help' => 'Altera o idioma do painel após recarregar a página.',
         ],
+        'dashboard' => [
+            'filters' => [
+                'period' => 'Período',
+                'today' => 'Hoje',
+                'seven_days' => 'Últimos 7 dias',
+                'thirty_days' => 'Últimos 30 dias',
+                'ninety_days' => 'Últimos 90 dias',
+            ],
+            'sales' => [
+                'title' => 'Desempenho de vendas',
+                'revenue' => 'Receita',
+                'orders' => 'Pedidos',
+                'average_order_value' => 'Ticket médio',
+            ],
+            'conversion' => [
+                'title' => 'Conversão do checkout',
+                'rate' => 'Taxa de conversão',
+                'rate_help' => 'Pedidos versus carrinhos no período selecionado.',
+                'orders' => 'Pedidos',
+                'carts' => 'Carrinhos',
+            ],
+            'traffic' => [
+                'title' => 'Fontes de tráfego',
+                'revenue' => 'Participação na receita',
+            ],
+            'top_products' => [
+                'title' => 'Produtos mais vendidos',
+                'columns' => [
+                    'product' => 'Produto',
+                    'sku' => 'SKU',
+                    'quantity' => 'Unidades vendidas',
+                    'revenue' => 'Receita',
+                ],
+            ],
+            'inventory' => [
+                'title' => 'Status do estoque',
+                'skus' => 'SKUs monitorados',
+                'available_units' => 'Unidades disponíveis',
+                'low_stock' => 'Estoque baixo (≤ :threshold)',
+            ],
+        ],
         'resources' => [
             'products' => [
                 'label' => 'Produto',
