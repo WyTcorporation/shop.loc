@@ -24,10 +24,10 @@ class ProductResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'Product';
+    protected static ?string $recordTitleAttribute = 'name';
 
 //    protected static ?string $navigationIcon = 'heroicon-o-cube';
-    protected static string|null|\UnitEnum $navigationGroup = 'Catalog';
+    protected static string|null|\UnitEnum $navigationGroup = null;
     protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Schema $schema): Schema
@@ -66,6 +66,21 @@ class ProductResource extends Resource
             'create' => CreateProduct::route('/create'),
             'edit' => EditProduct::route('/{record}/edit'),
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.products.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.products.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.catalog');
     }
 
     public static function getNavigationBadge(): ?string

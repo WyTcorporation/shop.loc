@@ -20,11 +20,11 @@ class CategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'Category';
+    protected static ?string $recordTitleAttribute = 'name';
 
 //    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Catalog';
+    protected static string|null|\UnitEnum $navigationGroup = null;
     protected static bool $shouldRegisterNavigation = true;
 
 
@@ -57,5 +57,20 @@ class CategoryResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         return (string) Category::count();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.categories.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.categories.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.catalog');
     }
 }

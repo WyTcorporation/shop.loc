@@ -27,7 +27,7 @@ class InventoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Inventory';
+    protected static string|null|\UnitEnum $navigationGroup = null;
 
     protected static ?string $recordTitleAttribute = 'id';
 
@@ -149,6 +149,21 @@ class InventoryResource extends Resource
             'create' => CreateInventory::route('/create'),
             'edit' => EditInventory::route('/{record}/edit'),
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.inventory.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.inventory.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.inventory');
     }
 
     public static function getNavigationBadge(): ?string

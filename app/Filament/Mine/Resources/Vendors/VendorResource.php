@@ -22,7 +22,9 @@ class VendorResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Catalog';
+    protected static string|null|\UnitEnum $navigationGroup = null;
+
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {
@@ -54,6 +56,21 @@ class VendorResource extends Resource
             'create' => CreateVendor::route('/create'),
             'edit' => EditVendor::route('/{record}/edit'),
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.vendors.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.vendors.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.catalog');
     }
 
     public static function getNavigationBadge(): ?string

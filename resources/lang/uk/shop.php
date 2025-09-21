@@ -7,7 +7,48 @@ return [
             'catalog' => 'Каталог',
             'sales' => 'Продажі',
             'inventory' => 'Запаси',
+            'marketing' => 'Маркетинг',
+            'content' => 'Контент',
+            'customers' => 'Клієнти',
             'settings' => 'Налаштування',
+        ],
+        'resources' => [
+            'products' => [
+                'label' => 'Товар',
+                'plural_label' => 'Товари',
+            ],
+            'categories' => [
+                'label' => 'Категорія',
+                'plural_label' => 'Категорії',
+            ],
+            'orders' => [
+                'label' => 'Замовлення',
+                'plural_label' => 'Замовлення',
+            ],
+            'vendors' => [
+                'label' => 'Продавець',
+                'plural_label' => 'Продавці',
+            ],
+            'inventory' => [
+                'label' => 'Позиція запасів',
+                'plural_label' => 'Запаси',
+            ],
+            'coupons' => [
+                'label' => 'Купон',
+                'plural_label' => 'Купони',
+            ],
+            'reviews' => [
+                'label' => 'Відгук',
+                'plural_label' => 'Відгуки',
+            ],
+            'users' => [
+                'label' => 'Клієнт',
+                'plural_label' => 'Клієнти',
+            ],
+            'warehouses' => [
+                'label' => 'Склад',
+                'plural_label' => 'Склади',
+            ],
         ],
     ],
 

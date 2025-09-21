@@ -19,7 +19,7 @@ class CouponResource extends Resource
     protected static ?string $model = Coupon::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTicket;
-    protected static string|null|\UnitEnum $navigationGroup = 'Marketing';
+    protected static string|null|\UnitEnum $navigationGroup = null;
     protected static ?string $recordTitleAttribute = 'code';
     protected static bool $shouldRegisterNavigation = true;
 
@@ -31,6 +31,21 @@ class CouponResource extends Resource
     public static function table(Table $table): Table
     {
         return CouponsTable::configure($table);
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.coupons.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.coupons.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.marketing');
     }
 
     public static function getPages(): array

@@ -19,7 +19,7 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-    protected static string|null|\UnitEnum $navigationGroup = 'Customers';
+    protected static string|null|\UnitEnum $navigationGroup = null;
     protected static ?string $recordTitleAttribute = 'name';
     protected static bool $shouldRegisterNavigation = true;
 
@@ -46,6 +46,21 @@ class UserResource extends Resource
             'index' => ListUsers::route('/'),
             'view' => ViewUser::route('/{record}'),
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.users.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.users.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.customers');
     }
 
     public static function getEloquentQuery(): Builder
