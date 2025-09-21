@@ -21,9 +21,10 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Filament\Mine\Resources\Products\ProductResource;
 use App\Filament\Mine\Resources\Categories\CategoryResource;
 use App\Filament\Mine\Resources\Orders\OrderResource;
+use App\Filament\Mine\Resources\Products\ProductResource;
+use App\Filament\Mine\Resources\Users\UserResource;
 use App\Filament\Mine\Resources\Vendors\VendorResource;
 
 class MinePanelProvider extends PanelProvider
@@ -47,6 +48,7 @@ class MinePanelProvider extends PanelProvider
                 CategoryResource::class,
                 VendorResource::class,
                 OrderResource::class,
+                UserResource::class,
             ])
             ->navigationGroups([
                 __('shop.admin.navigation.catalog'),

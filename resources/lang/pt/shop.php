@@ -350,6 +350,9 @@ return [
     'users' => [
         'fields' => [
             'points_balance' => 'Saldo de pontos',
+            'password' => 'Senha',
+            'roles' => 'Funções',
+            'categories' => 'Categorias permitidas',
         ],
     ],
 

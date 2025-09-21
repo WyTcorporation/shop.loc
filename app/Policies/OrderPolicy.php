@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\Permission;
+use App\Enums\Role;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -12,7 +14,7 @@ class OrderPolicy
 
     public function before(User $user, string $ability): bool|null
     {
-        if (! $user->vendor) {
+        if ($user->hasRole(Role::Administrator->value)) {
             return true;
         }
 
@@ -21,26 +23,45 @@ class OrderPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasAnyPermission([
+            Permission::ViewOrders->value,
+            Permission::ManageOrders->value,
+        ]);
     }
 
     public function view(User $user, Order $order): bool
     {
+        if (! $this->viewAny($user)) {
+            return false;
+        }
+
         return $this->managesOrder($user, $order);
     }
 
     public function update(User $user, Order $order): bool
     {
+        if (! $user->hasPermissionTo(Permission::ManageOrders->value)) {
+            return false;
+        }
+
         return $this->managesOrder($user, $order);
     }
 
     public function delete(User $user, Order $order): bool
     {
+        if (! $user->hasPermissionTo(Permission::ManageOrders->value)) {
+            return false;
+        }
+
         return $this->managesOrder($user, $order);
     }
 
     public function createMessage(User $user, Order $order): bool
     {
+        if (! $user->hasPermissionTo(Permission::ManageOrders->value)) {
+            return false;
+        }
+
         return $this->managesOrder($user, $order);
     }
 

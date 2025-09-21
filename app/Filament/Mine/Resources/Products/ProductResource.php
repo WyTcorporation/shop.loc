@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Products;
 
+use App\Enums\Permission;
 use App\Filament\Mine\Resources\Products\Pages\CreateProduct;
 use App\Filament\Mine\Resources\Products\Pages\EditProduct;
 use App\Filament\Mine\Resources\Products\Pages\ListProducts;
@@ -13,7 +14,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Filament\Forms;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -43,6 +43,14 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        $user = Auth::user();
+
+        abort_if($user === null, 403);
+
+        if (! $user->can(Permission::ViewProducts->value) && ! $user->can(Permission::ManageProducts->value)) {
+            abort(403);
+        }
+
         $query = parent::getEloquentQuery()
             ->with(['images' => fn($q) => $q
                 ->select('id','product_id','path','disk','is_primary','sort')
@@ -50,9 +58,13 @@ class ProductResource extends Resource
                 ->orderBy('sort')
             ]);
 
-        $user = Auth::user();
+        $permittedCategoryIds = $user->permittedCategoryIds();
 
-        if ($user?->vendor) {
+        if ($permittedCategoryIds->isNotEmpty()) {
+            $query->whereIn('category_id', $permittedCategoryIds);
+        }
+
+        if ($user->vendor) {
             $query->where('vendor_id', $user->vendor->id);
         }
 
@@ -83,8 +95,17 @@ class ProductResource extends Resource
         return __('shop.admin.navigation.catalog');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+    }
+
     public static function getNavigationBadge(): ?string
     {
+        if (! auth()->user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
         return (string) Product::count();
     }
 

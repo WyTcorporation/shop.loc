@@ -2,9 +2,12 @@
 
 namespace App\Filament\Mine\Resources\Users;
 
+use App\Filament\Mine\Resources\Users\Pages\CreateUser;
+use App\Filament\Mine\Resources\Users\Pages\EditUser;
 use App\Filament\Mine\Resources\Users\Pages\ListUsers;
 use App\Filament\Mine\Resources\Users\Pages\ViewUser;
 use App\Filament\Mine\Resources\Users\RelationManagers\LoyaltyPointTransactionsRelationManager;
+use App\Filament\Mine\Resources\Users\Schemas\UserForm;
 use App\Filament\Mine\Resources\Users\Tables\UsersTable;
 use App\Models\User;
 use BackedEnum;
@@ -13,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -25,7 +29,7 @@ class UserResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema;
+        return UserForm::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -44,8 +48,15 @@ class UserResource extends Resource
     {
         return [
             'index' => ListUsers::route('/'),
+            'create' => CreateUser::route('/create'),
             'view' => ViewUser::route('/{record}'),
+            'edit' => EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Auth::user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function getModelLabel(): string
@@ -65,12 +76,20 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        $user = Auth::user();
+
+        abort_if($user === null || ! $user->can('viewAny', static::getModel()), 403);
+
         return parent::getEloquentQuery()
             ->withSum('loyaltyPointTransactions as loyalty_points_balance', 'points');
     }
 
     public static function getNavigationBadge(): ?string
     {
+        if (! Auth::user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
         return (string) User::count();
     }
 }
