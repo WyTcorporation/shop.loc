@@ -7,6 +7,7 @@ use App\Enums\Permission as PermissionEnum;
 use App\Enums\Role as RoleEnum;
 use App\Enums\ShipmentStatus;
 use App\Models\Address;
+use App\Models\Act;
 use App\Models\CampaignTemplate;
 use App\Models\CampaignTest;
 use App\Models\Cart;
@@ -15,11 +16,14 @@ use App\Models\Coupon;
 use App\Models\Category;
 use App\Models\Currency;
 use App\Models\CustomerSegment;
+use App\Models\DeliveryNote;
+use App\Models\Invoice;
 use App\Models\LoyaltyPointTransaction;
 use App\Models\MarketingCampaign;
 use App\Models\Message;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\SaftExportLog;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\TwoFactorSecret;
@@ -32,6 +36,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -54,6 +59,10 @@ class FullDemoSeeder extends Seeder
         $this->seedWarehouseStock($warehouses);
         $this->seedCarts($users, $coupons);
         $orders = $this->seedOrders($users, $coupons, $currencies, $warehouses);
+        $this->seedInvoices($orders);
+        $this->seedDeliveryNotes($orders);
+        $this->seedActs($orders);
+        $this->seedSaftExportLogs($orders, $users);
         $templates = $this->seedCampaignTemplates();
         $segments = $this->seedCustomerSegments();
         $campaigns = $this->seedMarketingCampaigns($templates, $segments);
@@ -565,6 +574,291 @@ class FullDemoSeeder extends Seeder
         }
 
         return $orders;
+    }
+
+    private function seedInvoices(Collection $orders): void
+    {
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $configs = [
+            'new' => [
+                'status' => 'draft',
+                'issued_days_ago' => 1,
+                'due_in_days' => 14,
+                'tax_rate' => 0.18,
+                'notes' => 'Issued for review before payment capture.',
+            ],
+            'paid' => [
+                'status' => 'paid',
+                'issued_days_ago' => 8,
+                'due_in_days' => 0,
+                'tax_rate' => 0.21,
+                'notes' => 'Payment received in full via credit card.',
+            ],
+            'shipped' => [
+                'status' => 'issued',
+                'issued_days_ago' => 5,
+                'due_in_days' => 7,
+                'tax_rate' => 0.2,
+                'notes' => 'Partial payment expected upon delivery.',
+            ],
+            'cancelled' => [
+                'status' => 'void',
+                'issued_days_ago' => 2,
+                'due_in_days' => null,
+                'tax_rate' => 0,
+                'notes' => 'Cancelled before fulfillment. No payment due.',
+            ],
+        ];
+
+        Invoice::query()->whereIn('order_id', $orders->pluck('id'))->delete();
+
+        foreach ($orders as $key => $order) {
+            $order->loadMissing(['items.product', 'user']);
+
+            $config = $configs[$key] ?? [
+                'status' => 'draft',
+                'issued_days_ago' => 0,
+                'due_in_days' => 14,
+                'tax_rate' => 0.2,
+                'notes' => 'Auto-generated invoice for demo data.',
+            ];
+
+            $issuedAt = now()->subDays($config['issued_days_ago']);
+            $dueAt = is_null($config['due_in_days']) ? null : $issuedAt->copy()->addDays($config['due_in_days']);
+
+            $subtotal = (float) $order->subtotal;
+            $taxTotal = round($subtotal * $config['tax_rate'], 2);
+            $discountTotal = (float) $order->discount_total;
+            $total = max(0, round($subtotal + $taxTotal - $discountTotal, 2));
+
+            $lineSummary = $order->items
+                ->map(fn ($item) => sprintf(
+                    '%s × %d @ %s',
+                    Str::limit($item->product?->name ?? 'Item '.$item->id, 40),
+                    (int) $item->qty,
+                    number_format((float) $item->price, 2)
+                ))
+                ->implode('; ');
+
+            Invoice::create([
+                'order_id' => $order->id,
+                'number' => 'INV-'.Str::of($order->number)->after('ORD-')->replace('-', ''),
+                'issued_at' => $issuedAt,
+                'due_at' => $dueAt,
+                'status' => $config['status'],
+                'currency' => $order->currency,
+                'subtotal' => $subtotal,
+                'tax_total' => $taxTotal,
+                'total' => $total,
+                'metadata' => [
+                    'payment_terms' => $dueAt ? sprintf('Net %d days', $config['due_in_days']) : 'No payment due',
+                    'customer_reference' => $order->user?->name ?? $order->email,
+                    'line_items' => $lineSummary,
+                    'notes' => $config['notes'],
+                ],
+            ]);
+        }
+    }
+
+    private function seedDeliveryNotes(Collection $orders): void
+    {
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $configs = [
+            'new' => [
+                'status' => 'draft',
+                'issued_days_ago' => 0,
+                'dispatch_delay' => null,
+                'remarks' => 'Awaiting warehouse confirmation.',
+            ],
+            'paid' => [
+                'status' => 'packing',
+                'issued_days_ago' => 4,
+                'dispatch_delay' => 1,
+                'remarks' => 'Preparing shipment with gift packaging.',
+            ],
+            'shipped' => [
+                'status' => 'dispatched',
+                'issued_days_ago' => 3,
+                'dispatch_delay' => 0,
+                'remarks' => 'Left the warehouse with priority courier.',
+            ],
+            'cancelled' => [
+                'status' => 'void',
+                'issued_days_ago' => 1,
+                'dispatch_delay' => null,
+                'remarks' => 'Cancelled prior to dispatch.',
+            ],
+        ];
+
+        DeliveryNote::query()->whereIn('order_id', $orders->pluck('id'))->delete();
+
+        foreach ($orders as $key => $order) {
+            $order->loadMissing(['items.product', 'items.warehouse']);
+
+            $config = $configs[$key] ?? [
+                'status' => 'draft',
+                'issued_days_ago' => 0,
+                'dispatch_delay' => null,
+                'remarks' => 'Auto-generated delivery note.',
+            ];
+
+            $issuedAt = now()->subDays($config['issued_days_ago']);
+            $dispatchedAt = is_null($config['dispatch_delay']) ? null : $issuedAt->copy()->addDays($config['dispatch_delay']);
+
+            $items = $order->items
+                ->map(fn ($item) => [
+                    'sku' => $item->product?->sku ?? 'SKU-'.$item->id,
+                    'name' => $item->product?->name ?? 'Item '.$item->id,
+                    'quantity' => (int) $item->qty,
+                    'warehouse' => $item->warehouse?->name,
+                ])
+                ->values()
+                ->all();
+
+            DeliveryNote::create([
+                'order_id' => $order->id,
+                'number' => 'DN-'.Str::of($order->number)->after('ORD-')->replace('-', ''),
+                'issued_at' => $issuedAt,
+                'dispatched_at' => $dispatchedAt,
+                'status' => $config['status'],
+                'items' => $items,
+                'remarks' => $config['remarks'],
+            ]);
+        }
+    }
+
+    private function seedActs(Collection $orders): void
+    {
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $configs = [
+            'new' => [
+                'status' => 'draft',
+                'issued_days_ago' => 0,
+                'description' => 'Pending confirmation of delivered services.',
+            ],
+            'paid' => [
+                'status' => 'approved',
+                'issued_days_ago' => 7,
+                'description' => 'Services rendered and approved by finance.',
+            ],
+            'shipped' => [
+                'status' => 'signed',
+                'issued_days_ago' => 4,
+                'description' => 'Signed upon delivery completion.',
+            ],
+            'cancelled' => [
+                'status' => 'void',
+                'issued_days_ago' => 2,
+                'description' => 'Cancelled order – record kept for auditing.',
+            ],
+        ];
+
+        Act::query()->whereIn('order_id', $orders->pluck('id'))->delete();
+
+        foreach ($orders as $key => $order) {
+            $config = $configs[$key] ?? [
+                'status' => 'draft',
+                'issued_days_ago' => 0,
+                'description' => 'Auto-generated act for demo data.',
+            ];
+
+            $issuedAt = now()->subDays($config['issued_days_ago']);
+
+            Act::create([
+                'order_id' => $order->id,
+                'number' => 'ACT-'.Str::of($order->number)->after('ORD-')->replace('-', ''),
+                'issued_at' => $issuedAt,
+                'status' => $config['status'],
+                'total' => (float) $order->total,
+                'description' => $config['description'],
+            ]);
+        }
+    }
+
+    private function seedSaftExportLogs(Collection $orders, Collection $users): void
+    {
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $accountant = $users->get('accountant');
+
+        if (! $accountant) {
+            return;
+        }
+
+        $configs = [
+            [
+                'order_key' => 'paid',
+                'format' => 'xml',
+                'status' => 'completed',
+                'file_path' => 'exports/saft/demo-orders-q1.xml',
+                'filters' => ['status' => 'paid', 'from_date' => now()->startOfYear()->toDateString(), 'to_date' => now()->toDateString()],
+                'exported_days_ago' => 3,
+                'message' => 'Export finished successfully for paid orders.',
+            ],
+            [
+                'order_key' => 'shipped',
+                'format' => 'json',
+                'status' => 'processing',
+                'file_path' => null,
+                'filters' => ['status' => 'shipped', 'warehouse' => 'Main'],
+                'exported_days_ago' => null,
+                'message' => 'Export queued and processing in the background.',
+            ],
+            [
+                'order_key' => 'cancelled',
+                'format' => 'xml',
+                'status' => 'failed',
+                'file_path' => null,
+                'filters' => ['status' => 'cancelled', 'include_documents' => true],
+                'exported_days_ago' => null,
+                'message' => 'Failed due to missing tax profile configuration.',
+            ],
+        ];
+
+        SaftExportLog::query()
+            ->whereIn('status', ['completed', 'processing', 'failed'])
+            ->where('message', 'like', 'Export%')
+            ->delete();
+
+        Storage::disk('local')->makeDirectory('exports/saft');
+
+        foreach ($configs as $config) {
+            $order = $orders->get($config['order_key']);
+
+            if (! $order) {
+                continue;
+            }
+
+            $exportedAt = $config['exported_days_ago'] === null
+                ? null
+                : now()->subDays($config['exported_days_ago']);
+
+            if ($config['file_path']) {
+                Storage::disk('local')->put($config['file_path'], 'Demo SAF-T export content for showcase.');
+            }
+
+            SaftExportLog::create([
+                'order_id' => $order->id,
+                'user_id' => $accountant->id,
+                'format' => $config['format'],
+                'status' => $config['status'],
+                'file_path' => $config['file_path'],
+                'filters' => $config['filters'],
+                'exported_at' => $exportedAt,
+                'message' => $config['message'],
+            ]);
+        }
     }
 
     private function seedCampaignTemplates(): Collection
