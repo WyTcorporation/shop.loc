@@ -56,6 +56,7 @@ class MinePanelProvider extends PanelProvider
             ->navigationGroups([
                 __('shop.admin.navigation.catalog'),
                 __('shop.admin.navigation.sales'),
+                __('shop.admin.navigation.accounting'),
                 __('shop.admin.navigation.inventory'),
                 __('shop.admin.navigation.settings'),
             ])

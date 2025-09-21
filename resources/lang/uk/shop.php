@@ -6,6 +6,7 @@ return [
         'navigation' => [
             'catalog' => 'Каталог',
             'sales' => 'Продажі',
+            'accounting' => 'Бухгалтерія',
             'inventory' => 'Запаси',
             'marketing' => 'Маркетинг',
             'content' => 'Контент',
@@ -98,6 +99,67 @@ return [
                 'label' => 'Валюта',
                 'plural_label' => 'Валюти',
             ],
+            'invoices' => [
+                'label' => 'Рахунок',
+                'plural_label' => 'Рахунки',
+                'fields' => [
+                    'number' => 'Номер',
+                    'issued_at' => 'Дата виписки',
+                    'due_at' => 'Строк оплати',
+                    'subtotal' => 'Проміжна сума',
+                    'tax_total' => 'Податок',
+                    'metadata' => 'Метадані',
+                ],
+            ],
+            'delivery_notes' => [
+                'label' => 'Накладна',
+                'plural_label' => 'Накладні',
+                'fields' => [
+                    'number' => 'Номер',
+                    'issued_at' => 'Дата створення',
+                    'dispatched_at' => 'Дата відправлення',
+                    'items' => 'Позиції',
+                    'remarks' => 'Примітки',
+                ],
+            ],
+            'acts' => [
+                'label' => 'Акт',
+                'plural_label' => 'Акти',
+                'fields' => [
+                    'number' => 'Номер',
+                    'issued_at' => 'Дата підписання',
+                    'total' => 'Сума',
+                    'description' => 'Опис',
+                ],
+            ],
+            'saft_exports' => [
+                'label' => 'SAF-T експорт',
+                'plural_label' => 'SAF-T експорти',
+                'fields' => [
+                    'format' => 'Формат',
+                    'exported_at' => 'Дата експорту',
+                    'created_at' => 'Створено',
+                    'message' => 'Повідомлення',
+                    'from_date' => 'Початкова дата',
+                    'to_date' => 'Кінцева дата',
+                ],
+                'status' => [
+                    'completed' => 'Завершено',
+                    'processing' => 'Виконується',
+                    'failed' => 'Помилка',
+                ],
+                'actions' => [
+                    'export' => 'SAF-T експорт',
+                    'run' => 'Запустити експорт',
+                    'view_logs' => 'Переглянути журнали',
+                ],
+                'messages' => [
+                    'completed' => '{0} SAF-T експорт згенеровано без замовлень|{1} SAF-T експорт згенеровано для :count замовлення|[2,4] SAF-T експорт згенеровано для :count замовлень|[5,*] SAF-T експорт згенеровано для :count замовлень',
+                    'success' => 'SAF-T експорт успішно запущено.',
+                    'completed_info' => 'Після завершення ви зможете завантажити файл у журналі експортів.',
+                    'latest_title' => 'Останній експорт',
+                ],
+            ],
         ],
     ],
 
@@ -164,6 +226,9 @@ return [
         'tracking_number' => 'Номер відстеження',
         'created' => 'Створено',
         'updated' => 'Оновлено',
+        'add' => 'Додати',
+        'download' => 'Завантажити',
+        'export' => 'Експорт',
     ],
 
     'auth' => [
@@ -244,9 +309,13 @@ return [
             'number' => 'Номер',
             'total' => 'Всього',
             'shipment_status' => 'Статус відправлення',
+            'currency' => 'Валюта',
         ],
         'helpers' => [
             'email_auto' => 'Якщо вибрано користувача, електронна адреса заповниться автоматично.',
+        ],
+        'placeholders' => [
+            'any_order' => 'Будь-яке замовлення',
         ],
         'hints' => [
             'number_generated' => 'Згенерується автоматично',
