@@ -215,7 +215,7 @@ return [
             'mark_paid' => 'Позначити оплаченим',
             'mark_shipped' => 'Позначити відправленим',
             'cancel' => 'Скасувати',
-            'resend_confirmation' => 'Надіслати підтвердження ще раз',
+            'resend_confirmation' => 'Надіслати підтвердження',
         ],
         'notifications' => [
             'marked_paid' => 'Замовлення позначене як оплачене',
@@ -245,6 +245,7 @@ return [
             'title' => 'Товари у замовленні',
             'fields' => [
                 'product' => 'Товар',
+                'qty' => 'Кількість',
                 'price' => 'Ціна',
                 'subtotal' => 'Проміжна сума',
             ],
@@ -258,6 +259,10 @@ return [
                 'from' => 'Було',
                 'to' => 'Стало',
                 'by' => 'Ким змінено',
+                'note' => 'Примітка',
+                'deleted_at' => 'Видалено',
+                'created_at' => 'Створено',
+                'updated_at' => 'Оновлено',
             ],
             'empty_state' => [
                 'heading' => 'Статус ще не змінювався',
@@ -274,6 +279,8 @@ return [
         'not_enough_stock' => 'Недостатньо товару для продукту №:product_id на складі №:warehouse_id.',
         'not_enough_reserved_stock' => 'Недостатньо зарезервованого товару для продукту №:product_id на складі №:warehouse_id.',
         'fields' => [
+            'product' => 'Продукт',
+            'warehouse' => 'Склад',
             'quantity' => 'Кількість',
             'reserved' => 'Зарезервовано',
             'available' => 'Доступно',
@@ -445,6 +452,7 @@ return [
             'name' => 'Назва',
             'value' => 'Значення',
             'add' => 'Додати атрибут',
+            'translations' => 'Переклади',
         ],
         'placeholders' => [
             'available_stock' => 'Доступний залишок',
@@ -458,19 +466,23 @@ return [
             ],
         ],
         'images' => [
+            'title'=>'Зображення',
             'fields' => [
                 'image' => 'Зображення',
                 'alt_text' => 'Альтернативний текст',
                 'is_primary' => 'Головне зображення',
                 'preview' => 'Превʼю',
+                'disk' => 'Диск',
+                'sort' => 'Порядок',
+                'created_at' => 'Створено',
             ],
             'helper_texts' => [
                 'is_primary' => 'Використовується як превʼю товару.',
             ],
             'actions' => [
-                'create' => 'Додати зображення',
-                'edit' => 'Редагувати зображення',
-                'delete' => 'Видалити зображення',
+                'create' => 'Додати',
+                'edit' => 'Редагувати',
+                'delete' => 'Видалити',
             ],
             'empty' => [
                 'heading' => 'Ще немає зображень',
@@ -484,6 +496,18 @@ return [
             'name' => 'Назва',
             'slug' => 'Слаг',
             'parent' => 'Батьківська категорія',
+            'deleted_at' => 'Видалено',
+            'created_at' => 'Створено',
+            'updated_at' => 'Оновлено',
+        ],
+    ],
+
+    'vendor' => [
+        'fields' => [
+            'name' => 'Назва',
+            'slug' => 'Слаг',
+            'description' => 'Опис',
+
             'deleted_at' => 'Видалено',
             'created_at' => 'Створено',
             'updated_at' => 'Оновлено',

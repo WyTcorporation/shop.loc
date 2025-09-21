@@ -52,12 +52,14 @@ class ItemsRelationManager extends RelationManager
                     })
                     ->required(),
                 TextInput::make('qty')
+                    ->label(__('shop.orders.items.fields.qty'))
                     ->numeric()
                     ->minValue(1)
                     ->default(1)
                     ->reactive(),
 
                 TextInput::make('price')
+                    ->label(__('shop.orders.items.fields.price'))
                     ->numeric()
                     ->rule('decimal:0,2')
                     ->required()
@@ -72,7 +74,7 @@ class ItemsRelationManager extends RelationManager
             ->recordTitleAttribute('OrderItem')
             ->columns([
                 TextColumn::make('product.name')->label(__('shop.orders.items.fields.product')),
-                TextColumn::make('qty'),
+                TextColumn::make('qty')->label(__('shop.orders.items.fields.qty')),
                 TextColumn::make('price')
                     ->state(fn (OrderItem $record) => formatCurrency($record->price, $record->order?->currency))
                     ->label(__('shop.orders.items.fields.price')),

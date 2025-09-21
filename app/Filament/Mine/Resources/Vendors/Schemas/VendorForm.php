@@ -33,11 +33,13 @@ class VendorForm
                     ->unique(ignoreRecord: true)
                     ->disabled(fn () => (bool) $user?->vendor),
                 TextInput::make('name')
+                    ->label(__('shop.vendor.fields.name'))
                     ->required()
                     ->maxLength(255)
                     ->hidden()
                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
                 TextInput::make('slug')
+                    ->label(__('shop.vendor.fields.slug'))
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
@@ -49,6 +51,7 @@ class VendorForm
                     ->label(__('shop.common.phone'))
                     ->maxLength(255),
                 Textarea::make('description')
+                    ->label(__('shop.vendor.fields.description'))
                     ->rows(4)
                     ->columnSpanFull()
                     ->hidden()

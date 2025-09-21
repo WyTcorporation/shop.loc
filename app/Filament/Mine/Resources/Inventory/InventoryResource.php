@@ -37,6 +37,7 @@ class InventoryResource extends Resource
     {
         return $schema->components([
             Select::make('product_id')
+                ->label(__('shop.inventory.fields.product'))
                 ->relationship('product', 'name')
                 ->searchable()
                 ->preload()
@@ -61,6 +62,7 @@ class InventoryResource extends Resource
                 })
                 ->disabledOn('edit'),
             Select::make('warehouse_id')
+                ->label(__('shop.inventory.fields.warehouse'))
                 ->relationship('warehouse', 'name')
                 ->searchable()
                 ->preload()

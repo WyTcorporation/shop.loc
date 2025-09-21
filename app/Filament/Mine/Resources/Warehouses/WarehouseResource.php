@@ -42,18 +42,21 @@ class WarehouseResource extends Resource
 
         return $schema->components([
             TextInput::make('code')
+                ->label(__('shop.warehouses.fields.code'))
                 ->required()
                 ->maxLength(50)
                 ->unique(ignoreRecord: true)
                 ->rule('alpha_dash')
                 ->live(onBlur: true)
-                ->afterStateUpdated(fn (FormsSet $set, ?string $state) => $set('code', strtoupper((string) $state))),
+                ->afterStateUpdated(fn (SchemaSet $set, ?string $state) => $set('code', strtoupper((string) $state))),
             TextInput::make('name')
+                ->label(__('shop.warehouses.fields.name'))
                 ->required()
                 ->maxLength(255)
                 ->hidden()
                 ->dehydrateStateUsing(fn ($state, SchemaGet $get) => $get('name_translations.' . $primaryLocale) ?? $state),
             Textarea::make('description')
+                ->label(__('shop.warehouses.fields.description'))
                 ->columnSpanFull()
                 ->hidden()
                 ->dehydrateStateUsing(fn ($state, SchemaGet $get) => $get('description_translations.' . $primaryLocale) ?? $state),

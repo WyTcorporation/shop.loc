@@ -49,6 +49,7 @@ class CurrencyResource extends Resource
     {
         return $schema->components([
             TextInput::make('code')
+                ->label(__('shop.currencies.code'))
                 ->required()
                 ->minLength(3)
                 ->maxLength(3)

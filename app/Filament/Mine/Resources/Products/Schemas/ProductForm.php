@@ -128,6 +128,7 @@ class ProductForm
                                 }
                             }),
                         Fieldset::make('translations')
+                            ->label(__('shop.products.attributes.translations'))
                             ->schema(
                                 $supportedLocales
                                     ->map(fn (string $locale): TextInput => TextInput::make($locale)

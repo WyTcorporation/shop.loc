@@ -15,7 +15,7 @@ class LogsRelationManager extends RelationManager
 
     public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
     {
-        return __('shop.orders.items.title');
+        return __('shop.orders.logs.title');
     }
     public function form(Schema $schema): Schema
     {
@@ -30,8 +30,8 @@ class LogsRelationManager extends RelationManager
                 TextColumn::make('from_status')->label(__('shop.orders.logs.fields.from'))->badge(),
                 TextColumn::make('to_status')->label(__('shop.orders.logs.fields.to'))->badge(),
                 TextColumn::make('user.name')->label(__('shop.orders.logs.fields.by'))->placeholder('—'),
-                TextColumn::make('note')->limit(60)->wrap(),
-                TextColumn::make('created_at')->dateTime('Y-m-d H:i'),
+                TextColumn::make('note')->label(__('shop.orders.logs.fields.note'))->limit(60)->wrap(),
+                TextColumn::make('created_at')->label(__('shop.orders.logs.fields.created_at'))->dateTime('Y-m-d H:i'),
             ])
             ->paginated(false)
             ->emptyStateHeading(__('shop.orders.logs.empty_state.heading'))

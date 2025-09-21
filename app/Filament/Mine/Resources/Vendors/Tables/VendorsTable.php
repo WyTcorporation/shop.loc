@@ -26,9 +26,11 @@ class VendorsTable
             })
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('shop.vendor.fields.name'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('slug')
+                    ->label(__('shop.vendor.fields.slug'))
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('user.name')
@@ -41,6 +43,7 @@ class VendorsTable
                     ->label(__('shop.common.phone'))
                     ->toggleable(),
                 TextColumn::make('created_at')
+                    ->label(__('shop.vendor.fields.created_at'))
                     ->dateTime()
                     ->since()
                     ->sortable()

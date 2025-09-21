@@ -26,15 +26,18 @@ class CouponForm
 
         return $schema->components([
             TextInput::make('code')
+                ->label(__('shop.coupons.fields.code'))
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->maxLength(64)
                 ->helperText(__('shop.coupons.helpers.code_unique')),
             TextInput::make('name')
+                ->label(__('shop.coupons.fields.name'))
                 ->maxLength(255)
                 ->hidden()
                 ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
             Textarea::make('description')
+                ->label(__('shop.coupons.fields.description'))
                 ->rows(3)
                 ->columnSpanFull()
                 ->hidden()
@@ -68,6 +71,7 @@ class CouponForm
                         ->toArray(),
                 ),
             Select::make('type')
+                ->label(__('shop.coupons.fields.type'))
                 ->required()
                 ->options([
                     Coupon::TYPE_FIXED => __('shop.coupons.types.fixed'),

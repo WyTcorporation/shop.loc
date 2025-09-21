@@ -29,6 +29,13 @@ class ImagesRelationManager extends RelationManager
     protected static string $relationship = 'images';
     protected static ?string $recordTitleAttribute = 'path';
 
+    protected static ?string $title = null;
+
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('shop.products.images.title');
+    }
+
     public function form(Schema $schema): Schema
     {
         $primaryLocale = config('app.locale');
@@ -109,8 +116,12 @@ class ImagesRelationManager extends RelationManager
                             ]))
                         ->toArray(),
                 ),
-            Hidden::make('disk')->default(fn (): string => ProductImage::defaultDisk()),
-            TextInput::make('sort')->numeric()->default(0),
+            Hidden::make('disk')
+                ->label(__('shop.products.images.fields.disk'))
+                ->default(fn (): string => ProductImage::defaultDisk()),
+            TextInput::make('sort')
+                ->label(__('shop.products.images.fields.sort'))
+                ->numeric()->default(0),
             Toggle::make('is_primary')
                 ->label(__('shop.products.images.fields.is_primary'))
                 ->inline(false)
@@ -130,10 +141,12 @@ class ImagesRelationManager extends RelationManager
                 ToggleColumn::make('is_primary')
                     ->label(__('shop.products.images.fields.is_primary'))
                     ->sortable(),
-                TextColumn::make('alt')->limit(40),
-                TextColumn::make('sort')->sortable(),
-                TextColumn::make('disk')->sortable(),
-                TextColumn::make('created_at')->dateTime('Y-m-d H:i'),
+                TextColumn::make('alt')->label(__('shop.products.images.fields.alt_text'))->limit(40),
+                TextColumn::make('sort')->label(__('shop.products.images.fields.sort'))->sortable(),
+                TextColumn::make('disk')->label(__('shop.products.images.fields.disk'))->sortable(),
+                TextColumn::make('created_at')
+                    ->label(__('shop.products.images.fields.created_at'))
+                    ->dateTime('Y-m-d H:i'),
             ])
             ->headerActions([
                 CreateAction::make()
