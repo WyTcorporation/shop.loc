@@ -59,8 +59,11 @@ class CouponsTable
             ->filters([
                 TernaryFilter::make('is_active')
                     ->label('Active')
-                    ->true(fn ($query) => $query->where('is_active', true))
-                    ->false(fn ($query) => $query->where('is_active', false)),
+                    ->queries(
+                        true: fn ($query) => $query->where('is_active', true),
+                        false: fn ($query) => $query->where('is_active', false),
+                        blank: fn ($query) => $query,
+                    ),
             ])
             ->recordActions([
                 EditAction::make(),
