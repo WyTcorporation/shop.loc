@@ -13,6 +13,7 @@
 - Аналітика: GA4 з consent-режимом (EU ready), кастомний cookie-перемикач.
 
 - i18n (каркас): префікс у URL /:lang?, <html lang>, cookie lang, Accept-Language хедер до API, hreflang.
+- Mine panel (Filament): у меню користувача доступний перемикач мови з переліком `config('app.supported_locales')`. Вибрана мова зберігається у cookie `lang` (SameSite=Lax, ~1 рік) і після редіректу назад `SetLocaleFromRequest` одразу активує локаль для персоналу.
 
 - Замовлення/оплата: Order + OrderItems, Stripe Payment Intents, email-нотифікації по статусах (черги).
 
