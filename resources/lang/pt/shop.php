@@ -62,6 +62,90 @@ return [
             'products' => [
                 'label' => 'Produto',
                 'plural_label' => 'Produtos',
+                'imports' => [
+                    'tabs' => [
+                        'form' => 'Importar produtos',
+                        'history' => 'Histórico',
+                    ],
+                    'form' => [
+                        'heading' => 'Carregar planilha',
+                        'actions' => [
+                            'queue' => 'Agendar importação',
+                        ],
+                    ],
+                    'fields' => [
+                        'file' => 'Arquivo de importação',
+                    ],
+                    'messages' => [
+                        'missing_file' => 'Selecione um arquivo para importar.',
+                        'queued_title' => 'Importação de produtos iniciada',
+                        'queued_body' => 'A importação será executada em segundo plano. Você será notificado quando terminar.',
+                        'completed_title' => 'Importação de produtos concluída',
+                        'completed_body' => 'Processadas :processed de :total linhas.',
+                        'failed_title' => 'Falha na importação de produtos',
+                        'no_rows' => 'Nenhuma linha de dados foi detectada no arquivo enviado.',
+                        'row_created' => 'Produto criado (:sku)',
+                        'row_updated' => 'Produto atualizado (:sku)',
+                    ],
+                    'table' => [
+                        'recent_imports' => 'Importações recentes',
+                        'recent_exports' => 'Exportações recentes',
+                        'columns' => [
+                            'file' => 'Arquivo',
+                            'status' => 'Status',
+                            'progress' => 'Progresso',
+                            'results' => 'Resultados',
+                            'completed_at' => 'Concluída em',
+                            'format' => 'Formato',
+                            'rows' => 'Linhas',
+                        ],
+                        'results_created' => 'Criados',
+                        'results_updated' => 'Atualizados',
+                        'results_failed' => 'Falhos',
+                        'empty_imports' => 'Nenhuma importação ainda.',
+                        'empty_exports' => 'Nenhuma exportação ainda.',
+                    ],
+                ],
+                'exports' => [
+                    'tabs' => [
+                        'form' => 'Exportar produtos',
+                        'history' => 'Histórico',
+                    ],
+                    'form' => [
+                        'heading' => 'Configurar exportação',
+                        'actions' => [
+                            'queue' => 'Agendar exportação',
+                        ],
+                    ],
+                    'fields' => [
+                        'file_name' => 'Nome do arquivo',
+                        'format' => 'Formato',
+                        'only_active' => 'Apenas produtos ativos',
+                    ],
+                    'messages' => [
+                        'queued_title' => 'Exportação de produtos iniciada',
+                        'queued_body' => 'A exportação será executada em segundo plano. Você será notificado quando terminar.',
+                        'completed_title' => 'Exportação de produtos concluída',
+                        'completed_empty' => 'Nenhum produto corresponde aos filtros selecionados.',
+                        'completed_ready' => 'A exportação de produtos está pronta para download.',
+                        'failed_title' => 'Falha na exportação de produtos',
+                        'download' => 'Baixar',
+                        'pending' => 'Pendente',
+                    ],
+                    'table' => [
+                        'recent_exports' => 'Exportações recentes',
+                        'recent_imports' => 'Importações recentes',
+                        'columns' => [
+                            'format' => 'Formato',
+                            'status' => 'Status',
+                            'rows' => 'Linhas',
+                            'completed_at' => 'Concluída em',
+                            'file' => 'Arquivo',
+                        ],
+                        'empty_exports' => 'Nenhuma exportação ainda.',
+                        'empty_imports' => 'Nenhuma importação ainda.',
+                    ],
+                ],
             ],
             'categories' => [
                 'label' => 'Categoria',
