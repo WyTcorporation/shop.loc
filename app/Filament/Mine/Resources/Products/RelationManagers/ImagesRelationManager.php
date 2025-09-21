@@ -39,7 +39,7 @@ class ImagesRelationManager extends RelationManager
 
         return $schema->schema([
             FileUpload::make('path')
-                ->label('Image')
+                ->label(__('shop.products.images.fields.image'))
                 ->disk(fn (): string => ProductImage::defaultDisk())
                 ->directory(function (): string {
                     $directory = 'products/' . $this->getOwnerRecord()->id;
@@ -97,7 +97,7 @@ class ImagesRelationManager extends RelationManager
                         ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
                             ->schema([
                                 TextInput::make("alt_translations.{$locale}")
-                                    ->label('Alt text')
+                                    ->label(__('shop.products.images.fields.alt_text'))
                                     ->maxLength(255)
                                     ->required($locale === $primaryLocale)
                                     ->live(onBlur: true)
@@ -112,10 +112,10 @@ class ImagesRelationManager extends RelationManager
             Hidden::make('disk')->default(fn (): string => ProductImage::defaultDisk()),
             TextInput::make('sort')->numeric()->default(0),
             Toggle::make('is_primary')
-                ->label('Primary')
+                ->label(__('shop.products.images.fields.is_primary'))
                 ->inline(false)
                 ->default(fn ($livewire) => ! $livewire->getOwnerRecord()->images()->exists())
-                ->helperText('Використовується як превʼю товару')
+                ->helperText(__('shop.products.images.helper_texts.is_primary'))
         ]);
     }
 
@@ -124,19 +124,31 @@ class ImagesRelationManager extends RelationManager
         return $table
             ->columns([
                 ImageColumn::make('path')
-                    ->label('Preview')
+                    ->label(__('shop.products.images.fields.preview'))
                     ->disk(fn (ProductImage $record): string => $record->disk ?: ProductImage::defaultDisk())
                     ->circular(),
                 ToggleColumn::make('is_primary')
-                    ->label('Primary')
+                    ->label(__('shop.products.images.fields.is_primary'))
                     ->sortable(),
                 TextColumn::make('alt')->limit(40),
                 TextColumn::make('sort')->sortable(),
                 TextColumn::make('disk')->sortable(),
                 TextColumn::make('created_at')->dateTime('Y-m-d H:i'),
             ])
-            ->headerActions([CreateAction::make()])
-            ->actions([EditAction::make(), DeleteAction::make()])
+            ->headerActions([
+                CreateAction::make()
+                    ->label(__('shop.products.images.actions.create'))
+                    ->modalHeading(__('shop.products.images.actions.create')),
+            ])
+            ->actions([
+                EditAction::make()
+                    ->label(__('shop.products.images.actions.edit'))
+                    ->modalHeading(__('shop.products.images.actions.edit')),
+                DeleteAction::make()
+                    ->label(__('shop.products.images.actions.delete')),
+            ])
+            ->emptyStateHeading(__('shop.products.images.empty.heading'))
+            ->emptyStateDescription(__('shop.products.images.empty.description'))
             ->defaultSort('sort');
     }
 }
