@@ -24,11 +24,14 @@ class OrdersTable
         return $table
             ->columns([
                 TextColumn::make('user_id')
+                    ->label(__('shop.orders.fields.user'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('number')
+                    ->label(__('shop.orders.fields.number'))
                     ->searchable(),
                 TextColumn::make('total')
+                    ->label(__('shop.orders.fields.total'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')

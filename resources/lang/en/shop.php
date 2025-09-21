@@ -201,6 +201,7 @@ return [
         'fields' => [
             'user' => 'User',
             'number' => 'Number',
+            'total' => 'Total',
             'shipment_status' => 'Shipment status',
         ],
         'helpers' => [
@@ -239,6 +240,28 @@ return [
             'paid' => 'paid',
             'shipped' => 'shipped',
             'cancelled' => 'cancelled',
+        ],
+        'items' => [
+            'title' => 'Order items',
+            'fields' => [
+                'product' => 'Product',
+                'price' => 'Price',
+                'subtotal' => 'Subtotal',
+            ],
+            'empty_state' => [
+                'heading' => 'No items',
+            ],
+        ],
+        'logs' => [
+            'title' => 'Status history',
+            'fields' => [
+                'from' => 'From',
+                'to' => 'To',
+                'by' => 'By',
+            ],
+            'empty_state' => [
+                'heading' => 'No status changes yet',
+            ],
         ],
         'errors' => [
             'only_new_can_be_marked_paid' => 'Only orders with the ":required" status can be marked as paid. Order #:number is currently ":status".',

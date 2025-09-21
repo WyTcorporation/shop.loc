@@ -27,6 +27,7 @@ use function formatCurrency;
 class ItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
+    protected static ?string $title = __('shop.orders.items.title');
 
     public function form(Schema $schema): Schema
     {
@@ -35,7 +36,7 @@ class ItemsRelationManager extends RelationManager
         return $schema
             ->components([
                 Select::make('product_id')
-                    ->label('Product')
+                    ->label(__('shop.orders.items.fields.product'))
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload()
@@ -65,13 +66,13 @@ class ItemsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('OrderItem')
             ->columns([
-                TextColumn::make('product.name')->label('Product'),
+                TextColumn::make('product.name')->label(__('shop.orders.items.fields.product')),
                 TextColumn::make('qty'),
                 TextColumn::make('price')
                     ->state(fn (OrderItem $record) => formatCurrency($record->price, $record->order?->currency))
-                    ->label('Price'),
+                    ->label(__('shop.orders.items.fields.price')),
                 TextColumn::make('subtotal')
-                    ->label('Subtotal')
+                    ->label(__('shop.orders.items.fields.subtotal'))
                     ->state(fn (OrderItem $record) => formatCurrency($record->qty * (float) $record->price, $record->order?->currency)),
             ])
             ->filters([
@@ -119,6 +120,6 @@ class ItemsRelationManager extends RelationManager
             ])
             ->defaultSort('id')
             ->paginated(false)
-            ->emptyStateHeading('No items');
+            ->emptyStateHeading(__('shop.orders.items.empty_state.heading'));
     }
 }
