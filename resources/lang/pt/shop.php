@@ -53,6 +53,10 @@ return [
                 'label' => 'Armazém',
                 'plural_label' => 'Armazéns',
             ],
+            'currencies' => [
+                'label' => 'Moeda',
+                'plural_label' => 'Moedas',
+            ],
         ],
     ],
 
@@ -117,6 +121,8 @@ return [
         'note' => 'Observação',
         'total' => 'Total',
         'tracking_number' => 'Código de rastreamento',
+        'created' => 'Criado',
+        'updated' => 'Atualizado',
     ],
 
     'auth' => [
@@ -195,6 +201,7 @@ return [
         'fields' => [
             'user' => 'Usuário',
             'number' => 'Número',
+            'total' => 'Total',
             'shipment_status' => 'Status da remessa',
         ],
         'helpers' => [
@@ -221,6 +228,33 @@ return [
             'subtotal' => 'Subtotal',
             'total_order' => 'Total (pedido)',
         ],
+        'items' => [
+            'title' => 'Produtos no pedido',
+            'fields' => [
+                'product' => 'Produto',
+                'qty' => 'Qtd.',
+                'price' => 'Preço',
+                'subtotal' => 'Subtotal',
+            ],
+            'empty_state' => [
+                'heading' => 'Ainda não há produtos',
+            ],
+        ],
+        'logs' => [
+            'title' => 'Histórico de status',
+            'fields' => [
+                'from' => 'Anterior',
+                'to' => 'Atual',
+                'by' => 'Alterado por',
+                'note' => 'Observação',
+                'deleted_at' => 'Excluído em',
+                'created_at' => 'Criado em',
+                'updated_at' => 'Atualizado em',
+            ],
+            'empty_state' => [
+                'heading' => 'O status ainda não foi alterado',
+            ],
+        ],
         'shipment_status' => [
             'pending' => 'Pendente',
             'processing' => 'Processando',
@@ -245,6 +279,8 @@ return [
         'not_enough_stock' => 'Estoque insuficiente para o produto nº :product_id no depósito nº :warehouse_id.',
         'not_enough_reserved_stock' => 'Estoque reservado insuficiente para o produto nº :product_id no depósito nº :warehouse_id.',
         'fields' => [
+            'product' => 'Produto',
+            'warehouse' => 'Armazém',
             'quantity' => 'Quantidade',
             'reserved' => 'Reservado',
             'available' => 'Disponível',
@@ -372,6 +408,7 @@ return [
                 'type' => 'Tipo',
                 'points' => 'Pontos',
                 'amount' => 'Valor',
+                'description' => 'Descrição',
             ],
             'types' => [
                 'earn' => 'Acúmulo',
@@ -415,6 +452,7 @@ return [
             'name' => 'Nome',
             'value' => 'Valor',
             'add' => 'Adicionar atributo',
+            'translations' => 'Traduções',
         ],
         'placeholders' => [
             'available_stock' => 'Estoque disponível',
@@ -427,6 +465,30 @@ return [
                 'false' => 'Inativos',
             ],
         ],
+        'images' => [
+            'title' => 'Imagens',
+            'fields' => [
+                'image' => 'Imagem',
+                'alt_text' => 'Texto alternativo',
+                'is_primary' => 'Imagem principal',
+                'preview' => 'Pré-visualização',
+                'disk' => 'Disco',
+                'sort' => 'Ordem',
+                'created_at' => 'Criado em',
+            ],
+            'helper_texts' => [
+                'is_primary' => 'Usada como pré-visualização do produto.',
+            ],
+            'actions' => [
+                'create' => 'Adicionar',
+                'edit' => 'Editar',
+                'delete' => 'Excluir',
+            ],
+            'empty' => [
+                'heading' => 'Ainda não há imagens',
+                'description' => 'Adicione imagens do produto para vê-las aqui.',
+            ],
+        ],
     ],
 
     'categories' => [
@@ -434,6 +496,17 @@ return [
             'name' => 'Nome',
             'slug' => 'Slug',
             'parent' => 'Categoria pai',
+            'deleted_at' => 'Excluído em',
+            'created_at' => 'Criado em',
+            'updated_at' => 'Atualizado em',
+        ],
+    ],
+
+    'vendor' => [
+        'fields' => [
+            'name' => 'Nome',
+            'slug' => 'Slug',
+            'description' => 'Descrição',
             'deleted_at' => 'Excluído em',
             'created_at' => 'Criado em',
             'updated_at' => 'Atualizado em',
