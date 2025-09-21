@@ -20,7 +20,7 @@ class ReviewResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'id';
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Content';
+    protected static string|null|\UnitEnum $navigationGroup = null;
     protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Schema $schema): Schema
@@ -31,6 +31,21 @@ class ReviewResource extends Resource
     public static function table(Table $table): Table
     {
         return ReviewsTable::configure($table);
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.reviews.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.reviews.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.content');
     }
 
     public static function getRelations(): array

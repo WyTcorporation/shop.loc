@@ -23,11 +23,11 @@ class OrderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'Order';
+    protected static ?string $recordTitleAttribute = 'number';
 
 //    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Sales';
+    protected static string|null|\UnitEnum $navigationGroup = null;
     protected static bool $shouldRegisterNavigation = true;
 
 
@@ -60,6 +60,21 @@ class OrderResource extends Resource
             RelationManagers\ItemsRelationManager::class,
             RelationManagers\LogsRelationManager::class,
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.orders.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.orders.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.sales');
     }
 
     public static function getPages(): array

@@ -7,7 +7,48 @@ return [
             'catalog' => 'Catalog',
             'sales' => 'Sales',
             'inventory' => 'Inventory',
+            'marketing' => 'Marketing',
+            'content' => 'Content',
+            'customers' => 'Customers',
             'settings' => 'Settings',
+        ],
+        'resources' => [
+            'products' => [
+                'label' => 'Product',
+                'plural_label' => 'Products',
+            ],
+            'categories' => [
+                'label' => 'Category',
+                'plural_label' => 'Categories',
+            ],
+            'orders' => [
+                'label' => 'Order',
+                'plural_label' => 'Orders',
+            ],
+            'vendors' => [
+                'label' => 'Vendor',
+                'plural_label' => 'Vendors',
+            ],
+            'inventory' => [
+                'label' => 'Inventory item',
+                'plural_label' => 'Inventory',
+            ],
+            'coupons' => [
+                'label' => 'Coupon',
+                'plural_label' => 'Coupons',
+            ],
+            'reviews' => [
+                'label' => 'Review',
+                'plural_label' => 'Reviews',
+            ],
+            'users' => [
+                'label' => 'Customer',
+                'plural_label' => 'Customers',
+            ],
+            'warehouses' => [
+                'label' => 'Warehouse',
+                'plural_label' => 'Warehouses',
+            ],
         ],
     ],
 

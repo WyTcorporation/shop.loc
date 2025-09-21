@@ -29,7 +29,7 @@ class WarehouseResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice;
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Inventory';
+    protected static string|null|\UnitEnum $navigationGroup = null;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -134,6 +134,21 @@ class WarehouseResource extends Resource
             'create' => CreateWarehouse::route('/create'),
             'edit' => EditWarehouse::route('/{record}/edit'),
         ];
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('shop.admin.resources.warehouses.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('shop.admin.resources.warehouses.plural_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('shop.admin.navigation.inventory');
     }
 
     public static function getNavigationBadge(): ?string
