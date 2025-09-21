@@ -9,6 +9,10 @@ return [
             'inventory' => 'Inventário',
             'settings' => 'Configurações',
         ],
+        'language_switcher' => [
+            'label' => 'Idioma da interface',
+            'help' => 'Altera o idioma do painel após recarregar a página.',
+        ],
     ],
 
     'navigation' => [
@@ -19,6 +23,13 @@ return [
 
     'meta' => [
         'brand' => 'Shop',
+    ],
+
+    'languages' => [
+        'uk' => 'Ucraniano',
+        'en' => 'Inglês',
+        'ru' => 'Russo',
+        'pt' => 'Português',
     ],
 
     'conversation' => [

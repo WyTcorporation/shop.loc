@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -29,6 +30,10 @@ Route::get('/robots.txt', function () {
     return response(implode(PHP_EOL, $lines), 200)
         ->header('Content-Type', 'text/plain');
 });
+
+Route::post('/mine/language', LocaleController::class)
+    ->middleware(['web'])
+    ->name('mine.language.switch');
 
 Route::view('{any}', 'shop')->where('any', '^(?!mine|api).*$');
 

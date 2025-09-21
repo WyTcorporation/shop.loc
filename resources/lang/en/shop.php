@@ -12,6 +12,10 @@ return [
             'customers' => 'Customers',
             'settings' => 'Settings',
         ],
+        'language_switcher' => [
+            'label' => 'Interface language',
+            'help' => 'Changes the panel language for your next page load.',
+        ],
         'resources' => [
             'products' => [
                 'label' => 'Product',
@@ -60,6 +64,13 @@ return [
 
     'meta' => [
         'brand' => 'Shop',
+    ],
+
+    'languages' => [
+        'uk' => 'Ukrainian',
+        'en' => 'English',
+        'ru' => 'Russian',
+        'pt' => 'Portuguese',
     ],
 
     'conversation' => [

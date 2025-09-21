@@ -65,6 +65,7 @@ class MinePanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
                 OrdersStats::class,
             ])
+            ->renderHook('panels::user-menu.after', fn () => view('filament.mine.components.language-switcher'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

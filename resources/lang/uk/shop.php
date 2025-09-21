@@ -12,6 +12,10 @@ return [
             'customers' => 'Клієнти',
             'settings' => 'Налаштування',
         ],
+        'language_switcher' => [
+            'label' => 'Мова інтерфейсу',
+            'help' => 'Змінює мову панелі після оновлення сторінки.',
+        ],
         'resources' => [
             'products' => [
                 'label' => 'Товар',
@@ -60,6 +64,13 @@ return [
 
     'meta' => [
         'brand' => 'Shop',
+    ],
+
+    'languages' => [
+        'uk' => 'Українська',
+        'en' => 'Англійська',
+        'ru' => 'Російська',
+        'pt' => 'Португальська',
     ],
 
     'conversation' => [
