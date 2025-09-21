@@ -350,6 +350,9 @@ return [
     'users' => [
         'fields' => [
             'points_balance' => 'Баланс баллов',
+            'password' => 'Пароль',
+            'roles' => 'Роли',
+            'categories' => 'Разрешённые категории',
         ],
     ],
 

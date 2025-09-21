@@ -3,6 +3,7 @@
 namespace App\Filament\Mine\Resources\Users\Tables;
 
 use App\Models\User;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -32,7 +33,10 @@ class UsersTable
                     ->sortable(),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->visible(fn (User $record) => auth()->user()?->can('view', $record) ?? false),
+                EditAction::make()
+                    ->visible(fn (User $record) => auth()->user()?->can('update', $record) ?? false),
             ]);
     }
 }

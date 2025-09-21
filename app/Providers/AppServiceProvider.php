@@ -23,10 +23,12 @@ use Illuminate\Support\Facades\Event;
 use App\Models\Product;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
-use App\Policies\ProductPolicy;
-use App\Policies\OrderPolicy;
-use App\Policies\WarehousePolicy;
+use App\Models\User;
 use App\Policies\CurrencyPolicy;
+use App\Policies\OrderPolicy;
+use App\Policies\ProductPolicy;
+use App\Policies\UserPolicy;
+use App\Policies\WarehousePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Currency::class, CurrencyPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
 
         if (
             Config::get('filesystems.disks.public.driver') === 'local'
