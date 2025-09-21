@@ -7,7 +7,7 @@ use App\Models\Message;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -40,10 +40,10 @@ class OrderMessages extends Page implements HasForms
         $this->form->fill(['body' => '']);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $form): Schema
     {
         return $form
-            ->schema([
+            ->components([
                 Textarea::make('body')
                     ->label(__('shop.conversation.message'))
                     ->rows(4)
