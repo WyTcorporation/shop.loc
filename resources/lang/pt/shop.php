@@ -7,11 +7,52 @@ return [
             'catalog' => 'Catálogo',
             'sales' => 'Vendas',
             'inventory' => 'Inventário',
+            'marketing' => 'Marketing',
+            'content' => 'Conteúdo',
+            'customers' => 'Clientes',
             'settings' => 'Configurações',
         ],
         'language_switcher' => [
             'label' => 'Idioma da interface',
             'help' => 'Altera o idioma do painel após recarregar a página.',
+        ],
+        'resources' => [
+            'products' => [
+                'label' => 'Produto',
+                'plural_label' => 'Produtos',
+            ],
+            'categories' => [
+                'label' => 'Categoria',
+                'plural_label' => 'Categorias',
+            ],
+            'orders' => [
+                'label' => 'Pedido',
+                'plural_label' => 'Pedidos',
+            ],
+            'vendors' => [
+                'label' => 'Fornecedor',
+                'plural_label' => 'Fornecedores',
+            ],
+            'inventory' => [
+                'label' => 'Item de inventário',
+                'plural_label' => 'Inventário',
+            ],
+            'coupons' => [
+                'label' => 'Cupom',
+                'plural_label' => 'Cupons',
+            ],
+            'reviews' => [
+                'label' => 'Avaliação',
+                'plural_label' => 'Avaliações',
+            ],
+            'users' => [
+                'label' => 'Cliente',
+                'plural_label' => 'Clientes',
+            ],
+            'warehouses' => [
+                'label' => 'Armazém',
+                'plural_label' => 'Armazéns',
+            ],
         ],
     ],
 
@@ -203,6 +244,77 @@ return [
     'inventory' => [
         'not_enough_stock' => 'Estoque insuficiente para o produto nº :product_id no depósito nº :warehouse_id.',
         'not_enough_reserved_stock' => 'Estoque reservado insuficiente para o produto nº :product_id no depósito nº :warehouse_id.',
+        'fields' => [
+            'quantity' => 'Quantidade',
+            'reserved' => 'Reservado',
+            'available' => 'Disponível',
+        ],
+        'filters' => [
+            'warehouse' => 'Armazém',
+        ],
+    ],
+
+    'warehouses' => [
+        'fields' => [
+            'code' => 'Código',
+            'name' => 'Nome',
+            'description' => 'Descrição',
+        ],
+        'columns' => [
+            'created' => 'Criado',
+            'updated' => 'Atualizado',
+        ],
+    ],
+
+    'coupons' => [
+        'fields' => [
+            'code' => 'Código',
+            'type' => 'Tipo',
+            'value' => 'Valor',
+            'min_cart' => 'Mínimo do carrinho',
+            'max_discount' => 'Desconto máximo',
+            'usage' => 'Uso',
+            'usage_limit' => 'Limite total de uso',
+            'per_user_limit' => 'Limite por usuário',
+            'starts_at' => 'Início',
+            'expires_at' => 'Expira em',
+            'is_active' => 'Ativo',
+        ],
+        'filters' => [
+            'is_active' => 'Ativo',
+        ],
+        'helpers' => [
+            'code_unique' => 'Código único que os clientes irão inserir.',
+        ],
+        'types' => [
+            'fixed' => 'Valor fixo',
+            'percent' => 'Percentual',
+        ],
+    ],
+
+    'reviews' => [
+        'fields' => [
+            'product' => 'Produto',
+            'user' => 'Usuário',
+            'rating' => 'Avaliação',
+            'status' => 'Status',
+            'text' => 'Texto da avaliação',
+            'created_at' => 'Criado',
+        ],
+        'filters' => [
+            'status' => 'Status',
+        ],
+        'statuses' => [
+            'pending' => 'Pendente',
+            'approved' => 'Aprovada',
+            'rejected' => 'Rejeitada',
+        ],
+    ],
+
+    'users' => [
+        'fields' => [
+            'points_balance' => 'Saldo de pontos',
+        ],
     ],
 
     'api' => [
@@ -254,6 +366,32 @@ return [
             'checkout_redeem' => 'Pontos resgatados no checkout',
             'shipped_bonus' => 'Bônus pelo pedido enviado :number',
             'cancellation_return' => 'Pontos devolvidos após cancelamento',
+        ],
+        'transactions' => [
+            'fields' => [
+                'type' => 'Tipo',
+                'points' => 'Pontos',
+                'amount' => 'Valor',
+            ],
+            'types' => [
+                'earn' => 'Acúmulo',
+                'redeem' => 'Resgate',
+                'adjustment' => 'Ajuste',
+            ],
+        ],
+    ],
+
+    'widgets' => [
+        'orders_stats' => [
+            'labels' => [
+                'new' => 'Novos',
+                'paid' => 'Pagos',
+                'shipped' => 'Enviados',
+                'cancelled' => 'Cancelados',
+            ],
+            'descriptions' => [
+                'new' => 'Aguardando',
+            ],
         ],
     ],
 
