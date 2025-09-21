@@ -2,7 +2,11 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Mine\Widgets\OrdersStats;
+use App\Filament\Mine\Widgets\ConversionRateWidget;
+use App\Filament\Mine\Widgets\InventoryStatusWidget;
+use App\Filament\Mine\Widgets\SalesOverviewWidget;
+use App\Filament\Mine\Widgets\TopProductsTable;
+use App\Filament\Mine\Widgets\TrafficSourcesChart;
 use App\Http\Middleware\SetLocaleFromRequest;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -14,7 +18,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -65,8 +68,11 @@ class MinePanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Mine/Widgets'), for: 'App\Filament\Mine\Widgets')
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class,
-                OrdersStats::class,
+                SalesOverviewWidget::class,
+                ConversionRateWidget::class,
+                TrafficSourcesChart::class,
+                TopProductsTable::class,
+                InventoryStatusWidget::class,
             ])
             ->renderHook('panels::user-menu.after', fn () => view('filament.mine.components.language-switcher'))
             ->middleware([

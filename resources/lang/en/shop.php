@@ -16,6 +16,47 @@ return [
             'label' => 'Interface language',
             'help' => 'Changes the panel language for your next page load.',
         ],
+        'dashboard' => [
+            'filters' => [
+                'period' => 'Period',
+                'today' => 'Today',
+                'seven_days' => 'Last 7 days',
+                'thirty_days' => 'Last 30 days',
+                'ninety_days' => 'Last 90 days',
+            ],
+            'sales' => [
+                'title' => 'Sales performance',
+                'revenue' => 'Revenue',
+                'orders' => 'Orders',
+                'average_order_value' => 'Average order value',
+            ],
+            'conversion' => [
+                'title' => 'Checkout conversion',
+                'rate' => 'Conversion rate',
+                'rate_help' => 'Orders vs carts for the selected period.',
+                'orders' => 'Orders',
+                'carts' => 'Carts',
+            ],
+            'traffic' => [
+                'title' => 'Traffic sources',
+                'revenue' => 'Revenue share',
+            ],
+            'top_products' => [
+                'title' => 'Top products',
+                'columns' => [
+                    'product' => 'Product',
+                    'sku' => 'SKU',
+                    'quantity' => 'Units sold',
+                    'revenue' => 'Revenue',
+                ],
+            ],
+            'inventory' => [
+                'title' => 'Inventory status',
+                'skus' => 'Tracked SKUs',
+                'available_units' => 'Available units',
+                'low_stock' => 'Low stock (≤ :threshold)',
+            ],
+        ],
         'resources' => [
             'products' => [
                 'label' => 'Product',
