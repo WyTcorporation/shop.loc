@@ -154,6 +154,26 @@ class Order extends Model
         return $this->hasMany(Message::class)->latest('created_at');
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function deliveryNotes(): HasMany
+    {
+        return $this->hasMany(DeliveryNote::class);
+    }
+
+    public function acts(): HasMany
+    {
+        return $this->hasMany(Act::class);
+    }
+
+    public function saftExportLogs(): HasMany
+    {
+        return $this->hasMany(SaftExportLog::class);
+    }
+
     public function involvesVendor(int $vendorId): bool
     {
         if ($this->relationLoaded('items')) {

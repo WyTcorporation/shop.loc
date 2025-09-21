@@ -6,6 +6,7 @@ return [
         'navigation' => [
             'catalog' => 'Каталог',
             'sales' => 'Продажи',
+            'accounting' => 'Бухгалтерия',
             'inventory' => 'Запасы',
             'marketing' => 'Маркетинг',
             'content' => 'Контент',
@@ -98,6 +99,67 @@ return [
                 'label' => 'Валюта',
                 'plural_label' => 'Валюты',
             ],
+            'invoices' => [
+                'label' => 'Счет',
+                'plural_label' => 'Счета',
+                'fields' => [
+                    'number' => 'Номер',
+                    'issued_at' => 'Дата выставления',
+                    'due_at' => 'Срок оплаты',
+                    'subtotal' => 'Промежуточный итог',
+                    'tax_total' => 'Налог',
+                    'metadata' => 'Метаданные',
+                ],
+            ],
+            'delivery_notes' => [
+                'label' => 'Накладная',
+                'plural_label' => 'Накладные',
+                'fields' => [
+                    'number' => 'Номер',
+                    'issued_at' => 'Дата создания',
+                    'dispatched_at' => 'Дата отправки',
+                    'items' => 'Позиции',
+                    'remarks' => 'Примечания',
+                ],
+            ],
+            'acts' => [
+                'label' => 'Акт',
+                'plural_label' => 'Акты',
+                'fields' => [
+                    'number' => 'Номер',
+                    'issued_at' => 'Дата подписания',
+                    'total' => 'Сумма',
+                    'description' => 'Описание',
+                ],
+            ],
+            'saft_exports' => [
+                'label' => 'SAF-T экспорт',
+                'plural_label' => 'SAF-T экспорты',
+                'fields' => [
+                    'format' => 'Формат',
+                    'exported_at' => 'Дата экспорта',
+                    'created_at' => 'Создано',
+                    'message' => 'Сообщение',
+                    'from_date' => 'Дата начала',
+                    'to_date' => 'Дата окончания',
+                ],
+                'status' => [
+                    'completed' => 'Завершен',
+                    'processing' => 'В обработке',
+                    'failed' => 'Ошибка',
+                ],
+                'actions' => [
+                    'export' => 'SAF-T экспорт',
+                    'run' => 'Запустить экспорт',
+                    'view_logs' => 'Просмотр журналов',
+                ],
+                'messages' => [
+                    'completed' => '{0} SAF-T экспорт создан без заказов|{1} SAF-T экспорт создан для :count заказа|[2,4] SAF-T экспорт создан для :count заказов|[5,*] SAF-T экспорт создан для :count заказов',
+                    'success' => 'SAF-T экспорт успешно запущен.',
+                    'completed_info' => 'После завершения вы сможете скачать файл в списке журналов.',
+                    'latest_title' => 'Последний экспорт',
+                ],
+            ],
         ],
     ],
 
@@ -164,6 +226,9 @@ return [
         'tracking_number' => 'Номер отслеживания',
         'created' => 'Создано',
         'updated' => 'Обновлено',
+        'add' => 'Добавить',
+        'download' => 'Скачать',
+        'export' => 'Экспорт',
     ],
 
     'auth' => [
@@ -244,9 +309,13 @@ return [
             'number' => 'Номер',
             'total' => 'Итого',
             'shipment_status' => 'Статус отгрузки',
+            'currency' => 'Валюта',
         ],
         'helpers' => [
             'email_auto' => 'Если выбран пользователь, адрес заполнится автоматически.',
+        ],
+        'placeholders' => [
+            'any_order' => 'Любой заказ',
         ],
         'hints' => [
             'number_generated' => 'Сгенерируется автоматически',

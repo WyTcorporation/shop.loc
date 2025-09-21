@@ -6,6 +6,7 @@ return [
         'navigation' => [
             'catalog' => 'Catálogo',
             'sales' => 'Vendas',
+            'accounting' => 'Contabilidade',
             'inventory' => 'Inventário',
             'marketing' => 'Marketing',
             'content' => 'Conteúdo',
@@ -98,6 +99,67 @@ return [
                 'label' => 'Moeda',
                 'plural_label' => 'Moedas',
             ],
+            'invoices' => [
+                'label' => 'Fatura',
+                'plural_label' => 'Faturas',
+                'fields' => [
+                    'number' => 'Número',
+                    'issued_at' => 'Emitida em',
+                    'due_at' => 'Vencimento',
+                    'subtotal' => 'Subtotal',
+                    'tax_total' => 'Impostos',
+                    'metadata' => 'Metadados',
+                ],
+            ],
+            'delivery_notes' => [
+                'label' => 'Nota de entrega',
+                'plural_label' => 'Notas de entrega',
+                'fields' => [
+                    'number' => 'Número',
+                    'issued_at' => 'Emitida em',
+                    'dispatched_at' => 'Despachada em',
+                    'items' => 'Itens',
+                    'remarks' => 'Observações',
+                ],
+            ],
+            'acts' => [
+                'label' => 'Atestado',
+                'plural_label' => 'Atestados',
+                'fields' => [
+                    'number' => 'Número',
+                    'issued_at' => 'Emitido em',
+                    'total' => 'Total',
+                    'description' => 'Descrição',
+                ],
+            ],
+            'saft_exports' => [
+                'label' => 'Exportação SAF-T',
+                'plural_label' => 'Exportações SAF-T',
+                'fields' => [
+                    'format' => 'Formato',
+                    'exported_at' => 'Exportado em',
+                    'created_at' => 'Criado em',
+                    'message' => 'Mensagem',
+                    'from_date' => 'Data inicial',
+                    'to_date' => 'Data final',
+                ],
+                'status' => [
+                    'completed' => 'Concluído',
+                    'processing' => 'Processando',
+                    'failed' => 'Falhou',
+                ],
+                'actions' => [
+                    'export' => 'Exportação SAF-T',
+                    'run' => 'Iniciar exportação',
+                    'view_logs' => 'Ver registros',
+                ],
+                'messages' => [
+                    'completed' => '{0} Exportação SAF-T gerada sem pedidos|{1} Exportação SAF-T gerada para :count pedido|[2,*] Exportação SAF-T gerada para :count pedidos',
+                    'success' => 'Exportação SAF-T iniciada com sucesso.',
+                    'completed_info' => 'Quando finalizar você poderá baixar o arquivo na lista de registros.',
+                    'latest_title' => 'Última exportação',
+                ],
+            ],
         ],
     ],
 
@@ -164,6 +226,9 @@ return [
         'tracking_number' => 'Código de rastreamento',
         'created' => 'Criado',
         'updated' => 'Atualizado',
+        'add' => 'Adicionar',
+        'download' => 'Baixar',
+        'export' => 'Exportar',
     ],
 
     'auth' => [
@@ -244,9 +309,13 @@ return [
             'number' => 'Número',
             'total' => 'Total',
             'shipment_status' => 'Status da remessa',
+            'currency' => 'Moeda',
         ],
         'helpers' => [
             'email_auto' => 'Se um usuário for selecionado, o e-mail será preenchido automaticamente.',
+        ],
+        'placeholders' => [
+            'any_order' => 'Qualquer pedido',
         ],
         'hints' => [
             'number_generated' => 'Gerado automaticamente',

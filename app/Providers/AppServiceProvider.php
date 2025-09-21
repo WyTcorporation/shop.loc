@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Act;
 use App\Models\Currency;
+use App\Models\DeliveryNote;
+use App\Models\Invoice;
 use App\Models\Order;
+use App\Models\SaftExportLog;
 use App\Models\Shipment;
 use App\Models\Warehouse;
 use App\Observers\OrderObserver;
@@ -24,9 +28,13 @@ use App\Models\Product;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use App\Policies\ActPolicy;
 use App\Policies\CurrencyPolicy;
+use App\Policies\DeliveryNotePolicy;
+use App\Policies\InvoicePolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\SaftExportLogPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WarehousePolicy;
 
@@ -69,6 +77,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Currency::class, CurrencyPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);
+        Gate::policy(DeliveryNote::class, DeliveryNotePolicy::class);
+        Gate::policy(Act::class, ActPolicy::class);
+        Gate::policy(SaftExportLog::class, SaftExportLogPolicy::class);
 
         if (
             Config::get('filesystems.disks.public.driver') === 'local'

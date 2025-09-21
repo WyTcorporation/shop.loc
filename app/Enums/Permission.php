@@ -12,6 +12,14 @@ enum Permission: string
     case ManageUsers = 'manage users';
     case ManageInventory = 'manage inventory';
     case ManageSettings = 'manage settings';
+    case ViewInvoices = 'view invoices';
+    case ManageInvoices = 'manage invoices';
+    case ViewDeliveryNotes = 'view delivery notes';
+    case ManageDeliveryNotes = 'manage delivery notes';
+    case ViewActs = 'view acts';
+    case ManageActs = 'manage acts';
+    case ViewSaftExports = 'view saft exports';
+    case ManageSaftExports = 'manage saft exports';
 
     /**
      * @return list<string>

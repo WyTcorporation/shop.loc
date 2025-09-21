@@ -6,6 +6,7 @@ return [
         'navigation' => [
             'catalog' => 'Catalog',
             'sales' => 'Sales',
+            'accounting' => 'Accounting',
             'inventory' => 'Inventory',
             'marketing' => 'Marketing',
             'content' => 'Content',
@@ -98,6 +99,67 @@ return [
                 'label' => 'Currency',
                 'plural_label' => 'Currencies',
             ],
+            'invoices' => [
+                'label' => 'Invoice',
+                'plural_label' => 'Invoices',
+                'fields' => [
+                    'number' => 'Number',
+                    'issued_at' => 'Issued at',
+                    'due_at' => 'Due at',
+                    'subtotal' => 'Subtotal',
+                    'tax_total' => 'Tax total',
+                    'metadata' => 'Metadata',
+                ],
+            ],
+            'delivery_notes' => [
+                'label' => 'Delivery note',
+                'plural_label' => 'Delivery notes',
+                'fields' => [
+                    'number' => 'Number',
+                    'issued_at' => 'Issued at',
+                    'dispatched_at' => 'Dispatched at',
+                    'items' => 'Items',
+                    'remarks' => 'Remarks',
+                ],
+            ],
+            'acts' => [
+                'label' => 'Act',
+                'plural_label' => 'Acts',
+                'fields' => [
+                    'number' => 'Number',
+                    'issued_at' => 'Issued at',
+                    'total' => 'Total',
+                    'description' => 'Description',
+                ],
+            ],
+            'saft_exports' => [
+                'label' => 'SAF-T export',
+                'plural_label' => 'SAF-T exports',
+                'fields' => [
+                    'format' => 'Format',
+                    'exported_at' => 'Exported at',
+                    'created_at' => 'Created at',
+                    'message' => 'Message',
+                    'from_date' => 'From date',
+                    'to_date' => 'To date',
+                ],
+                'status' => [
+                    'completed' => 'Completed',
+                    'processing' => 'Processing',
+                    'failed' => 'Failed',
+                ],
+                'actions' => [
+                    'export' => 'SAF-T export',
+                    'run' => 'Start export',
+                    'view_logs' => 'View logs',
+                ],
+                'messages' => [
+                    'completed' => '{0} SAF-T export generated with no matching orders|{1} SAF-T export generated for :count order|[2,*] SAF-T export generated for :count orders',
+                    'success' => 'SAF-T export started successfully.',
+                    'completed_info' => 'Once finished you can download the export from the logs list.',
+                    'latest_title' => 'Latest export',
+                ],
+            ],
         ],
     ],
 
@@ -164,6 +226,9 @@ return [
         'tracking_number' => 'Tracking number',
         'created' => 'Created',
         'updated' => 'Updated',
+        'add' => 'Add',
+        'download' => 'Download',
+        'export' => 'Export',
     ],
 
     'auth' => [
@@ -244,9 +309,13 @@ return [
             'number' => 'Number',
             'total' => 'Total',
             'shipment_status' => 'Shipment status',
+            'currency' => 'Currency',
         ],
         'helpers' => [
             'email_auto' => 'If a user is selected, the email will be filled automatically.',
+        ],
+        'placeholders' => [
+            'any_order' => 'Any order',
         ],
         'hints' => [
             'number_generated' => 'Generated automatically',
