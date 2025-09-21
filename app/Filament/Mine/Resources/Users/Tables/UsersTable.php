@@ -3,7 +3,7 @@
 namespace App\Filament\Mine\Resources\Users\Tables;
 
 use App\Models\User;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
