@@ -5,6 +5,8 @@ namespace App\Filament\Mine\Resources\Products;
 use App\Enums\Permission;
 use App\Filament\Mine\Resources\Products\Pages\CreateProduct;
 use App\Filament\Mine\Resources\Products\Pages\EditProduct;
+use App\Filament\Mine\Resources\Products\Pages\ExportProducts;
+use App\Filament\Mine\Resources\Products\Pages\ImportProducts;
 use App\Filament\Mine\Resources\Products\Pages\ListProducts;
 use App\Filament\Mine\Resources\Products\Schemas\ProductForm;
 use App\Filament\Mine\Resources\Products\Tables\ProductsTable;
@@ -77,6 +79,8 @@ class ProductResource extends Resource
             'index' => ListProducts::route('/'),
             'create' => CreateProduct::route('/create'),
             'edit' => EditProduct::route('/{record}/edit'),
+            'import' => ImportProducts::route('/import'),
+            'export' => ExportProducts::route('/export'),
         ];
     }
 

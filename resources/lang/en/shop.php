@@ -62,6 +62,90 @@ return [
             'products' => [
                 'label' => 'Product',
                 'plural_label' => 'Products',
+                'imports' => [
+                    'tabs' => [
+                        'form' => 'Import products',
+                        'history' => 'History',
+                    ],
+                    'form' => [
+                        'heading' => 'Upload spreadsheet',
+                        'actions' => [
+                            'queue' => 'Queue import',
+                        ],
+                    ],
+                    'fields' => [
+                        'file' => 'Import file',
+                    ],
+                    'messages' => [
+                        'missing_file' => 'Please select a file to import.',
+                        'queued_title' => 'Product import started',
+                        'queued_body' => 'The import will run in the background. You will be notified when it finishes.',
+                        'completed_title' => 'Product import completed',
+                        'completed_body' => 'Processed :processed of :total rows.',
+                        'failed_title' => 'Product import failed',
+                        'no_rows' => 'No data rows were detected in the uploaded file.',
+                        'row_created' => 'Product created (:sku)',
+                        'row_updated' => 'Product updated (:sku)',
+                    ],
+                    'table' => [
+                        'recent_imports' => 'Recent imports',
+                        'recent_exports' => 'Recent exports',
+                        'columns' => [
+                            'file' => 'File',
+                            'status' => 'Status',
+                            'progress' => 'Progress',
+                            'results' => 'Results',
+                            'completed_at' => 'Completed at',
+                            'format' => 'Format',
+                            'rows' => 'Rows',
+                        ],
+                        'results_created' => 'Created',
+                        'results_updated' => 'Updated',
+                        'results_failed' => 'Failed',
+                        'empty_imports' => 'No imports yet.',
+                        'empty_exports' => 'No exports yet.',
+                    ],
+                ],
+                'exports' => [
+                    'tabs' => [
+                        'form' => 'Export products',
+                        'history' => 'History',
+                    ],
+                    'form' => [
+                        'heading' => 'Configure export',
+                        'actions' => [
+                            'queue' => 'Queue export',
+                        ],
+                    ],
+                    'fields' => [
+                        'file_name' => 'File name',
+                        'format' => 'Format',
+                        'only_active' => 'Only active products',
+                    ],
+                    'messages' => [
+                        'queued_title' => 'Product export started',
+                        'queued_body' => 'The export will run in the background. You will be notified when it finishes.',
+                        'completed_title' => 'Product export completed',
+                        'completed_empty' => 'No products matched the selected filters.',
+                        'completed_ready' => 'Products export is ready to download.',
+                        'failed_title' => 'Product export failed',
+                        'download' => 'Download',
+                        'pending' => 'Pending',
+                    ],
+                    'table' => [
+                        'recent_exports' => 'Recent exports',
+                        'recent_imports' => 'Recent imports',
+                        'columns' => [
+                            'format' => 'Format',
+                            'status' => 'Status',
+                            'rows' => 'Rows',
+                            'completed_at' => 'Completed at',
+                            'file' => 'File',
+                        ],
+                        'empty_exports' => 'No exports yet.',
+                        'empty_imports' => 'No imports yet.',
+                    ],
+                ],
             ],
             'categories' => [
                 'label' => 'Category',
