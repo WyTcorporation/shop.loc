@@ -85,11 +85,12 @@ class InventoryResource extends Resource
                 })
                 ->disabledOn('edit'),
             TextInput::make('qty')
-                ->label('Quantity')
+                ->label(__('shop.inventory.fields.quantity'))
                 ->numeric()
                 ->required()
                 ->minValue(0),
             TextInput::make('reserved')
+                ->label(__('shop.inventory.fields.reserved'))
                 ->numeric()
                 ->required()
                 ->minValue(0),
@@ -101,37 +102,38 @@ class InventoryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('product.name')
-                    ->label('Product')
+                    ->label(__('shop.common.product'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('product.sku')
-                    ->label('SKU')
+                    ->label(__('shop.products.fields.sku'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('warehouse.name')
-                    ->label('Warehouse')
+                    ->label(__('shop.admin.resources.warehouses.label'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('qty')
-                    ->label('Qty')
+                    ->label(__('shop.common.quantity'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('reserved')
+                    ->label(__('shop.inventory.fields.reserved'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('available')
-                    ->label('Available')
+                    ->label(__('shop.inventory.fields.available'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('updated_at')
-                    ->label('Updated')
+                    ->label(__('shop.common.updated'))
                     ->dateTime()
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('warehouse_id')
                     ->relationship('warehouse', 'name')
-                    ->label('Warehouse'),
+                    ->label(__('shop.admin.resources.warehouses.label')),
             ])
             ->recordActions([
                 EditAction::make(),

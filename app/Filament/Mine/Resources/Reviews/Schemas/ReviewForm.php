@@ -15,7 +15,7 @@ class ReviewForm
         return $schema
             ->components([
                 Select::make('product_id')
-                    ->label('Product')
+                    ->label(__('shop.reviews.fields.product'))
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload()
@@ -23,7 +23,7 @@ class ReviewForm
                     ->dehydrated(false),
 
                 Select::make('user_id')
-                    ->label('User')
+                    ->label(__('shop.reviews.fields.user'))
                     ->relationship('user', 'email')
                     ->searchable()
                     ->preload()
@@ -31,22 +31,22 @@ class ReviewForm
                     ->dehydrated(false),
 
                 TextInput::make('rating')
-                    ->label('Rating')
+                    ->label(__('shop.reviews.fields.rating'))
                     ->numeric()
                     ->disabled()
                     ->dehydrated(false),
 
                 Select::make('status')
-                    ->label('Status')
+                    ->label(__('shop.reviews.fields.status'))
                     ->options([
-                        Review::STATUS_PENDING => 'Pending',
-                        Review::STATUS_APPROVED => 'Approved',
-                        Review::STATUS_REJECTED => 'Rejected',
+                        Review::STATUS_PENDING => __('shop.reviews.statuses.pending'),
+                        Review::STATUS_APPROVED => __('shop.reviews.statuses.approved'),
+                        Review::STATUS_REJECTED => __('shop.reviews.statuses.rejected'),
                     ])
                     ->required(),
 
                 Textarea::make('text')
-                    ->label('Review text')
+                    ->label(__('shop.reviews.fields.text'))
                     ->rows(6)
                     ->columnSpanFull(),
             ])
