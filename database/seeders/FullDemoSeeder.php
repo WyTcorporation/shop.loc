@@ -3,11 +3,14 @@
 namespace Database\Seeders;
 
 use App\Enums\OrderStatus;
+use App\Enums\Permission as PermissionEnum;
+use App\Enums\Role as RoleEnum;
 use App\Enums\ShipmentStatus;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Coupon;
+use App\Models\Category;
 use App\Models\Currency;
 use App\Models\LoyaltyPointTransaction;
 use App\Models\Message;
@@ -25,6 +28,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role as SpatieRole;
 
 class FullDemoSeeder extends Seeder
 {
@@ -34,6 +39,8 @@ class FullDemoSeeder extends Seeder
         $this->resetMedia();
 
         $this->call(DemoCatalogSeeder::class);
+
+        $this->seedPermissionsAndRoles();
 
         $users = $this->seedUsers();
         $coupons = $this->seedCoupons();
@@ -55,8 +62,46 @@ class FullDemoSeeder extends Seeder
         $disk->makeDirectory('products');
     }
 
+    private function seedPermissionsAndRoles(): void
+    {
+        $permissions = collect(PermissionEnum::values())->map(function (string $permission) {
+            return Permission::query()->firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        });
+
+        foreach (RoleEnum::cases() as $roleEnum) {
+            $role = SpatieRole::query()->firstOrCreate([
+                'name' => $roleEnum->value,
+                'guard_name' => 'web',
+            ]);
+
+            $permissionNames = match ($roleEnum) {
+                RoleEnum::Administrator => $permissions->pluck('name')->all(),
+                RoleEnum::Accountant => [
+                    PermissionEnum::ViewInvoices->value,
+                    PermissionEnum::ManageInvoices->value,
+                    PermissionEnum::ViewDeliveryNotes->value,
+                    PermissionEnum::ManageDeliveryNotes->value,
+                    PermissionEnum::ViewActs->value,
+                    PermissionEnum::ManageActs->value,
+                    PermissionEnum::ViewSaftExports->value,
+                    PermissionEnum::ManageSaftExports->value,
+                ],
+            };
+
+            $role->syncPermissions($permissionNames);
+        }
+    }
+
     private function seedUsers(): Collection
     {
+        $categorySlugs = Category::query()
+            ->orderBy('id')
+            ->pluck('slug')
+            ->values();
+
         $usersConfig = [
             'admin' => [
                 'name' => 'Admin',
@@ -64,6 +109,9 @@ class FullDemoSeeder extends Seeder
                 'password' => 'admin',
                 'two_factor' => false,
                 'addresses' => 1,
+                'roles' => [RoleEnum::Administrator->value],
+                'permissions' => [],
+                'categories' => [],
             ],
             'buyer' => [
                 'name' => 'Demo Buyer',
@@ -71,6 +119,9 @@ class FullDemoSeeder extends Seeder
                 'password' => 'password',
                 'two_factor' => true,
                 'addresses' => 2,
+                'roles' => [],
+                'permissions' => [],
+                'categories' => [],
             ],
             'repeat' => [
                 'name' => 'Repeat Customer',
@@ -78,6 +129,9 @@ class FullDemoSeeder extends Seeder
                 'password' => 'password',
                 'two_factor' => true,
                 'addresses' => 2,
+                'roles' => [],
+                'permissions' => [],
+                'categories' => [],
             ],
             'vip' => [
                 'name' => 'VIP Shopper',
@@ -85,6 +139,46 @@ class FullDemoSeeder extends Seeder
                 'password' => 'password',
                 'two_factor' => true,
                 'addresses' => 3,
+                'roles' => [],
+                'permissions' => [],
+                'categories' => [],
+            ],
+            'accountant' => [
+                'name' => 'Demo Accountant',
+                'email' => 'demo+accountant@example.com',
+                'password' => 'password',
+                'two_factor' => true,
+                'addresses' => 1,
+                'roles' => [RoleEnum::Accountant->value],
+                'permissions' => [],
+                'categories' => [],
+            ],
+            'catalog_manager_one' => [
+                'name' => 'Demo Catalog Manager A',
+                'email' => 'demo+catalog-a@example.com',
+                'password' => 'password',
+                'two_factor' => false,
+                'addresses' => 1,
+                'roles' => [],
+                'permissions' => [
+                    PermissionEnum::ViewProducts->value,
+                    PermissionEnum::ManageProducts->value,
+                    PermissionEnum::ManageInventory->value,
+                ],
+                'categories' => $categorySlugs->take(2)->all(),
+            ],
+            'catalog_manager_two' => [
+                'name' => 'Demo Catalog Manager B',
+                'email' => 'demo+catalog-b@example.com',
+                'password' => 'password',
+                'two_factor' => false,
+                'addresses' => 1,
+                'roles' => [],
+                'permissions' => [
+                    PermissionEnum::ViewProducts->value,
+                    PermissionEnum::ManageProducts->value,
+                ],
+                'categories' => $categorySlugs->slice(2, 3)->all(),
             ],
         ];
 
@@ -106,6 +200,15 @@ class FullDemoSeeder extends Seeder
             if ($config['addresses'] > 0) {
                 Address::factory()->count($config['addresses'])->for($user)->create();
             }
+
+            $user->syncRoles($config['roles']);
+            $user->syncPermissions($config['permissions']);
+
+            $categoryIds = Category::query()
+                ->whereIn('slug', $config['categories'])
+                ->pluck('id')
+                ->all();
+            $user->categories()->sync($categoryIds);
 
             return $user->fresh(['addresses', 'twoFactorSecret']);
         });
