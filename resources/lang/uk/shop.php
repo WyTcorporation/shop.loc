@@ -401,6 +401,7 @@ return [
                 'type' => 'Тип',
                 'points' => 'Бали',
                 'amount' => 'Сума',
+                'description' => 'Опис',
             ],
             'types' => [
                 'earn' => 'Нарахування',

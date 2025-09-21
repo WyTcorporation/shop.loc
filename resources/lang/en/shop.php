@@ -401,6 +401,7 @@ return [
                 'type' => 'Type',
                 'points' => 'Points',
                 'amount' => 'Amount',
+                'description' => 'Description',
             ],
             'types' => [
                 'earn' => 'Earned',
