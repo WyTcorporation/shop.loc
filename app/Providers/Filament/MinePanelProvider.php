@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Mine\Widgets\OrdersStats;
+use App\Http\Middleware\SetLocaleFromRequest;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -68,6 +69,7 @@ class MinePanelProvider extends PanelProvider
             ->renderHook('panels::user-menu.after', fn () => view('filament.mine.components.language-switcher'))
             ->middleware([
                 EncryptCookies::class,
+                SetLocaleFromRequest::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
                 AuthenticateSession::class,
