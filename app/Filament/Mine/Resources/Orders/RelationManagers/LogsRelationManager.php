@@ -11,8 +11,12 @@ use Filament\Tables\Columns\TextColumn;
 class LogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'logs';
-    protected static ?string $title = __('shop.orders.logs.title');
+    protected static ?string $title = null;
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('shop.orders.items.title');
+    }
     public function form(Schema $schema): Schema
     {
         return $schema->components([]);

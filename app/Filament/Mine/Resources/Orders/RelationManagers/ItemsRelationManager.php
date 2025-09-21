@@ -29,7 +29,7 @@ class ItemsRelationManager extends RelationManager
     protected static string $relationship = 'items';
     protected static ?string $title = null;
 
-    public static function getTitle(): ?string
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
     {
         return __('shop.orders.items.title');
     }

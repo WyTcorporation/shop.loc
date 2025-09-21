@@ -41,10 +41,6 @@
                     </option>
                 @endforeach
             </select>
-
-            <p class="text-xs text-gray-400 dark:text-gray-500">
-                {{ __('shop.admin.language_switcher.help') }}
-            </p>
         </form>
     </div>
 @endif
