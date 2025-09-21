@@ -7,11 +7,52 @@ return [
             'catalog' => 'Каталог',
             'sales' => 'Продажи',
             'inventory' => 'Запасы',
+            'marketing' => 'Маркетинг',
+            'content' => 'Контент',
+            'customers' => 'Клиенты',
             'settings' => 'Настройки',
         ],
         'language_switcher' => [
             'label' => 'Язык интерфейса',
             'help' => 'Изменяет язык панели после обновления страницы.',
+        ],
+        'resources' => [
+            'products' => [
+                'label' => 'Товар',
+                'plural_label' => 'Товары',
+            ],
+            'categories' => [
+                'label' => 'Категория',
+                'plural_label' => 'Категории',
+            ],
+            'orders' => [
+                'label' => 'Заказ',
+                'plural_label' => 'Заказы',
+            ],
+            'vendors' => [
+                'label' => 'Поставщик',
+                'plural_label' => 'Поставщики',
+            ],
+            'inventory' => [
+                'label' => 'Запас',
+                'plural_label' => 'Запасы',
+            ],
+            'coupons' => [
+                'label' => 'Купон',
+                'plural_label' => 'Купоны',
+            ],
+            'reviews' => [
+                'label' => 'Отзыв',
+                'plural_label' => 'Отзывы',
+            ],
+            'users' => [
+                'label' => 'Покупатель',
+                'plural_label' => 'Покупатели',
+            ],
+            'warehouses' => [
+                'label' => 'Склад',
+                'plural_label' => 'Склады',
+            ],
         ],
     ],
 
@@ -203,6 +244,77 @@ return [
     'inventory' => [
         'not_enough_stock' => 'Недостаточно товара для продукта №:product_id на складе №:warehouse_id.',
         'not_enough_reserved_stock' => 'Недостаточно зарезервированного товара для продукта №:product_id на складе №:warehouse_id.',
+        'fields' => [
+            'quantity' => 'Количество',
+            'reserved' => 'Зарезервировано',
+            'available' => 'Доступно',
+        ],
+        'filters' => [
+            'warehouse' => 'Склад',
+        ],
+    ],
+
+    'warehouses' => [
+        'fields' => [
+            'code' => 'Код',
+            'name' => 'Название',
+            'description' => 'Описание',
+        ],
+        'columns' => [
+            'created' => 'Создано',
+            'updated' => 'Обновлено',
+        ],
+    ],
+
+    'coupons' => [
+        'fields' => [
+            'code' => 'Код',
+            'type' => 'Тип',
+            'value' => 'Значение',
+            'min_cart' => 'Мин. сумма корзины',
+            'max_discount' => 'Макс. скидка',
+            'usage' => 'Использование',
+            'usage_limit' => 'Общий лимит использования',
+            'per_user_limit' => 'Лимит на пользователя',
+            'starts_at' => 'Начало действия',
+            'expires_at' => 'Окончание действия',
+            'is_active' => 'Активен',
+        ],
+        'filters' => [
+            'is_active' => 'Активность',
+        ],
+        'helpers' => [
+            'code_unique' => 'Уникальный код, который будут вводить покупатели.',
+        ],
+        'types' => [
+            'fixed' => 'Фиксированная сумма',
+            'percent' => 'Процент',
+        ],
+    ],
+
+    'reviews' => [
+        'fields' => [
+            'product' => 'Товар',
+            'user' => 'Пользователь',
+            'rating' => 'Рейтинг',
+            'status' => 'Статус',
+            'text' => 'Текст отзыва',
+            'created_at' => 'Создано',
+        ],
+        'filters' => [
+            'status' => 'Статус',
+        ],
+        'statuses' => [
+            'pending' => 'На модерации',
+            'approved' => 'Одобрен',
+            'rejected' => 'Отклонён',
+        ],
+    ],
+
+    'users' => [
+        'fields' => [
+            'points_balance' => 'Баланс баллов',
+        ],
     ],
 
     'api' => [
@@ -254,6 +366,32 @@ return [
             'checkout_redeem' => 'Баллы списаны при оформлении заказа',
             'shipped_bonus' => 'Бонус за отправленный заказ :number',
             'cancellation_return' => 'Баллы возвращены после отмены',
+        ],
+        'transactions' => [
+            'fields' => [
+                'type' => 'Тип',
+                'points' => 'Баллы',
+                'amount' => 'Сумма',
+            ],
+            'types' => [
+                'earn' => 'Начисление',
+                'redeem' => 'Списание',
+                'adjustment' => 'Корректировка',
+            ],
+        ],
+    ],
+
+    'widgets' => [
+        'orders_stats' => [
+            'labels' => [
+                'new' => 'Новые',
+                'paid' => 'Оплаченные',
+                'shipped' => 'Отправленные',
+                'cancelled' => 'Отменённые',
+            ],
+            'descriptions' => [
+                'new' => 'В ожидании',
+            ],
         ],
     ],
 
