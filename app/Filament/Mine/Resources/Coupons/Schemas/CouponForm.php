@@ -29,7 +29,7 @@ class CouponForm
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->maxLength(64)
-                ->helperText('Unique coupon code customers will enter.'),
+                ->helperText(__('shop.coupons.helpers.code_unique')),
             TextInput::make('name')
                 ->maxLength(255)
                 ->hidden()
@@ -70,38 +70,41 @@ class CouponForm
             Select::make('type')
                 ->required()
                 ->options([
-                    Coupon::TYPE_FIXED => 'Fixed amount',
-                    Coupon::TYPE_PERCENT => 'Percentage',
+                    Coupon::TYPE_FIXED => __('shop.coupons.types.fixed'),
+                    Coupon::TYPE_PERCENT => __('shop.coupons.types.percent'),
                 ])
                 ->native(false),
             TextInput::make('value')
+                ->label(__('shop.coupons.fields.value'))
                 ->required()
                 ->numeric()
                 ->prefix(fn ($state, callable $get) => $get('type') === Coupon::TYPE_PERCENT ? '%' : currencySymbol()),
             TextInput::make('min_cart_total')
+                ->label(__('shop.coupons.fields.min_cart'))
                 ->numeric()
                 ->default(0)
                 ->prefix(currencySymbol()),
             TextInput::make('max_discount')
+                ->label(__('shop.coupons.fields.max_discount'))
                 ->numeric()
                 ->prefix(currencySymbol()),
             TextInput::make('usage_limit')
+                ->label(__('shop.coupons.fields.usage_limit'))
                 ->numeric()
-                ->minValue(0)
-                ->label('Total usage limit'),
+                ->minValue(0),
             TextInput::make('per_user_limit')
+                ->label(__('shop.coupons.fields.per_user_limit'))
                 ->numeric()
-                ->minValue(0)
-                ->label('Per user limit'),
+                ->minValue(0),
             DateTimePicker::make('starts_at')
                 ->seconds(false)
-                ->label('Starts at'),
+                ->label(__('shop.coupons.fields.starts_at')),
             DateTimePicker::make('expires_at')
                 ->seconds(false)
-                ->label('Expires at'),
+                ->label(__('shop.coupons.fields.expires_at')),
             Toggle::make('is_active')
                 ->default(true)
-                ->label('Active'),
+                ->label(__('shop.coupons.fields.is_active')),
         ])->columns(2);
     }
 }

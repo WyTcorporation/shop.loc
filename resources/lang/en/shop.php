@@ -106,6 +106,8 @@ return [
         'note' => 'Note',
         'total' => 'Total',
         'tracking_number' => 'Tracking number',
+        'created' => 'Created',
+        'updated' => 'Updated',
     ],
 
     'auth' => [
@@ -233,6 +235,77 @@ return [
     'inventory' => [
         'not_enough_stock' => 'Not enough stock for product #:product_id at warehouse #:warehouse_id.',
         'not_enough_reserved_stock' => 'Not enough reserved stock for product #:product_id at warehouse #:warehouse_id.',
+        'fields' => [
+            'quantity' => 'Quantity',
+            'reserved' => 'Reserved',
+            'available' => 'Available',
+        ],
+        'filters' => [
+            'warehouse' => 'Warehouse',
+        ],
+    ],
+
+    'warehouses' => [
+        'fields' => [
+            'code' => 'Code',
+            'name' => 'Name',
+            'description' => 'Description',
+        ],
+        'columns' => [
+            'created' => 'Created',
+            'updated' => 'Updated',
+        ],
+    ],
+
+    'coupons' => [
+        'fields' => [
+            'code' => 'Code',
+            'type' => 'Type',
+            'value' => 'Value',
+            'min_cart' => 'Min cart',
+            'max_discount' => 'Max discount',
+            'usage' => 'Usage',
+            'usage_limit' => 'Total usage limit',
+            'per_user_limit' => 'Per-user limit',
+            'starts_at' => 'Starts at',
+            'expires_at' => 'Expires at',
+            'is_active' => 'Active',
+        ],
+        'filters' => [
+            'is_active' => 'Active',
+        ],
+        'helpers' => [
+            'code_unique' => 'Unique coupon code customers will enter.',
+        ],
+        'types' => [
+            'fixed' => 'Fixed amount',
+            'percent' => 'Percentage',
+        ],
+    ],
+
+    'reviews' => [
+        'fields' => [
+            'product' => 'Product',
+            'user' => 'User',
+            'rating' => 'Rating',
+            'status' => 'Status',
+            'text' => 'Review text',
+            'created_at' => 'Created',
+        ],
+        'filters' => [
+            'status' => 'Status',
+        ],
+        'statuses' => [
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+        ],
+    ],
+
+    'users' => [
+        'fields' => [
+            'points_balance' => 'Points balance',
+        ],
     ],
 
     'api' => [
@@ -284,6 +357,32 @@ return [
             'checkout_redeem' => 'Redeemed during checkout',
             'shipped_bonus' => 'Bonus for shipped order :number',
             'cancellation_return' => 'Points returned after cancellation',
+        ],
+        'transactions' => [
+            'fields' => [
+                'type' => 'Type',
+                'points' => 'Points',
+                'amount' => 'Amount',
+            ],
+            'types' => [
+                'earn' => 'Earned',
+                'redeem' => 'Redeemed',
+                'adjustment' => 'Adjustment',
+            ],
+        ],
+    ],
+
+    'widgets' => [
+        'orders_stats' => [
+            'labels' => [
+                'new' => 'New',
+                'paid' => 'Paid',
+                'shipped' => 'Shipped',
+                'cancelled' => 'Cancelled',
+            ],
+            'descriptions' => [
+                'new' => 'Awaiting',
+            ],
         ],
     ],
 

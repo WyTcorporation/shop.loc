@@ -93,24 +93,24 @@ class WarehouseResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('code')
-                    ->label('Code')
+                    ->label(__('shop.warehouses.fields.code'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('shop.warehouses.fields.name'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('description')
-                    ->label('Description')
+                    ->label(__('shop.warehouses.fields.description'))
                     ->wrap()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->label('Created')
+                    ->label(__('shop.common.created'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('Updated')
+                    ->label(__('shop.common.updated'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

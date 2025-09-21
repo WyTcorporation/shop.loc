@@ -19,46 +19,50 @@ class CouponsTable
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('code')
+                    ->label(__('shop.coupons.fields.code'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('type')
-                    ->label('Type')
+                    ->label(__('shop.coupons.fields.type'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state) => ucfirst($state))
+                    ->formatStateUsing(fn (string $state) => __('shop.coupons.types.' . $state))
                     ->sortable(),
                 TextColumn::make('value')
-                    ->label('Value')
+                    ->label(__('shop.coupons.fields.value'))
                     ->state(function (Coupon $record) {
                         return $record->type === Coupon::TYPE_PERCENT
                             ? number_format((float) $record->value, 2) . '%'
                             : formatCurrency($record->value);
                     }),
                 TextColumn::make('min_cart_total')
-                    ->label('Min cart')
+                    ->label(__('shop.coupons.fields.min_cart'))
                     ->state(fn (Coupon $record) => formatCurrency($record->min_cart_total))
                     ->toggleable(),
                 TextColumn::make('usage_limit')
-                    ->label('Usage')
+                    ->label(__('shop.coupons.fields.usage'))
                     ->state(fn (Coupon $record) => $record->usage_limit
                         ? sprintf('%d / %d', $record->used, $record->usage_limit)
                         : (string) $record->used)
                     ->toggleable(),
                 IconColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('shop.coupons.fields.is_active'))
                     ->boolean(),
                 TextColumn::make('starts_at')
+                    ->label(__('shop.coupons.fields.starts_at'))
                     ->dateTime()
                     ->toggleable(),
                 TextColumn::make('expires_at')
+                    ->label(__('shop.coupons.fields.expires_at'))
                     ->dateTime()
                     ->toggleable(),
                 TextColumn::make('updated_at')
+                    ->label(__('shop.common.updated'))
                     ->since()
                     ->toggleable(),
             ])
             ->filters([
                 TernaryFilter::make('is_active')
-                    ->label('Active')
+                    ->label(__('shop.coupons.filters.is_active'))
                     ->queries(
                         true: fn ($query) => $query->where('is_active', true),
                         false: fn ($query) => $query->where('is_active', false),

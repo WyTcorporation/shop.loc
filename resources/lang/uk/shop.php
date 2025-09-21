@@ -106,6 +106,8 @@ return [
         'note' => 'Примітка',
         'total' => 'Разом',
         'tracking_number' => 'Номер відстеження',
+        'created' => 'Створено',
+        'updated' => 'Оновлено',
     ],
 
     'auth' => [
@@ -233,6 +235,77 @@ return [
     'inventory' => [
         'not_enough_stock' => 'Недостатньо товару для продукту №:product_id на складі №:warehouse_id.',
         'not_enough_reserved_stock' => 'Недостатньо зарезервованого товару для продукту №:product_id на складі №:warehouse_id.',
+        'fields' => [
+            'quantity' => 'Кількість',
+            'reserved' => 'Зарезервовано',
+            'available' => 'Доступно',
+        ],
+        'filters' => [
+            'warehouse' => 'Склад',
+        ],
+    ],
+
+    'warehouses' => [
+        'fields' => [
+            'code' => 'Код',
+            'name' => 'Назва',
+            'description' => 'Опис',
+        ],
+        'columns' => [
+            'created' => 'Створено',
+            'updated' => 'Оновлено',
+        ],
+    ],
+
+    'coupons' => [
+        'fields' => [
+            'code' => 'Код',
+            'type' => 'Тип',
+            'value' => 'Значення',
+            'min_cart' => 'Мін. сума кошика',
+            'max_discount' => 'Макс. знижка',
+            'usage' => 'Використання',
+            'usage_limit' => 'Загальне обмеження',
+            'per_user_limit' => 'Обмеження на користувача',
+            'starts_at' => 'Початок дії',
+            'expires_at' => 'Завершення дії',
+            'is_active' => 'Активний',
+        ],
+        'filters' => [
+            'is_active' => 'Активний',
+        ],
+        'helpers' => [
+            'code_unique' => 'Унікальний код купона, який вводитимуть клієнти.',
+        ],
+        'types' => [
+            'fixed' => 'Фіксована сума',
+            'percent' => 'Відсоток',
+        ],
+    ],
+
+    'reviews' => [
+        'fields' => [
+            'product' => 'Товар',
+            'user' => 'Користувач',
+            'rating' => 'Оцінка',
+            'status' => 'Статус',
+            'text' => 'Текст відгуку',
+            'created_at' => 'Створено',
+        ],
+        'filters' => [
+            'status' => 'Статус',
+        ],
+        'statuses' => [
+            'pending' => 'Очікує',
+            'approved' => 'Схвалено',
+            'rejected' => 'Відхилено',
+        ],
+    ],
+
+    'users' => [
+        'fields' => [
+            'points_balance' => 'Баланс балів',
+        ],
     ],
 
     'api' => [
@@ -284,6 +357,32 @@ return [
             'checkout_redeem' => 'Бали списано під час оформлення замовлення',
             'shipped_bonus' => 'Бонус за відправлене замовлення :number',
             'cancellation_return' => 'Бали повернено після скасування',
+        ],
+        'transactions' => [
+            'fields' => [
+                'type' => 'Тип',
+                'points' => 'Бали',
+                'amount' => 'Сума',
+            ],
+            'types' => [
+                'earn' => 'Нарахування',
+                'redeem' => 'Списання',
+                'adjustment' => 'Коригування',
+            ],
+        ],
+    ],
+
+    'widgets' => [
+        'orders_stats' => [
+            'labels' => [
+                'new' => 'Нові',
+                'paid' => 'Оплачені',
+                'shipped' => 'Відправлені',
+                'cancelled' => 'Скасовані',
+            ],
+            'descriptions' => [
+                'new' => 'Очікує',
+            ],
         ],
     ],
 

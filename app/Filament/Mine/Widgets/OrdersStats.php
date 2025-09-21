@@ -39,21 +39,21 @@ class OrdersStats extends BaseWidget
         $chart = $labels->map(fn ($d) => (float) ($byDay[$d] ?? 0))->all();
 
         return [
-            Stat::make('New', (string) $get(OrderStatus::New))
-                ->description('Awaiting')
+            Stat::make(__('shop.widgets.orders_stats.labels.new'), (string) $get(OrderStatus::New))
+                ->description(__('shop.widgets.orders_stats.descriptions.new'))
                 ->color(OrderStatus::New->badgeColor())
                 ->chart($chart),
 
-            Stat::make('Paid', (string) $get(OrderStatus::Paid))
+            Stat::make(__('shop.widgets.orders_stats.labels.paid'), (string) $get(OrderStatus::Paid))
                 ->color(OrderStatus::Paid->badgeColor())
                 ->chart($chart),
 
-            Stat::make('Shipped', (string) $get(OrderStatus::Shipped))
+            Stat::make(__('shop.widgets.orders_stats.labels.shipped'), (string) $get(OrderStatus::Shipped))
                 ->color(OrderStatus::Shipped->badgeColor())
                 ->chart($chart),
 
             // (опція) Показати скасовані без графіка:
-             Stat::make('Canceled', (string) $get(OrderStatus::Cancelled))
+             Stat::make(__('shop.widgets.orders_stats.labels.cancelled'), (string) $get(OrderStatus::Cancelled))
                  ->color(OrderStatus::Cancelled->badgeColor()),
         ];
     }

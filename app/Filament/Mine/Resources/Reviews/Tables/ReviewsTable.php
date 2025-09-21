@@ -19,26 +19,26 @@ class ReviewsTable
             ->query(fn (): Builder => Review::query()->with(['product', 'user']))
             ->columns([
                 TextColumn::make('product.name')
-                    ->label('Product')
+                    ->label(__('shop.reviews.fields.product'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('user.email')
-                    ->label('User')
+                    ->label(__('shop.reviews.fields.user'))
                     ->sortable()
                     ->searchable()
                     ->formatStateUsing(fn (?string $state) => $state ?? '—'),
 
                 TextColumn::make('rating')
-                    ->label('Rating')
+                    ->label(__('shop.reviews.fields.rating'))
                     ->numeric()
                     ->sortable(),
 
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('shop.reviews.fields.status'))
                     ->badge()
                     ->sortable()
-                    ->formatStateUsing(fn (string $state) => ucfirst($state))
+                    ->formatStateUsing(fn (string $state) => __('shop.reviews.statuses.' . $state))
                     ->color(fn (Review $record) => match ($record->status) {
                         Review::STATUS_APPROVED => 'success',
                         Review::STATUS_REJECTED => 'danger',
@@ -46,18 +46,18 @@ class ReviewsTable
                     }),
 
                 TextColumn::make('created_at')
-                    ->label('Created')
+                    ->label(__('shop.reviews.fields.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label(__('shop.reviews.filters.status'))
                     ->options([
-                        Review::STATUS_PENDING => 'Pending',
-                        Review::STATUS_APPROVED => 'Approved',
-                        Review::STATUS_REJECTED => 'Rejected',
+                        Review::STATUS_PENDING => __('shop.reviews.statuses.pending'),
+                        Review::STATUS_APPROVED => __('shop.reviews.statuses.approved'),
+                        Review::STATUS_REJECTED => __('shop.reviews.statuses.rejected'),
                     ]),
             ])
             ->recordActions([
