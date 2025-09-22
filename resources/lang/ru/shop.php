@@ -422,6 +422,21 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Статус вашего заказа №:number обновлён',
+            'heading' => 'Статус заказа обновлён',
+            'order_intro' => 'Заказ №:number',
+            'labels' => [
+                'from' => 'Было',
+                'to' => 'Стало',
+                'subtotal' => 'Сумма товаров',
+                'coupon' => 'Купон',
+                'discount' => 'Скидка',
+                'loyalty_points' => 'Использованные баллы',
+                'total' => 'К оплате',
+                'status' => 'Статус',
+                'date' => 'Дата',
+            ],
+            'thanks' => 'Спасибо за покупку!',
+            'team_signature' => 'Команда :app',
         ],
         'sections' => [
             'general' => 'Общее',

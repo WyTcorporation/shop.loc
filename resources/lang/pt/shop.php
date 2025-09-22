@@ -422,6 +422,21 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Status do pedido nº :number atualizado',
+            'heading' => 'Status do pedido atualizado',
+            'order_intro' => 'Pedido nº :number',
+            'labels' => [
+                'from' => 'Status anterior',
+                'to' => 'Status atual',
+                'subtotal' => 'Subtotal dos itens',
+                'coupon' => 'Cupom',
+                'discount' => 'Desconto',
+                'loyalty_points' => 'Pontos de fidelidade usados',
+                'total' => 'Total a pagar',
+                'status' => 'Status',
+                'date' => 'Data',
+            ],
+            'thanks' => 'Obrigado pela sua compra!',
+            'team_signature' => 'Equipe :app',
         ],
         'sections' => [
             'general' => 'Geral',

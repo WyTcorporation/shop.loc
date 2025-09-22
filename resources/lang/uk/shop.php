@@ -422,6 +422,21 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Ваше замовлення №:number: статус оновлено',
+            'heading' => 'Статус замовлення оновлено',
+            'order_intro' => 'Замовлення №:number',
+            'labels' => [
+                'from' => 'Було',
+                'to' => 'Стало',
+                'subtotal' => 'Сума товарів',
+                'coupon' => 'Купон',
+                'discount' => 'Знижка',
+                'loyalty_points' => 'Використані бали',
+                'total' => 'До сплати',
+                'status' => 'Статус',
+                'date' => 'Дата',
+            ],
+            'thanks' => 'Дякуємо за покупку!',
+            'team_signature' => 'Команда :app',
         ],
         'sections' => [
             'general' => 'Загальне',

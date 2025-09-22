@@ -11,19 +11,27 @@ class OrderStatusUpdatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    protected string $mailLocale;
+
     public function __construct(
         public Order $order,
         public ?string $fromStatus,
         public string $toStatus,
-    ) {}
+        ?string $locale = null,
+    ) {
+        $this->mailLocale = $locale ?: app()->getLocale() ?: (string) config('app.locale');
+        $this->locale = $this->mailLocale;
+    }
 
     public function build(): self
     {
-        return $this->subject(__('shop.orders.status_updated.subject_line', ['number' => $this->order->number]))
-            ->markdown('emails.orders.status-updated', [
-                'order'      => $this->order,
-                'fromStatus' => $this->fromStatus,
-                'toStatus'   => $this->toStatus,
-            ]);
+        return $this->withLocale($this->mailLocale, function () {
+            return $this->subject(__('shop.orders.status_updated.subject_line', ['number' => $this->order->number]))
+                ->markdown('emails.orders.status-updated', [
+                    'order'      => $this->order,
+                    'fromStatus' => $this->fromStatus,
+                    'toStatus'   => $this->toStatus,
+                ]);
+        });
     }
 }
