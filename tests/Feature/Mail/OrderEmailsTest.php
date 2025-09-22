@@ -28,7 +28,7 @@ class OrderEmailsTest extends TestCase
 
         $this->assertStringContainsString('Оплату отримано', $html);
         $this->assertStringContainsString($order->number, $html);
-        $this->assertStringContainsString('грн', $html);
+        $this->assertStringContainsString('UAH', $html);
     }
 
     public function test_order_shipped_mail_highlights_shipment_status(): void
