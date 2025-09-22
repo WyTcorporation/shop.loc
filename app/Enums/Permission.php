@@ -20,6 +20,16 @@ enum Permission: string
     case ManageActs = 'manage acts';
     case ViewSaftExports = 'view saft exports';
     case ManageSaftExports = 'manage saft exports';
+    case ViewMarketing = 'view marketing';
+    case ManageMarketing = 'manage marketing';
+    case ViewCampaigns = 'view campaigns';
+    case ManageCampaigns = 'manage campaigns';
+    case ViewSegments = 'view segments';
+    case ManageSegments = 'manage segments';
+    case ViewCampaignTemplates = 'view campaign templates';
+    case ManageCampaignTemplates = 'manage campaign templates';
+    case ViewCampaignTests = 'view campaign tests';
+    case ManageCampaignTests = 'manage campaign tests';
 
     /**
      * @return list<string>
