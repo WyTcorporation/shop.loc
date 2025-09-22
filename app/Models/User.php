@@ -149,6 +149,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 
     public function sendPasswordResetNotification($token): void
     {
-        Mail::to($this)->queue(new ResetPasswordMail($this, $token));
+        $locale = resolveMailLocale();
+
+        Mail::to($this)
+            ->locale($locale)
+            ->queue((new ResetPasswordMail($this, $token))->locale($locale));
     }
 }

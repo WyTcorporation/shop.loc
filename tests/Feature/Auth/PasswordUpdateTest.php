@@ -15,7 +15,7 @@ it('queues password changed email when password is updated', function () {
 
     Sanctum::actingAs($user, [], 'sanctum');
 
-    $response = $this->putJson('/api/auth/me', [
+    $response = $this->withUnencryptedCookie('lang', 'es')->withCredentials()->putJson('/api/auth/me', [
         'password' => 'new-secure-password',
         'password_confirmation' => 'new-secure-password',
     ]);
@@ -24,6 +24,7 @@ it('queues password changed email when password is updated', function () {
 
     Mail::assertQueued(PasswordChangedMail::class, function (PasswordChangedMail $mail) use ($user) {
         $mail->assertHasTag('auth-password-changed')->assertHasMetadata('type', 'auth');
+        expect($mail->locale)->toBe('es');
 
         return $mail->user->is($user);
     });

@@ -24,16 +24,20 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        $appName = config('app.name', 'Shop');
+        $locale = $this->locale ?: app()->getLocale() ?: (string) config('app.fallback_locale', 'en');
 
-        return $this->subject(__('shop.auth.reset.subject', ['app' => $appName]))
-            ->tag('auth-password-reset')
-            ->metadata(['type' => 'auth'])
-            ->view('emails.auth.reset-password', [
-                'user' => $this->user,
-                'resetUrl' => $this->resetUrl,
-                'displayUrl' => $this->displayUrl,
-            ]);
+        return $this->withLocale($locale, function () use ($locale) {
+            $appName = config('app.name', 'Shop');
+
+            return $this->subject(__('shop.auth.reset.subject', ['app' => $appName], $locale))
+                ->tag('auth-password-reset')
+                ->metadata(['type' => 'auth'])
+                ->view('emails.auth.reset-password', [
+                    'user' => $this->user,
+                    'resetUrl' => $this->resetUrl,
+                    'displayUrl' => $this->displayUrl,
+                ]);
+        });
     }
 
     protected function makeResetUrl(): string

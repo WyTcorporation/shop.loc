@@ -20,7 +20,7 @@ beforeEach(function () {
 it('sends verification and welcome mails when registering', function () {
     Mail::fake();
 
-    $response = $this->postJson('/api/auth/register', [
+    $response = $this->withUnencryptedCookie('lang', 'pt')->withCredentials()->postJson('/api/auth/register', [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
         'password' => 'super-secret',
@@ -33,6 +33,7 @@ it('sends verification and welcome mails when registering', function () {
     Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
         expect($mail->verificationUrl)->toBeString();
         expect($mail->displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
+        expect($mail->locale)->toBe('pt');
 
         $rendered = $mail->render();
         $escapedUrl = e($mail->verificationUrl);
@@ -47,6 +48,7 @@ it('sends verification and welcome mails when registering', function () {
     Mail::assertQueued(WelcomeMail::class, function (WelcomeMail $mail) use ($user) {
         expect($mail->verificationUrl)->toBeString();
         expect($mail->displayUrl)->toBe(expectedDisplayUrl($mail->verificationUrl));
+        expect($mail->locale)->toBe('pt');
 
         $rendered = $mail->render();
         $escapedUrl = e($mail->verificationUrl);
