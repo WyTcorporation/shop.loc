@@ -171,6 +171,22 @@ return [
                 'label' => 'Avaliação',
                 'plural_label' => 'Avaliações',
             ],
+            'email_campaigns' => [
+                'label' => 'Campanha de email',
+                'plural_label' => 'Campanhas de email',
+            ],
+            'push_campaigns' => [
+                'label' => 'Campanha push',
+                'plural_label' => 'Campanhas push',
+            ],
+            'segments' => [
+                'label' => 'Segmento',
+                'plural_label' => 'Segmentos',
+            ],
+            'tests' => [
+                'label' => 'Teste A/B',
+                'plural_label' => 'Testes A/B',
+            ],
             'users' => [
                 'label' => 'Cliente',
                 'plural_label' => 'Clientes',
@@ -645,6 +661,17 @@ return [
     ],
 
     'widgets' => [
+        'marketing_performance' => [
+            'title' => 'Desempenho de marketing',
+            'stats' => [
+                'email_opens' => 'Aberturas de email',
+                'push_clicks' => 'Cliques push',
+                'total_conversions' => 'Conversões totais',
+            ],
+            'descriptions' => [
+                'avg_conversion' => 'Conversão média: :rate%',
+            ],
+        ],
         'orders_stats' => [
             'labels' => [
                 'new' => 'Novos',

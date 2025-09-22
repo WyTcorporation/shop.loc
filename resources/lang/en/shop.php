@@ -171,6 +171,22 @@ return [
                 'label' => 'Review',
                 'plural_label' => 'Reviews',
             ],
+            'email_campaigns' => [
+                'label' => 'Email campaign',
+                'plural_label' => 'Email campaigns',
+            ],
+            'push_campaigns' => [
+                'label' => 'Push campaign',
+                'plural_label' => 'Push campaigns',
+            ],
+            'segments' => [
+                'label' => 'Segment',
+                'plural_label' => 'Segments',
+            ],
+            'tests' => [
+                'label' => 'A/B test',
+                'plural_label' => 'A/B tests',
+            ],
             'users' => [
                 'label' => 'Customer',
                 'plural_label' => 'Customers',
@@ -645,6 +661,17 @@ return [
     ],
 
     'widgets' => [
+        'marketing_performance' => [
+            'title' => 'Marketing performance',
+            'stats' => [
+                'email_opens' => 'Email opens',
+                'push_clicks' => 'Push clicks',
+                'total_conversions' => 'Total conversions',
+            ],
+            'descriptions' => [
+                'avg_conversion' => 'Avg. conversion: :rate%',
+            ],
+        ],
         'orders_stats' => [
             'labels' => [
                 'new' => 'New',

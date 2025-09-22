@@ -17,7 +17,7 @@ class MarketingPerformanceWidget extends StatsOverviewWidget
 
     protected function getHeading(): ?string
     {
-        return __('Marketing performance');
+        return __('shop.widgets.marketing_performance.title');
     }
 
     protected function getDescription(): ?string
@@ -38,13 +38,13 @@ class MarketingPerformanceWidget extends StatsOverviewWidget
         $metrics = app(DashboardMetricsService::class)->getMarketingPerformance($period);
 
         return [
-            Stat::make(__('Email opens'), number_format($metrics['email']['opens'] ?? 0))
-                ->description(__('Avg. conversion: :rate%', ['rate' => number_format($metrics['email']['average_conversion_rate'] ?? 0, 2)]))
+            Stat::make(__('shop.widgets.marketing_performance.stats.email_opens'), number_format($metrics['email']['opens'] ?? 0))
+                ->description(__('shop.widgets.marketing_performance.descriptions.avg_conversion', ['rate' => number_format($metrics['email']['average_conversion_rate'] ?? 0, 2)]))
                 ->color('primary'),
-            Stat::make(__('Push clicks'), number_format($metrics['push']['clicks'] ?? 0))
-                ->description(__('Avg. conversion: :rate%', ['rate' => number_format($metrics['push']['average_conversion_rate'] ?? 0, 2)]))
+            Stat::make(__('shop.widgets.marketing_performance.stats.push_clicks'), number_format($metrics['push']['clicks'] ?? 0))
+                ->description(__('shop.widgets.marketing_performance.descriptions.avg_conversion', ['rate' => number_format($metrics['push']['average_conversion_rate'] ?? 0, 2)]))
                 ->color('info'),
-            Stat::make(__('Total conversions'), number_format($metrics['total_conversions'] ?? 0))
+            Stat::make(__('shop.widgets.marketing_performance.stats.total_conversions'), number_format($metrics['total_conversions'] ?? 0))
                 ->color('success'),
         ];
     }
@@ -53,6 +53,17 @@ class MarketingPerformanceWidget extends StatsOverviewWidget
     {
         $user = Auth::user();
 
-        return $user?->can(Permission::ManageSettings->value) ?? false;
+        return $user?->hasAnyPermission([
+            Permission::ViewMarketing->value,
+            Permission::ManageMarketing->value,
+            Permission::ViewCampaigns->value,
+            Permission::ManageCampaigns->value,
+            Permission::ViewSegments->value,
+            Permission::ManageSegments->value,
+            Permission::ViewCampaignTemplates->value,
+            Permission::ManageCampaignTemplates->value,
+            Permission::ViewCampaignTests->value,
+            Permission::ManageCampaignTests->value,
+        ]) ?? false;
     }
 }

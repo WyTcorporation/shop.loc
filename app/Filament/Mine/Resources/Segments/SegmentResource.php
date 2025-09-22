@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class SegmentResource extends Resource
 {
@@ -49,28 +50,41 @@ class SegmentResource extends Resource
         ];
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) CustomerSegment::count();
-    }
-
     public static function getModelLabel(): string
     {
-        return __('Segment');
+        return __('shop.admin.resources.segments.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Segments');
+        return __('shop.admin.resources.segments.plural_label');
     }
 
     public static function getNavigationGroup(): ?string
     {
-        return __('Marketing');
+        return __('shop.admin.navigation.marketing');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Auth::user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function getEloquentQuery(): Builder
     {
+        $user = Auth::user();
+
+        abort_if($user === null || ! $user->can('viewAny', static::getModel()), 403);
+
         return parent::getEloquentQuery()->withCount('campaigns');
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        if (! Auth::user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
+        return (string) CustomerSegment::count();
     }
 }

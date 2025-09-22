@@ -171,6 +171,22 @@ return [
                 'label' => 'Відгук',
                 'plural_label' => 'Відгуки',
             ],
+            'email_campaigns' => [
+                'label' => 'Email-кампанія',
+                'plural_label' => 'Email-кампанії',
+            ],
+            'push_campaigns' => [
+                'label' => 'Push-кампанія',
+                'plural_label' => 'Push-кампанії',
+            ],
+            'segments' => [
+                'label' => 'Сегмент',
+                'plural_label' => 'Сегменти',
+            ],
+            'tests' => [
+                'label' => 'A/B-тест',
+                'plural_label' => 'A/B-тести',
+            ],
             'users' => [
                 'label' => 'Клієнт',
                 'plural_label' => 'Клієнти',
@@ -645,6 +661,17 @@ return [
     ],
 
     'widgets' => [
+        'marketing_performance' => [
+            'title' => 'Ефективність маркетингу',
+            'stats' => [
+                'email_opens' => 'Відкриття email',
+                'push_clicks' => 'Кліки push',
+                'total_conversions' => 'Усього конверсій',
+            ],
+            'descriptions' => [
+                'avg_conversion' => 'Середня конверсія: :rate%',
+            ],
+        ],
         'orders_stats' => [
             'labels' => [
                 'new' => 'Нові',

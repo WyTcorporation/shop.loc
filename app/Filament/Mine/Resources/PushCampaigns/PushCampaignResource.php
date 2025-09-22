@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 
 class PushCampaignResource extends Resource
@@ -51,32 +52,45 @@ class PushCampaignResource extends Resource
         ];
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) MarketingCampaign::push()->count();
-    }
-
     public static function getModelLabel(): string
     {
-        return __('Push campaign');
+        return __('shop.admin.resources.push_campaigns.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Push campaigns');
+        return __('shop.admin.resources.push_campaigns.plural_label');
     }
 
     public static function getNavigationGroup(): ?string
     {
-        return __('Marketing');
+        return __('shop.admin.navigation.marketing');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Auth::user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function getEloquentQuery(): Builder
     {
+        $user = Auth::user();
+
+        abort_if($user === null || ! $user->can('viewAny', static::getModel()), 403);
+
         return parent::getEloquentQuery()
             ->push()
             ->with('template')
             ->withCount('segments');
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        if (! Auth::user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
+        return (string) MarketingCampaign::push()->count();
     }
 
     public static function persistSchedule(MarketingCampaign $campaign, array $data): void

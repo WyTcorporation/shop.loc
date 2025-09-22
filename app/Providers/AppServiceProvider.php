@@ -3,9 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Act;
+use App\Models\CampaignTemplate;
+use App\Models\CampaignTest;
 use App\Models\Currency;
+use App\Models\CustomerSegment;
 use App\Models\DeliveryNote;
 use App\Models\Invoice;
+use App\Models\MarketingCampaign;
 use App\Models\Order;
 use App\Models\SaftExportLog;
 use App\Models\Shipment;
@@ -29,14 +33,18 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use App\Policies\ActPolicy;
+use App\Policies\CampaignTemplatePolicy;
+use App\Policies\CampaignTestPolicy;
+use App\Policies\CustomerSegmentPolicy;
 use App\Policies\CurrencyPolicy;
 use App\Policies\DeliveryNotePolicy;
 use App\Policies\InvoicePolicy;
+use App\Policies\MarketingCampaignPolicy;
 use App\Policies\OrderPolicy;
-use App\Policies\ProductPolicy;
-use App\Policies\SaftExportLogPolicy;
 use App\Policies\PermissionPolicy;
+use App\Policies\ProductPolicy;
 use App\Policies\RolePolicy;
+use App\Policies\SaftExportLogPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WarehousePolicy;
 use Spatie\Permission\Models\Permission as SpatiePermission;
@@ -85,6 +93,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(DeliveryNote::class, DeliveryNotePolicy::class);
         Gate::policy(Act::class, ActPolicy::class);
         Gate::policy(SaftExportLog::class, SaftExportLogPolicy::class);
+        Gate::policy(MarketingCampaign::class, MarketingCampaignPolicy::class);
+        Gate::policy(CustomerSegment::class, CustomerSegmentPolicy::class);
+        Gate::policy(CampaignTemplate::class, CampaignTemplatePolicy::class);
+        Gate::policy(CampaignTest::class, CampaignTestPolicy::class);
         Gate::policy(SpatieRole::class, RolePolicy::class);
         Gate::policy(SpatiePermission::class, PermissionPolicy::class);
 
