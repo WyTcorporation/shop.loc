@@ -174,9 +174,11 @@ App\Enums\OrderStatus:
     → 200: { facets, nbHits, driver, error? }
 ```
 
-4.4 Кошик   
+4.4 Кошик
 (у нас hook useCart() — бекенд має мати типові REST-ендпоїнти: /api/cart GET/POST/PUT/DELETE).
 Фактичні назви/схема залежать від вашої реалізації (ми інтегрували «як було»).
+Бекенд виставляє cookie `cart_id` (SameSite=Lax, HttpOnly=true). Прапор `Secure` бере значення з `config('session.secure')`,
+а за його відсутності — з `app()->environment('production')`, тому для axios потрібно `withCredentials: true`.
 
 4.5 Замовлення  
 ```bash
