@@ -8,32 +8,32 @@
 @endphp
 
 @component('mail::message')
-    # Статус замовлення оновлено
+# {{ __('shop.orders.status_updated.heading') }}
 
-    Замовлення **#{{ $order->number }}**
+{{ __('shop.orders.status_updated.order_intro', ['number' => $order->number]) }}
 
-    @isset($fromStatus)
-        **Було:** {{ $fromStatus }}
-    @endisset
+@isset($fromStatus)
+**{{ __('shop.orders.status_updated.labels.from') }}:** {{ $fromStatus }}
+@endisset
 
-    **Стало:** {{ $toStatus }}
+**{{ __('shop.orders.status_updated.labels.to') }}:** {{ $toStatus }}
 
-    @component('mail::panel')
-        Сума товарів: **{{ \App\Support\OrderMailFormatter::money($order, $subtotal) }}**
-        @if(!empty($couponCode))
-        Купон: **{{ $couponCode }}**
-        @endif
-        @if($discountTotal > 0)
-        Знижка: **−{{ \App\Support\OrderMailFormatter::money($order, $discountTotal) }}**
-        @endif
-        @if($loyaltyPointsUsed > 0)
-        Використані бали: **{{ number_format($loyaltyPointsUsed, 0, ',', ' ') }}@if($loyaltyPointsValue > 0) (−{{ \App\Support\OrderMailFormatter::money($order, $loyaltyPointsValue) }})@endif**
-        @endif
-        До сплати: **{{ \App\Support\OrderMailFormatter::money($order, $total) }}**
-        Статус: **{{ $toStatus }}**
-        Дата: {{ $order->updated_at->format('Y-m-d H:i') }}
-    @endcomponent
+@component('mail::panel')
+{{ __('shop.orders.status_updated.labels.subtotal') }}: **{{ \App\Support\OrderMailFormatter::money($order, $subtotal) }}**
+@if(! empty($couponCode))
+{{ __('shop.orders.status_updated.labels.coupon') }}: **{{ $couponCode }}**
+@endif
+@if($discountTotal > 0)
+{{ __('shop.orders.status_updated.labels.discount') }}: **−{{ \App\Support\OrderMailFormatter::money($order, $discountTotal) }}**
+@endif
+@if($loyaltyPointsUsed > 0)
+{{ __('shop.orders.status_updated.labels.loyalty_points') }}: **{{ number_format($loyaltyPointsUsed, 0, ',', ' ') }}@if($loyaltyPointsValue > 0) (−{{ \App\Support\OrderMailFormatter::money($order, $loyaltyPointsValue) }})@endif**
+@endif
+{{ __('shop.orders.status_updated.labels.total') }}: **{{ \App\Support\OrderMailFormatter::money($order, $total) }}**
+{{ __('shop.orders.status_updated.labels.status') }}: **{{ $toStatus }}**
+{{ __('shop.orders.status_updated.labels.date') }}: {{ $order->updated_at->format('Y-m-d H:i') }}
+@endcomponent
 
-    Дякуємо за покупку!
-    Команда {{ config('app.name') }}
+{{ __('shop.orders.status_updated.thanks') }}
+{{ __('shop.orders.status_updated.team_signature', ['app' => config('app.name')]) }}
 @endcomponent

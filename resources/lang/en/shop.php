@@ -422,6 +422,21 @@ return [
         ],
         'status_updated' => [
             'subject_line' => 'Your order #:number status was updated',
+            'heading' => 'Order status updated',
+            'order_intro' => 'Order #:number',
+            'labels' => [
+                'from' => 'Previous status',
+                'to' => 'Current status',
+                'subtotal' => 'Items subtotal',
+                'coupon' => 'Coupon',
+                'discount' => 'Discount',
+                'loyalty_points' => 'Loyalty points used',
+                'total' => 'Total due',
+                'status' => 'Status',
+                'date' => 'Date',
+            ],
+            'thanks' => 'Thank you for your purchase!',
+            'team_signature' => 'The :app team',
         ],
         'sections' => [
             'general' => 'General',
