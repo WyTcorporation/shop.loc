@@ -48,8 +48,13 @@ class CartController extends Controller
             $cart->load($relations);
         }
 
+        $secureCookie = config('session.secure');
+        if ($secureCookie === null) {
+            $secureCookie = app()->environment('production');
+        }
+
         return $this->cartResponse($cart)
-            ->cookie('cart_id', $cart->id, 60 * 24 * 30, '/', null, false, false, 'Lax');
+            ->cookie('cart_id', $cart->id, 60 * 24 * 30, '/', null, (bool) $secureCookie, true, 'Lax');
     }
 
     public function show(string $id): JsonResponse
