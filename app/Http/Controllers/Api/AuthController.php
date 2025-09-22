@@ -38,9 +38,13 @@ class AuthController extends Controller
 
         $user->loadMissing('twoFactorSecret');
 
-        $verificationUrl = $this->queueEmailVerification($user);
+        $locale = resolveMailLocale($request);
 
-        Mail::to($user)->queue(new WelcomeMail($user, $verificationUrl));
+        $verificationUrl = $this->queueEmailVerification($user, $locale, true);
+
+        Mail::to($user)
+            ->locale($locale)
+            ->queue((new WelcomeMail($user, $verificationUrl))->locale($locale));
 
         $token = $user->createToken('shop')->plainTextToken;
 
@@ -64,7 +68,9 @@ class AuthController extends Controller
         }
 
         if (!$user->hasVerifiedEmail()) {
-            $this->queueEmailVerification($user, true);
+            $locale = resolveMailLocale($request);
+
+            $this->queueEmailVerification($user, $locale, true);
         }
 
         return response()->json([
@@ -175,7 +181,11 @@ class AuthController extends Controller
         $user->loadMissing('twoFactorSecret');
 
         if ($passwordChanged) {
-            Mail::to($user)->queue(new PasswordChangedMail($user));
+            $locale = resolveMailLocale($request);
+
+            Mail::to($user)
+                ->locale($locale)
+                ->queue((new PasswordChangedMail($user))->locale($locale));
             $this->maybeAlertSupportAboutPasswordChange($user);
         }
 
@@ -260,7 +270,7 @@ class AuthController extends Controller
         ];
     }
 
-    private function queueEmailVerification(User $user, $send = false): string
+    private function queueEmailVerification(User $user, string $locale, bool $send = false): string
     {
         $verificationUrl = URL::temporarySignedRoute(
             'api.email.verify',
@@ -271,7 +281,11 @@ class AuthController extends Controller
             ]
         );
 
-        if ($send) Mail::to($user)->queue(new VerifyEmailMail($user, $verificationUrl));
+        if ($send) {
+            Mail::to($user)
+                ->locale($locale)
+                ->queue((new VerifyEmailMail($user, $verificationUrl))->locale($locale));
+        }
 
         return $verificationUrl;
     }

@@ -18,13 +18,17 @@ class PasswordChangedMail extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        $appName = config('app.name', 'Shop');
+        $locale = $this->locale ?: app()->getLocale() ?: (string) config('app.fallback_locale', 'en');
 
-        return $this->subject(__('shop.auth.reset.changed_subject', ['app' => $appName]))
-            ->tag('auth-password-changed')
-            ->metadata(['type' => 'auth'])
-            ->view('emails.auth.password-changed', [
-                'user' => $this->user,
-            ]);
+        return $this->withLocale($locale, function () use ($locale) {
+            $appName = config('app.name', 'Shop');
+
+            return $this->subject(__('shop.auth.reset.changed_subject', ['app' => $appName], $locale))
+                ->tag('auth-password-changed')
+                ->metadata(['type' => 'auth'])
+                ->view('emails.auth.password-changed', [
+                    'user' => $this->user,
+                ]);
+        });
     }
 }

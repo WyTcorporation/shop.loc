@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\PasswordChangedMail;
+use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -12,7 +13,7 @@ it('queues password changed email when password is reset via the api', function 
 
     $token = Password::broker()->createToken($user);
 
-    $response = $this->postJson('/api/password/reset', [
+    $response = $this->withUnencryptedCookie('lang', 'ru')->withCredentials()->postJson('/api/password/reset', [
         'token' => $token,
         'email' => $user->email,
         'password' => 'new-secure-password',
@@ -23,6 +24,24 @@ it('queues password changed email when password is reset via the api', function 
 
     Mail::assertQueued(PasswordChangedMail::class, function (PasswordChangedMail $mail) use ($user) {
         $mail->assertHasTag('auth-password-changed')->assertHasMetadata('type', 'auth');
+        expect($mail->locale)->toBe('ru');
+
+        return $mail->user->is($user);
+    });
+});
+
+it('queues reset password email with locale from cookie', function () {
+    Mail::fake();
+
+    $user = User::factory()->create();
+
+    $this->withUnencryptedCookie('lang', 'pt')->withCredentials()->postJson('/api/password/email', [
+        'email' => $user->email,
+    ])->assertOk();
+
+    Mail::assertQueued(ResetPasswordMail::class, function (ResetPasswordMail $mail) use ($user) {
+        $mail->assertHasTag('auth-password-reset')->assertHasMetadata('type', 'auth');
+        expect($mail->locale)->toBe('pt');
 
         return $mail->user->is($user);
     });

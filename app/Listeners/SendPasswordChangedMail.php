@@ -10,6 +10,10 @@ class SendPasswordChangedMail
 {
     public function handle(PasswordReset $event): void
     {
-        Mail::to($event->user)->queue(new PasswordChangedMail($event->user));
+        $locale = resolveMailLocale();
+
+        Mail::to($event->user)
+            ->locale($locale)
+            ->queue((new PasswordChangedMail($event->user))->locale($locale));
     }
 }

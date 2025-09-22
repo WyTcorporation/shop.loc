@@ -21,16 +21,20 @@ class VerifyEmailMail extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        $appName = config('app.name', 'Shop');
+        $locale = $this->locale ?: app()->getLocale() ?: (string) config('app.fallback_locale', 'en');
 
-        return $this->subject(__('shop.auth.verify.subject', ['app' => $appName]))
-            ->tag('auth-verify-email')
-            ->metadata(['type' => 'auth'])
-            ->view('emails.auth.verify-email', [
-                'user' => $this->user,
-                'verificationUrl' => $this->verificationUrl,
-                'displayUrl' => $this->displayUrl,
-            ]);
+        return $this->withLocale($locale, function () use ($locale) {
+            $appName = config('app.name', 'Shop');
+
+            return $this->subject(__('shop.auth.verify.subject', ['app' => $appName], $locale))
+                ->tag('auth-verify-email')
+                ->metadata(['type' => 'auth'])
+                ->view('emails.auth.verify-email', [
+                    'user' => $this->user,
+                    'verificationUrl' => $this->verificationUrl,
+                    'displayUrl' => $this->displayUrl,
+                ]);
+        });
     }
 
     protected function makeDisplayUrl(string $url): string
