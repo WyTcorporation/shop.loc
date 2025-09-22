@@ -175,6 +175,34 @@ return [
                 'label' => 'Клієнт',
                 'plural_label' => 'Клієнти',
             ],
+            'roles' => [
+                'label' => 'Роль',
+                'plural_label' => 'Ролі',
+                'form' => [
+                    'assign_users_help' => 'Призначте цю роль одному чи кільком користувачам.',
+                ],
+                'bulk_actions' => [
+                    'sync_users' => [
+                        'label' => 'Синхронізувати з користувачами',
+                        'users_field' => 'Користувачі',
+                        'replace_toggle' => 'Замінити наявні ролі для вибраних користувачів',
+                    ],
+                ],
+            ],
+            'permissions' => [
+                'label' => 'Дозвіл',
+                'plural_label' => 'Дозволи',
+                'form' => [
+                    'assign_users_help' => 'Надайте цей дозвіл безпосередньо конкретним користувачам.',
+                ],
+                'bulk_actions' => [
+                    'sync_users' => [
+                        'label' => 'Синхронізувати з користувачами',
+                        'users_field' => 'Користувачі',
+                        'replace_toggle' => 'Замінити наявні дозволи для вибраних користувачів',
+                    ],
+                ],
+            ],
             'warehouses' => [
                 'label' => 'Склад',
                 'plural_label' => 'Склади',
@@ -546,6 +574,7 @@ return [
             'points_balance' => 'Баланс балів',
             'password' => 'Пароль',
             'roles' => 'Ролі',
+            'permissions' => 'Прямі дозволи',
             'categories' => 'Дозволені категорії',
         ],
     ],

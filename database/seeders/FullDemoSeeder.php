@@ -106,6 +106,33 @@ class FullDemoSeeder extends Seeder
                     PermissionEnum::ViewSaftExports->value,
                     PermissionEnum::ManageSaftExports->value,
                 ],
+                RoleEnum::CatalogManager => [
+                    PermissionEnum::ViewProducts->value,
+                    PermissionEnum::ManageProducts->value,
+                    PermissionEnum::ManageInventory->value,
+                ],
+                RoleEnum::OrderManager => [
+                    PermissionEnum::ViewOrders->value,
+                    PermissionEnum::ManageOrders->value,
+                    PermissionEnum::ViewDeliveryNotes->value,
+                    PermissionEnum::ManageDeliveryNotes->value,
+                    PermissionEnum::ViewInvoices->value,
+                    PermissionEnum::ManageInvoices->value,
+                    PermissionEnum::ViewActs->value,
+                    PermissionEnum::ManageActs->value,
+                    PermissionEnum::ViewSaftExports->value,
+                    PermissionEnum::ManageSaftExports->value,
+                ],
+                RoleEnum::MarketingManager => [
+                    PermissionEnum::ViewProducts->value,
+                    PermissionEnum::ManageProducts->value,
+                    PermissionEnum::ManageSettings->value,
+                ],
+                RoleEnum::Support => [
+                    PermissionEnum::ViewOrders->value,
+                    PermissionEnum::ManageOrders->value,
+                    PermissionEnum::ViewUsers->value,
+                ],
             };
 
             $role->syncPermissions($permissionNames);
