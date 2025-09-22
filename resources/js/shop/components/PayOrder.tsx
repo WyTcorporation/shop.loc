@@ -70,21 +70,34 @@ export default function PayOrder({
 }) {
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [publishableKey, setPublishableKey] = useState<string | null>(null);
+    const { error: notifyError } = useNotify();
+    const { t } = useLocale();
 
     useEffect(() => {
         let on = true;
-        (async () => {
-            const res = await fetch('/api/payments/intent', {
+        const loadIntent = async () => {
+            const response = await fetch('/api/payments/intent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ number }),
-            }).then(r => r.json());
+            });
+            if (!response.ok) {
+                throw new Error('Failed to create payment intent');
+            }
+            const res = await response.json();
             if (!on) return;
             setClientSecret(res.clientSecret);
             setPublishableKey(res.publishableKey);
-        })();
+        };
+        loadIntent().catch(error => {
+            if (!on) return;
+            notifyError({ title: t('checkout.payOrder.error') });
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(error);
+            }
+        });
         return () => { on = false; };
-    }, [number]);
+    }, [number, notifyError, t]);
 
     const stripePromise = useMemo(() => publishableKey ? loadStripe(publishableKey) : null, [publishableKey]);
 
