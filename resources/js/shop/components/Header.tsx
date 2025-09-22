@@ -42,9 +42,6 @@ export default function Header() {
                         </NavLink>
                         <MiniCart />
                         <WishlistBadge />
-                        <button onClick={openCookiePreferences} className="text-xs underline">
-                            {t('header.nav.cookies')}
-                        </button>
                         {!isReady ? (
                             <span className="text-xs text-gray-500">{t('common.loading')}</span>
                         ) : isAuthenticated ? (

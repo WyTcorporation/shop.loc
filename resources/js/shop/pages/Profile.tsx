@@ -5,6 +5,7 @@ import { AuthApi, TwoFactorApi, type TwoFactorSetup, type TwoFactorStatus } from
 import useAuth from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
+import {openCookiePreferences} from "@/shop/ui/analytics";
 
 export default function ProfilePage() {
     const { t, lang } = useLocale();
@@ -469,30 +470,18 @@ export default function ProfilePage() {
                 </form>
                 <dl className="mt-8 space-y-4 text-sm text-gray-700">
                     <div>
-                        <dt className="font-medium text-gray-900">{t('profile.overview.info.id')}</dt>
-                        <dd className="mt-1 text-gray-700" data-testid="profile-id">
-                            {user?.id ?? '—'}
-                        </dd>
-                    </div>
-                    <div>
-                        <dt className="font-medium text-gray-900">{t('profile.overview.info.name')}</dt>
-                        <dd className="mt-1 text-gray-700" data-testid="profile-name-display">
-                            {user?.name ?? '—'}
-                        </dd>
-                    </div>
-                    <div>
-                        <dt className="font-medium text-gray-900">{t('profile.overview.info.email')}</dt>
-                        <dd className="mt-1 break-words text-gray-700" data-testid="profile-email-display">
-                            {user?.email ?? '—'}
-                        </dd>
-                    </div>
-                    <div>
                         <dt className="font-medium text-gray-900">{t('profile.overview.info.verified')}</dt>
                         <dd className="mt-1 text-gray-700">
                             {user?.email_verified_at
                                 ? t('profile.overview.info.verifiedYes')
                                 : t('profile.overview.info.verifiedNo')}
                         </dd>
+                    </div>
+
+                    <div>
+                    <button onClick={openCookiePreferences} className="text-xs underline">
+                        {t('header.nav.cookies')}
+                    </button>
                     </div>
                 </dl>
                 {logoutError && (

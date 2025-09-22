@@ -3,7 +3,7 @@ import React from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import LocaleProvider from '../i18n/LocaleProvider';
 import {WishlistApi} from '../api';
-import useWishlist, {WishlistProvider} from './useWishlist';
+import useWishlist, {WishlistProvider} from '../hooks/useWishlist';
 
 type AuthMock = {
     user: { id: number } | null;
