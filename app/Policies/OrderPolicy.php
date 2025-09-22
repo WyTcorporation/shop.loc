@@ -31,6 +31,10 @@ class OrderPolicy
 
     public function view(User $user, Order $order): bool
     {
+        if ($order->user_id === $user->id) {
+            return true;
+        }
+
         if (! $this->viewAny($user)) {
             return false;
         }
