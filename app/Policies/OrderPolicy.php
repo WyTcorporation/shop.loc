@@ -62,6 +62,10 @@ class OrderPolicy
 
     public function createMessage(User $user, Order $order): bool
     {
+        if ($order->user_id === $user->id) {
+            return true;
+        }
+
         if (! $user->hasPermissionTo(Permission::ManageOrders->value)) {
             return false;
         }
