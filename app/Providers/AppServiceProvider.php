@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Act;
 use App\Models\CampaignTemplate;
 use App\Models\CampaignTest;
+use App\Models\Category;
 use App\Models\Currency;
 use App\Models\CustomerSegment;
 use App\Models\DeliveryNote;
@@ -35,6 +36,7 @@ use App\Models\User;
 use App\Policies\ActPolicy;
 use App\Policies\CampaignTemplatePolicy;
 use App\Policies\CampaignTestPolicy;
+use App\Policies\CategoryPolicy;
 use App\Policies\CustomerSegmentPolicy;
 use App\Policies\CurrencyPolicy;
 use App\Policies\DeliveryNotePolicy;
@@ -85,6 +87,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Currency::class, CurrencyPolicy::class);
