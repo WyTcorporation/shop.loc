@@ -5,7 +5,7 @@ namespace App\Services\Analytics;
 use App\Enums\OrderStatus;
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\ProductStock;
 use App\Services\Currency\CurrencyConverter;
 use App\Services\Marketing\MarketingAnalyticsService;
@@ -169,9 +169,9 @@ class DashboardMetricsService
     {
         $baseCurrency = $this->getBaseCurrency();
 
-        return OrderItem::query()
-            ->select('order_items.product_id')
-            ->selectRaw('MIN(order_items.id) AS id')
+        return Product::query()
+            ->selectRaw('products.id AS id')
+            ->selectRaw('products.id AS product_id')
             ->selectRaw('products.name AS product_name')
             ->selectRaw('products.sku AS product_sku')
             ->selectRaw('SUM(order_items.qty)::integer AS total_qty')
@@ -180,11 +180,11 @@ class DashboardMetricsService
                 [$baseCurrency],
             )
             ->selectRaw('MAX(orders.created_at) AS last_order_at')
+            ->join('order_items', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->join('products', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('currencies as curr', 'curr.code', '=', 'orders.currency')
             ->whereNotIn('orders.status', [OrderStatus::Cancelled->value])
-            ->groupBy('order_items.product_id', 'products.name', 'products.sku');
+            ->groupBy('products.id', 'products.name', 'products.sku');
     }
 
     public function applyPeriodConstraint(Builder|QueryBuilder $query, DashboardPeriod $period, string $column = 'created_at'): void
