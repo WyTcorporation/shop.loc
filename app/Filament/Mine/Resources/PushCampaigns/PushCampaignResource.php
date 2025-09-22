@@ -90,7 +90,7 @@ class PushCampaignResource extends Resource
             return null;
         }
 
-        return (string) MarketingCampaign::push()->count();
+        return (string) MarketingCampaign::query()->push()->count();
     }
 
     public static function persistSchedule(MarketingCampaign $campaign, array $data): void
