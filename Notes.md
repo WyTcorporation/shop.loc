@@ -229,3 +229,4 @@ CI/CD (build, тест, deploy), prod Dockerfile.
 git rm --cached .env
 git commit -m "Stop tracking .env and ignore it"
 
+Комміт Update Portuguese shop translations - MVP готове
