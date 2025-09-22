@@ -60,6 +60,13 @@ class TopProductsTable extends TableWidget
                     ->label(__('shop.admin.dashboard.filters.period'))
                     ->options(DashboardPeriod::options())
                     ->default(DashboardPeriod::ThirtyDays->value)
+                    ->query(function (Builder $query, array $data) use ($metrics) {
+                        $period = DashboardPeriod::tryFromFilter($data['value'] ?? null);
+
+                        $metrics->applyPeriodConstraint($query, $period, 'orders.created_at');
+
+                        return $query;
+                    })
                     ->native(false),
             ]);
     }
