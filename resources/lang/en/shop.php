@@ -86,6 +86,7 @@ return [
                         'no_rows' => 'No data rows were detected in the uploaded file.',
                         'row_created' => 'Product created (:sku)',
                         'row_updated' => 'Product updated (:sku)',
+                        'category_forbidden' => 'Category is not permitted for the current role.',
                     ],
                     'table' => [
                         'recent_imports' => 'Recent imports',
