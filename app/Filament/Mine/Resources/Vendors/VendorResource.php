@@ -38,9 +38,11 @@ class VendorResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-
         $user = Auth::user();
+
+        abort_if($user === null || ! $user->can('viewAny', static::getModel()), 403);
+
+        $query = parent::getEloquentQuery();
 
         if ($user?->vendor) {
             $query->whereKey($user->vendor->id);
@@ -56,6 +58,11 @@ class VendorResource extends Resource
             'create' => CreateVendor::route('/create'),
             'edit' => EditVendor::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function getModelLabel(): string
@@ -75,6 +82,10 @@ class VendorResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        if (! auth()->user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
         return (string) Vendor::count();
     }
 }

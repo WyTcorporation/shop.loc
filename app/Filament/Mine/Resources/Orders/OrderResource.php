@@ -41,11 +41,18 @@ class OrderResource extends Resource
         return OrdersTable::configure($table);
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+    }
+
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-
         $user = Auth::user();
+
+        abort_if($user === null || ! $user->can('viewAny', static::getModel()), 403);
+
+        $query = parent::getEloquentQuery();
 
         if ($user?->vendor) {
             $query->whereHas('items.product', fn ($builder) => $builder->where('vendor_id', $user->vendor->id));
@@ -89,6 +96,10 @@ class OrderResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        if (! auth()->user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
         return (string) Order::count();
     }
 }

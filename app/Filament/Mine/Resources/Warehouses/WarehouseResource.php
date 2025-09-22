@@ -139,6 +139,11 @@ class WarehouseResource extends Resource
         ];
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+    }
+
     public static function getModelLabel(): string
     {
         return __('shop.admin.resources.warehouses.label');
@@ -156,6 +161,10 @@ class WarehouseResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        if (! auth()->user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
         return (string) Warehouse::count();
     }
 }
