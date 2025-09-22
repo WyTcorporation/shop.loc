@@ -35,8 +35,12 @@ use App\Policies\InvoicePolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\SaftExportLogPolicy;
+use App\Policies\PermissionPolicy;
+use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WarehousePolicy;
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Spatie\Permission\Models\Role as SpatieRole;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -81,6 +85,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(DeliveryNote::class, DeliveryNotePolicy::class);
         Gate::policy(Act::class, ActPolicy::class);
         Gate::policy(SaftExportLog::class, SaftExportLogPolicy::class);
+        Gate::policy(SpatieRole::class, RolePolicy::class);
+        Gate::policy(SpatiePermission::class, PermissionPolicy::class);
 
         if (
             Config::get('filesystems.disks.public.driver') === 'local'

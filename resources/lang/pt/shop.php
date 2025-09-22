@@ -175,6 +175,34 @@ return [
                 'label' => 'Cliente',
                 'plural_label' => 'Clientes',
             ],
+            'roles' => [
+                'label' => 'Função',
+                'plural_label' => 'Funções',
+                'form' => [
+                    'assign_users_help' => 'Atribua esta função a um ou mais usuários.',
+                ],
+                'bulk_actions' => [
+                    'sync_users' => [
+                        'label' => 'Sincronizar com usuários',
+                        'users_field' => 'Usuários',
+                        'replace_toggle' => 'Substituir funções existentes para os usuários selecionados',
+                    ],
+                ],
+            ],
+            'permissions' => [
+                'label' => 'Permissão',
+                'plural_label' => 'Permissões',
+                'form' => [
+                    'assign_users_help' => 'Conceda esta permissão diretamente a usuários específicos.',
+                ],
+                'bulk_actions' => [
+                    'sync_users' => [
+                        'label' => 'Sincronizar com usuários',
+                        'users_field' => 'Usuários',
+                        'replace_toggle' => 'Substituir permissões existentes para os usuários selecionados',
+                    ],
+                ],
+            ],
             'warehouses' => [
                 'label' => 'Armazém',
                 'plural_label' => 'Armazéns',
@@ -546,6 +574,7 @@ return [
             'points_balance' => 'Saldo de pontos',
             'password' => 'Senha',
             'roles' => 'Funções',
+            'permissions' => 'Permissões diretas',
             'categories' => 'Categorias permitidas',
         ],
     ],

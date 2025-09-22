@@ -34,6 +34,13 @@ class UserForm
                 ->searchable()
                 ->preload()
                 ->native(false),
+            Select::make('permissions')
+                ->label(__('shop.users.fields.permissions'))
+                ->relationship('permissions', 'name')
+                ->multiple()
+                ->searchable()
+                ->preload()
+                ->native(false),
             Select::make('categories')
                 ->label(__('shop.users.fields.categories'))
                 ->relationship('categories', 'name')

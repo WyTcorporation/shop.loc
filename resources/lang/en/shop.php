@@ -175,6 +175,34 @@ return [
                 'label' => 'Customer',
                 'plural_label' => 'Customers',
             ],
+            'roles' => [
+                'label' => 'Role',
+                'plural_label' => 'Roles',
+                'form' => [
+                    'assign_users_help' => 'Assign this role to one or more users.',
+                ],
+                'bulk_actions' => [
+                    'sync_users' => [
+                        'label' => 'Sync with users',
+                        'users_field' => 'Users',
+                        'replace_toggle' => 'Replace existing roles for the selected users',
+                    ],
+                ],
+            ],
+            'permissions' => [
+                'label' => 'Permission',
+                'plural_label' => 'Permissions',
+                'form' => [
+                    'assign_users_help' => 'Grant this permission directly to specific users.',
+                ],
+                'bulk_actions' => [
+                    'sync_users' => [
+                        'label' => 'Sync with users',
+                        'users_field' => 'Users',
+                        'replace_toggle' => 'Replace existing permissions for the selected users',
+                    ],
+                ],
+            ],
             'warehouses' => [
                 'label' => 'Warehouse',
                 'plural_label' => 'Warehouses',
@@ -546,6 +574,7 @@ return [
             'points_balance' => 'Points balance',
             'password' => 'Password',
             'roles' => 'Roles',
+            'permissions' => 'Direct permissions',
             'categories' => 'Allowed categories',
         ],
     ],
