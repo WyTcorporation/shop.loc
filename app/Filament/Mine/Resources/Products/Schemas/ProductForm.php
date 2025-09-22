@@ -77,7 +77,25 @@ class ProductForm
                     ->required(),
                 Select::make('category_id')
                     ->label(__('shop.products.fields.category'))
-                    ->relationship('category', 'name')
+                    ->relationship(
+                        name: 'category',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function (Builder $query) {
+                            $user = Auth::user();
+
+                            if ($user === null) {
+                                return $query;
+                            }
+
+                            $permittedCategoryIds = $user->permittedCategoryIds();
+
+                            if ($permittedCategoryIds->isEmpty()) {
+                                return $query;
+                            }
+
+                            return $query->whereIn('id', $permittedCategoryIds);
+                        }
+                    )
                     ->searchable()
                     ->preload()
                     ->native(false)
