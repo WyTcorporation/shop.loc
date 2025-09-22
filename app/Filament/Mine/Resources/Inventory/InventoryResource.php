@@ -170,8 +170,17 @@ class InventoryResource extends Resource
         return __('shop.admin.navigation.inventory');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+    }
+
     public static function getNavigationBadge(): ?string
     {
+        if (! auth()->user()?->can('viewAny', static::getModel())) {
+            return null;
+        }
+
         return (string) ProductStock::count();
     }
 }
