@@ -16,9 +16,15 @@ it('returns localized order shipment subject for each supported locale', functio
 ]);
 
 it('falls back to english when locale has no translation', function () {
+    $originalFallback = App::getFallbackLocale();
+
     Config::set('app.fallback_locale', 'en');
+    App::setFallbackLocale('en');
     App::setLocale('fr');
 
     expect(__('shop.orders.shipped.subject'))
         ->toBe('Order on the way');
+
+    App::setFallbackLocale($originalFallback);
+    Config::set('app.fallback_locale', $originalFallback);
 });
