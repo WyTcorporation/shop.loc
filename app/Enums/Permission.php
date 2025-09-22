@@ -10,7 +10,16 @@ enum Permission: string
     case ManageOrders = 'manage orders';
     case ViewUsers = 'view users';
     case ManageUsers = 'manage users';
+    case ViewInventory = 'view inventory';
     case ManageInventory = 'manage inventory';
+    case ViewCoupons = 'view coupons';
+    case ManageCoupons = 'manage coupons';
+    case ViewReviews = 'view reviews';
+    case ManageReviews = 'manage reviews';
+    case ViewVendors = 'view vendors';
+    case ManageVendors = 'manage vendors';
+    case ViewCategories = 'view categories';
+    case ManageCategories = 'manage categories';
     case ManageSettings = 'manage settings';
     case ViewInvoices = 'view invoices';
     case ManageInvoices = 'manage invoices';
