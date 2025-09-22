@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {useParams, Link, useSearchParams} from 'react-router-dom';
 import { OrdersApi, refreshOrderStatus, type Product } from '../api';
 import { formatPrice } from '../ui/format';
@@ -89,6 +89,26 @@ export default function OrderConfirmation() {
         })();
         return () => { on = false; };
     }, [number, payment_intent, redirect_status]);
+
+    const handlePaid = useCallback(
+        async (_status?: string, paymentIntentId?: string) => {
+            if (!number) return;
+            try {
+                await refreshOrderStatus(number, paymentIntentId);
+            } catch (error) {
+                console.error('Failed to refresh order status after payment', error);
+                return;
+            }
+
+            try {
+                const updatedOrder = await OrdersApi.show(number);
+                setOrder(updatedOrder);
+            } catch (error) {
+                console.error('Failed to fetch updated order after payment', error);
+            }
+        },
+        [number]
+    );
 
     if (loading) return <div className="max-w-6xl mx-auto p-4">{t('order.confirmation.loading')}</div>;
     if (!order) return <div className="max-w-6xl mx-auto p-4">{t('order.confirmation.notFound')}</div>;
@@ -300,7 +320,7 @@ export default function OrderConfirmation() {
                 <div className="border rounded-xl p-4">
                     <h2 className="font-semibold mb-2">{t('order.confirmation.payment.title')}</h2>
                     <p className="text-sm text-gray-600 mb-3">{t('order.confirmation.payment.description')}</p>
-                    <PayOrder number={order.number} onPaid={() => window.location.reload()} />
+                    <PayOrder number={order.number} onPaid={handlePaid} />
                 </div>
             )}
         </div>
