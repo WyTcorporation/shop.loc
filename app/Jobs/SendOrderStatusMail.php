@@ -17,23 +17,41 @@ class SendOrderStatusMail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public string $locale;
+
     public function __construct(
         public int $orderId,
         public string $status, // 'paid' | 'shipped' | ...
-    ) {}
+        ?string $locale = null,
+    ) {
+        $this->locale = $locale ?: app()->getLocale() ?: (string) config('app.locale');
+    }
 
     public function handle(): void
     {
-        $order = Order::find($this->orderId);
-        if (! $order || ! $order->email) {
-            return;
-        }
+        $previousLocale = app()->getLocale();
+        app()->setLocale($this->locale);
 
-        match ($this->status) {
-            'paid'      => Mail::to($order->email)->send(new OrderPaidMail($order)),
-            'shipped'   => Mail::to($order->email)->send(new OrderShippedMail($order)),
-            'delivered' => Mail::to($order->email)->send(new OrderDeliveredMail($order)),
-            default     => null,
-        };
+        try {
+            $order = Order::find($this->orderId);
+            if (! $order || ! $order->email) {
+                return;
+            }
+
+            $pending = Mail::to($order->email)->locale($this->locale);
+
+            $mailable = match ($this->status) {
+                'paid'      => new OrderPaidMail($order),
+                'shipped'   => new OrderShippedMail($order),
+                'delivered' => new OrderDeliveredMail($order),
+                default     => null,
+            };
+
+            if ($mailable) {
+                $pending->send($mailable->locale($this->locale));
+            }
+        } finally {
+            app()->setLocale($previousLocale);
+        }
     }
 }

@@ -11,10 +11,14 @@ class OrderShippedMail extends Mailable
 
     public function build()
     {
-        return $this
-            ->subject(__('shop.orders.shipped.subject_line', ['number' => $this->order->number]))
-            ->tag('order-shipped')
-            ->metadata(['type' => 'order'])
-            ->view('emails.orders.shipped', ['order' => $this->order]);
+        $locale = $this->locale ?: app()->getLocale();
+
+        return $this->withLocale($locale, function () use ($locale) {
+            return $this
+                ->subject(__('shop.orders.shipped.subject_line', ['number' => $this->order->number], $locale))
+                ->tag('order-shipped')
+                ->metadata(['type' => 'order'])
+                ->view('emails.orders.shipped', ['order' => $this->order]);
+        });
     }
 }

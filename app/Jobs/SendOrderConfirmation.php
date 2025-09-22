@@ -3,12 +3,10 @@
 namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
-
 use App\Mail\OrderPlacedMail;
 use App\Models\Order;
-//use Illuminate\Bus\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
@@ -17,8 +15,11 @@ class SendOrderConfirmation implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(public Order $order)
+    public string $locale;
+
+    public function __construct(public Order $order, ?string $locale = null)
     {
+        $this->locale = $locale ?: app()->getLocale() ?: (string) config('app.locale');
     }
 
     public function handle(): void
@@ -27,15 +28,23 @@ class SendOrderConfirmation implements ShouldQueue
         if (! $order->email) {
             return;
         }
-        $mailable = new OrderPlacedMail($order);
 
-        $pending = Mail::to($order->email);
+        $previousLocale = app()->getLocale();
+        app()->setLocale($this->locale);
 
-        if ($admin = config('shop.admin_email')) {
-            $pending->bcc($admin);
+        try {
+            $mailable = (new OrderPlacedMail($order))->locale($this->locale);
+
+            $pending = Mail::to($order->email)->locale($this->locale);
+
+            if ($admin = config('shop.admin_email')) {
+                $pending->bcc($admin);
+            }
+
+            $pending->send($mailable);
+        } finally {
+            app()->setLocale($previousLocale);
         }
-
-        $pending->send($mailable);
     }
 
 //    public function handle(): void
