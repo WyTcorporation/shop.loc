@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\Permission as PermissionEnum;
 use App\Filament\Mine\Resources\Inventory\Pages\CreateInventory;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Warehouse;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Livewire\Livewire;
 
@@ -12,6 +14,8 @@ it('validates unique product and warehouse combination when creating inventory',
     $product = Product::factory()->create();
     $warehouse = Warehouse::getDefault();
 
+    Permission::findOrCreate(PermissionEnum::ManageInventory->value, 'web');
+    $user->givePermissionTo(PermissionEnum::ManageInventory->value);
     $this->actingAs($user);
 
     $component = Livewire::test(CreateInventory::class)
