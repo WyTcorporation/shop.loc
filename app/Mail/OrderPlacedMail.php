@@ -19,12 +19,16 @@ class OrderPlacedMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject(__('shop.orders.placed.subject_line', ['number' => $this->order->number]))
-            ->tag('order-placed')
-            ->metadata(['type' => 'order'])
-            ->view('emails.orders.placed', [
-                'order' => $this->order->loadMissing(['items.product']),
-            ]);
+        $locale = $this->locale ?: app()->getLocale();
+
+        return $this->withLocale($locale, function () use ($locale) {
+            return $this->subject(__('shop.orders.placed.subject_line', ['number' => $this->order->number], $locale))
+                ->tag('order-placed')
+                ->metadata(['type' => 'order'])
+                ->view('emails.orders.placed', [
+                    'order' => $this->order->loadMissing(['items.product']),
+                ]);
+        });
     }
 
 //    public function envelope(): Envelope

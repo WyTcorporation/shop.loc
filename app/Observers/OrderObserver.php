@@ -15,7 +15,12 @@ class OrderObserver
 
     public function created(Order $order): void
     {
-        SendOrderConfirmation::dispatch($order)->afterCommit();
+        $locale = $order->getAttribute('locale')
+            ?? $order->getOriginal('locale')
+            ?? app()->getLocale()
+            ?? (string) config('app.locale');
+
+        SendOrderConfirmation::dispatch($order, $locale)->afterCommit();
     }
 
     public function updated(Order $order): void
@@ -28,6 +33,11 @@ class OrderObserver
         $status = $order->getAttribute('status');
         $to = $status instanceof BackedEnum ? $status->value : (string) $status;
 
-        SendOrderStatusMail::dispatch($order->getKey(), $to)->afterCommit();
+        $locale = $order->getAttribute('locale')
+            ?? $order->getOriginal('locale')
+            ?? app()->getLocale()
+            ?? (string) config('app.locale');
+
+        SendOrderStatusMail::dispatch($order->getKey(), $to, $locale)->afterCommit();
     }
 }

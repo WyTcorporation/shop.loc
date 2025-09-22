@@ -11,10 +11,14 @@ class OrderPaidMail extends Mailable
 
     public function build()
     {
-        return $this
-            ->subject(__('shop.orders.paid.subject_line', ['number' => $this->order->number]))
-            ->tag('order-paid')
-            ->metadata(['type' => 'order'])
-            ->view('emails.orders.paid', ['order' => $this->order]);
+        $locale = $this->locale ?: app()->getLocale();
+
+        return $this->withLocale($locale, function () use ($locale) {
+            return $this
+                ->subject(__('shop.orders.paid.subject_line', ['number' => $this->order->number], $locale))
+                ->tag('order-paid')
+                ->metadata(['type' => 'order'])
+                ->view('emails.orders.paid', ['order' => $this->order]);
+        });
     }
 }

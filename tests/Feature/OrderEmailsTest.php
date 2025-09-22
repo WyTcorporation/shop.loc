@@ -35,6 +35,63 @@ it('sends order placed email', function () {
     });
 });
 
+it('sends order placed email using dispatch locale', function () {
+    config(['mail.default' => 'array']);
+    config(['shop.admin_email' => null]);
+    Mail::setDefaultDriver('array');
+
+    $mailer = Mail::mailer();
+    $transport = $mailer->getSymfonyTransport();
+    expect($transport)->toBeInstanceOf(\Illuminate\Mail\Transport\ArrayTransport::class);
+    $transport->flush();
+
+    $order = Order::factory()->createQuietly([
+        'email' => 'customer@example.com',
+        'total' => 123.45,
+    ]);
+
+    $transport->flush();
+
+    $originalLocale = app()->getLocale();
+
+    app()->setLocale('en');
+    $job = new SendOrderConfirmation($order);
+    expect($job->locale)->toBe('en');
+    expect(__('shop.orders.placed.subject_line', ['number' => $order->number]))
+        ->toBe(__('shop.orders.placed.subject_line', ['number' => $order->number], 'en'));
+    app()->setLocale($originalLocale);
+
+    $job->handle();
+
+    $messages = $transport->messages();
+    expect($messages)->not->toBeEmpty();
+
+    /** @var \Symfony\Component\Mailer\SentMessage|null $sent */
+    $sent = null;
+
+    foreach ($messages as $message) {
+        $recipients = array_map(
+            fn ($address) => method_exists($address, 'getAddress') ? $address->getAddress() : (string) $address,
+            $message->getEnvelope()->getRecipients()
+        );
+
+        if (in_array('customer@example.com', $recipients, true)) {
+            $sent = $message;
+            break;
+        }
+    }
+
+    expect($sent)->not->toBeNull();
+
+    /** @var \Symfony\Component\Mime\Email $email */
+    $email = $sent->getOriginalMessage();
+
+    $expectedSubject = __('shop.orders.placed.subject_line', ['number' => $order->number], 'en');
+
+    expect($email->getSubject())->toBe($expectedSubject);
+    expect($email->getHtmlBody())->toContain('Thank you for your order!');
+});
+
 
 it('renders coupon summary in order placed email view', function () {
     $order = Order::factory()->create([
