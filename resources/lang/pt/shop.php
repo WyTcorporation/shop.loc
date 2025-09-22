@@ -86,6 +86,7 @@ return [
                         'no_rows' => 'Nenhuma linha de dados foi detectada no arquivo enviado.',
                         'row_created' => 'Produto criado (:sku)',
                         'row_updated' => 'Produto atualizado (:sku)',
+                        'category_forbidden' => 'Categoria não permitida para a função atual.',
                     ],
                     'table' => [
                         'recent_imports' => 'Importações recentes',

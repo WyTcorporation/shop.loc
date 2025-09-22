@@ -7,6 +7,7 @@ use App\Jobs\ProcessProductImportChunk;
 use App\Models\Product;
 use App\Models\ProductImport;
 use App\Models\ProductImportLog;
+use Illuminate\Support\Collection;
 use Filament\Notifications\Notification;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
@@ -94,10 +95,35 @@ class ProductImportService
 
         $logs = [];
 
+        $user = $import->user()->first();
+        $permittedCategoryIds = $user ? $user->permittedCategoryIds() : collect();
+
         foreach ($rows as $index => $row) {
             $rowNumber = $offset + $index + 2; // account for header row
 
             try {
+                $categoryCheck = $this->resolveCategoryForRow($row, $permittedCategoryIds);
+
+                if ($categoryCheck['status'] === 'failed') {
+                    $status = 'failed';
+                    $message = $categoryCheck['message'];
+                    $failed++;
+
+                    $logs[] = [
+                        'product_import_id' => $import->id,
+                        'row_number' => $rowNumber,
+                        'status' => $status,
+                        'message' => $message,
+                        'payload' => $row,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+
+                    continue;
+                }
+
+                $row = $categoryCheck['payload'];
+
                 $result = $this->processRow($row);
                 $status = $result['status'];
                 $message = $result['message'] ?? null;
@@ -184,6 +210,52 @@ class ProductImportService
             ->body($message)
             ->danger()
             ->sendToDatabase($import->user);
+    }
+
+    protected function resolveCategoryForRow(array $row, Collection $permittedCategoryIds): array
+    {
+        $categoryId = array_key_exists('category_id', $row) ? $row['category_id'] : null;
+        $categoryId = $categoryId === '' ? null : $categoryId;
+        $categoryId = $categoryId !== null ? (int) $categoryId : null;
+
+        if ($categoryId === null && $permittedCategoryIds->count() === 1) {
+            $row['category_id'] = $permittedCategoryIds->first();
+
+            return [
+                'status' => 'ok',
+                'payload' => $row,
+            ];
+        }
+
+        if ($categoryId === null) {
+            return [
+                'status' => 'failed',
+                'message' => __('shop.admin.resources.products.imports.messages.category_forbidden'),
+            ];
+        }
+
+        if ($permittedCategoryIds->isNotEmpty() && ! $permittedCategoryIds->contains($categoryId)) {
+            if ($permittedCategoryIds->count() === 1) {
+                $row['category_id'] = $permittedCategoryIds->first();
+
+                return [
+                    'status' => 'ok',
+                    'payload' => $row,
+                ];
+            }
+
+            return [
+                'status' => 'failed',
+                'message' => __('shop.admin.resources.products.imports.messages.category_forbidden'),
+            ];
+        }
+
+        $row['category_id'] = $categoryId;
+
+        return [
+            'status' => 'ok',
+            'payload' => $row,
+        ];
     }
 
     protected function processRow(array $row): array
