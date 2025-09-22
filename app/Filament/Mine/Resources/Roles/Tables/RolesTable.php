@@ -4,12 +4,12 @@ namespace App\Filament\Mine\Resources\Roles\Tables;
 
 use App\Enums\Permission as PermissionEnum;
 use App\Models\User;
+use Filament\Actions\BulkAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
