@@ -275,6 +275,7 @@ export type OrderResponse = {
         city?: string | null;
         addr?: string | null;
         postal_code?: string | null;
+        phone?: string | null;
     } | null;
     note?: string | null;
     created_at?: string | null;
@@ -628,6 +629,7 @@ export const OrdersApi = {
             city: string;
             addr: string;
             postal_code?: string | null;
+            phone?: string | null;
         } | null;
         note?: string;
     }): Promise<OrderResponse> {

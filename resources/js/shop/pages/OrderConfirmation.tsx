@@ -51,6 +51,7 @@ type Order = {
         city?: string | null;
         addr?: string | null;
         postal_code?: string | null;
+        phone?: string | null;
     } | null;
     currency?: string | null;
 };
@@ -222,6 +223,7 @@ export default function OrderConfirmation() {
                         {billingAddress.city && <div>{billingAddress.city}</div>}
                         {billingAddress.addr && <div>{billingAddress.addr}</div>}
                         {billingAddress.postal_code && <div>{billingAddress.postal_code}</div>}
+                        {billingAddress.phone && <div>{billingAddress.phone}</div>}
                     </div>
                 </div>
             )}

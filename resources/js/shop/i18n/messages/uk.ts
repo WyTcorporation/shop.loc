@@ -509,6 +509,10 @@ const messages = {
                     optionalLabel: 'Поштовий індекс (необовʼязково)',
                     placeholder: '01001',
                 },
+                phone: {
+                    optionalLabel: 'Телефон (необовʼязково)',
+                    placeholder: '+380 00 000 0000',
+                },
             },
         },
         errors: {

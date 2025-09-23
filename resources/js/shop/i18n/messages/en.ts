@@ -508,6 +508,10 @@ const messages = {
                     optionalLabel: 'Postal code (optional)',
                     placeholder: '01001',
                 },
+                phone: {
+                    optionalLabel: 'Phone (optional)',
+                    placeholder: '+380 00 000 0000',
+                },
             },
         },
         errors: {

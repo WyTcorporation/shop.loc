@@ -63,6 +63,7 @@ type BillingFormState = {
     city: string;
     addr: string;
     postal_code: string;
+    phone: string;
 };
 
 type BillingErrors = Partial<Record<keyof BillingFormState, string>>;
@@ -128,6 +129,7 @@ const emptyBilling: BillingFormState = {
     city: '',
     addr: '',
     postal_code: '',
+    phone: '',
 };
 
 export default function CheckoutPage() {
@@ -317,6 +319,7 @@ export default function CheckoutPage() {
             city: addressForm.city,
             addr: addressForm.addr,
             postal_code: addressForm.postal_code,
+            phone: addressForm.phone,
         }));
     };
 
@@ -410,6 +413,7 @@ export default function CheckoutPage() {
                       ...(billingForm.postal_code.trim()
                           ? { postal_code: billingForm.postal_code.trim() }
                           : {}),
+                      ...(billingForm.phone.trim() ? { phone: billingForm.phone.trim() } : {}),
                   }
                 : null;
             const delivery = deliveryOptions.find((opt) => opt.id === deliveryMethod);
@@ -754,6 +758,21 @@ export default function CheckoutPage() {
                                             <p className="text-sm text-red-600">{billingErrors.postal_code}</p>
                                         )}
                                     </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700" htmlFor="billing-phone">
+                                            {t('checkout.billing.fields.phone.optionalLabel')}
+                                        </label>
+                                        <input
+                                            id="billing-phone"
+                                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                            value={billingForm.phone}
+                                            onChange={handleBillingInputChange('phone')}
+                                            placeholder={t('checkout.billing.fields.phone.placeholder')}
+                                        />
+                                        {billingErrors.phone && (
+                                            <p className="text-sm text-red-600">{billingErrors.phone}</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -958,6 +977,9 @@ export default function CheckoutPage() {
                                             )}
                                             {order.billing_address.postal_code && (
                                                 <div>{order.billing_address.postal_code}</div>
+                                            )}
+                                            {order.billing_address.phone && (
+                                                <div>{order.billing_address.phone}</div>
                                             )}
                                         </>
                                     ) : (

@@ -511,6 +511,10 @@ const messages = {
                     optionalLabel: 'Почтовый индекс (необязательно)',
                     placeholder: '01001',
                 },
+                phone: {
+                    optionalLabel: 'Телефон (необязательно)',
+                    placeholder: '+380 00 000 0000',
+                },
             },
         },
         errors: {
