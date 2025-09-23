@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useCallback, useEffect, useState} from 'react'
 import { Link } from 'react-router-dom'
 import useCart from '../useCart'
 import SeoHead from '../components/SeoHead';
@@ -11,6 +11,49 @@ export default function CartPage() {
     const { t, locale } = useLocale();
 
     const brand = t('header.brand');
+
+    const [pendingQuantities, setPendingQuantities] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (!cart) return;
+
+        const next: Record<string, string> = {};
+        cart.items.forEach(item => {
+            next[String(item.id)] = String(item.qty ?? 0);
+        });
+        setPendingQuantities(next);
+    }, [cart]);
+
+    const commitQuantity = useCallback(async (item: { id: number | string; qty?: number | string | null }) => {
+        const key = String(item.id);
+        const pendingValue = pendingQuantities[key] ?? String(item.qty ?? 0);
+        const parsed = Number.parseInt(pendingValue, 10);
+
+        if (Number.isNaN(parsed)) {
+            setPendingQuantities(prev => ({
+                ...prev,
+                [key]: String(item.qty ?? 0),
+            }));
+            return;
+        }
+
+        const clamped = Math.max(0, parsed);
+        const current = Number(item.qty ?? 0);
+
+        if (clamped === current) {
+            setPendingQuantities(prev => ({
+                ...prev,
+                [key]: String(current),
+            }));
+            return;
+        }
+
+        await update(item.id, clamped);
+        setPendingQuantities(prev => ({
+            ...prev,
+            [key]: String(clamped),
+        }));
+    }, [pendingQuantities, update]);
 
     useEffect(() => {
         if (!cart) return;
@@ -36,6 +79,10 @@ export default function CartPage() {
 
             <div className="space-y-3">
                 {cart.items.map(it => {
+                    const key = String(it.id);
+                    const pendingValue = Object.prototype.hasOwnProperty.call(pendingQuantities, key)
+                        ? pendingQuantities[key]
+                        : String(it.qty ?? 0);
                     const embeddedProduct = (it as any).product ?? null;
                     const p = embeddedProduct ?? it; // 🔁 підтримка обох форм
                     const preview = p.preview_url ?? p.images?.[0]?.url;
@@ -84,8 +131,21 @@ export default function CartPage() {
                             <input
                                 type="number"
                                 min={0}
-                                value={it.qty}
-                                onChange={e => update(it.id, Math.max(0, parseInt(e.target.value || '0', 10)))}
+                                value={pendingValue}
+                                onChange={e => {
+                                    const { value } = e.target;
+                                    setPendingQuantities(prev => ({
+                                        ...prev,
+                                        [key]: value,
+                                    }));
+                                }}
+                                onBlur={() => { void commitQuantity(it); }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        void commitQuantity(it);
+                                    }
+                                }}
                                 className="border rounded px-2 py-1 w-20"
                             />
                             <div className="w-24 text-right font-medium">{formatCurrency(line, { currency, locale })}</div>
