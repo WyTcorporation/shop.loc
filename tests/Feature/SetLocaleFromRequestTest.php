@@ -38,7 +38,7 @@ it('sets locale from url prefix including normalized variants', function (string
 ]);
 
 it('sets locale from lang cookie with normalization', function (string $cookie, string $expected) {
-    $response = $this->withCredentials()->withCookie('lang', $cookie)->getJson('/api/test-locale');
+    $response = $this->withCredentials()->withUnencryptedCookie('lang', $cookie)->getJson('/api/test-locale');
 
     $response->assertOk();
     expect($response->json('locale'))->toBe($expected);

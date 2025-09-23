@@ -19,7 +19,7 @@ it('stores the selected locale in the lang cookie and redirects back', function 
         ]);
 
     $response->assertRedirect('/mine/orders');
-    $response->assertCookie('lang', 'ru');
+    $response->assertCookie('lang', 'ru', false);
 });
 
 it('normalizes unsupported locales to the first configured value', function () {
@@ -34,7 +34,7 @@ it('normalizes unsupported locales to the first configured value', function () {
     ]);
 
     $response->assertRedirect('/mine');
-    $response->assertCookie('lang', 'uk');
+    $response->assertCookie('lang', 'uk', false);
 });
 
 it('prevents redirecting to external domains', function () {
@@ -48,5 +48,5 @@ it('prevents redirecting to external domains', function () {
     ]);
 
     $response->assertRedirect('/mine/dashboard');
-    $response->assertCookie('lang', 'en');
+    $response->assertCookie('lang', 'en', false);
 });

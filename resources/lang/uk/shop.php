@@ -522,6 +522,7 @@ return [
             'empty_state' => [
                 'heading' => 'Статус ще не змінювався',
             ],
+            'shipment_status_note' => 'Статус відправлення оновлено: :status',
         ],
         'errors' => [
             'only_new_can_be_marked_paid' => 'Позначати оплаченим можна лише замовлення зі статусом ":required". Замовлення №:number зараз має статус ":status".',
