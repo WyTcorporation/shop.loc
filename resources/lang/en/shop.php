@@ -522,6 +522,7 @@ return [
             'empty_state' => [
                 'heading' => 'No status changes yet',
             ],
+            'shipment_status_note' => 'Shipment status updated: :status',
         ],
         'errors' => [
             'only_new_can_be_marked_paid' => 'Only orders with the ":required" status can be marked as paid. Order #:number is currently ":status".',

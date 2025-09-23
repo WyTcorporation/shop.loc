@@ -7,6 +7,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 
 class LogsRelationManager extends RelationManager
 {
@@ -25,6 +26,7 @@ class LogsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('user'))
             ->recordTitleAttribute('to_status')
             ->columns([
                 TextColumn::make('from_status')->label(__('shop.orders.logs.fields.from'))->badge(),

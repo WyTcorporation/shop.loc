@@ -7,11 +7,48 @@ use App\Jobs\SendOrderConfirmation;
 use App\Jobs\SendOrderStatusMail;
 use App\Jobs\SendOrderStatusUpdate;
 use App\Models\Order;
+use App\Models\OrderStatusLog;
 use BackedEnum;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 
 class OrderObserver
 {
     public bool $afterCommit = true;
+
+    /**
+     * @var array<int|string, string|null>
+     */
+    private static array $previousStatuses = [];
+
+    public function updating(Order $order): void
+    {
+        if (! $order->isDirty('status')) {
+            return;
+        }
+
+        $cacheKey = $this->cacheKey($order);
+
+        if (array_key_exists($cacheKey, self::$previousStatuses)) {
+            return;
+        }
+
+        $originalStatus = $order->getOriginal('status');
+
+        if ($originalStatus instanceof BackedEnum) {
+            self::$previousStatuses[$cacheKey] = $originalStatus->value;
+
+            return;
+        }
+
+        if (is_string($originalStatus) || $originalStatus === null) {
+            self::$previousStatuses[$cacheKey] = $originalStatus;
+
+            return;
+        }
+
+        self::$previousStatuses[$cacheKey] = (string) $originalStatus;
+    }
 
     public function created(Order $order): void
     {
@@ -29,9 +66,34 @@ class OrderObserver
             return;
         }
 
+        $cacheKey = $this->cacheKey($order);
+        $stored = self::$previousStatuses[$cacheKey] ?? null;
+        unset(self::$previousStatuses[$cacheKey]);
+
+        $originalStatus = $stored ?? $order->getOriginal('status');
+
+        if ($originalStatus instanceof BackedEnum) {
+            $fromEnum = OrderStatus::tryFrom($originalStatus->value);
+            $from = $fromEnum?->value;
+        } elseif (is_string($originalStatus)) {
+            $fromEnum = OrderStatus::tryFrom($originalStatus);
+            $from = $fromEnum?->value ?? $originalStatus;
+        } else {
+            $fromEnum = null;
+            $from = null;
+        }
 
         $status = $order->getAttribute('status');
-        $to = $status instanceof BackedEnum ? $status->value : (string) $status;
+        $toEnum = $status instanceof OrderStatus ? $status : OrderStatus::from((string) $status);
+        $to = $toEnum->value;
+
+        OrderStatusLog::create([
+            'order_id' => $order->getKey(),
+            'from_status' => $from,
+            'to_status' => $to,
+            'changed_by' => Auth::id(),
+            'note' => $this->resolveStatusNote(),
+        ]);
 
         $locale = $order->getAttribute('locale')
             ?? $order->getOriginal('locale')
@@ -39,5 +101,35 @@ class OrderObserver
             ?? (string) config('app.locale');
 
         SendOrderStatusMail::dispatch($order->getKey(), $to, $locale)->afterCommit();
+
+        if (in_array($toEnum, [OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
+            $fromLabel = $fromEnum ? __('shop.orders.statuses.' . $fromEnum->value) : null;
+            $toLabel = __('shop.orders.statuses.' . $toEnum->value);
+
+            SendOrderStatusUpdate::dispatch($order, $fromLabel, $toLabel, $locale)->afterCommit();
+        }
+    }
+
+    private function cacheKey(Order $order): int|string
+    {
+        return $order->getKey() ?? spl_object_id($order);
+    }
+
+    private function resolveStatusNote(): ?string
+    {
+        $note = null;
+
+        $request = request();
+        if ($request) {
+            $note = $request->input('status_note');
+        }
+
+        if (is_array($note)) {
+            $note = Arr::get($note, 'note');
+        }
+
+        $note = is_string($note) ? trim($note) : null;
+
+        return $note === '' ? null : $note;
     }
 }

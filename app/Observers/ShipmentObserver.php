@@ -4,7 +4,9 @@ namespace App\Observers;
 
 use App\Enums\ShipmentStatus;
 use App\Jobs\SendOrderStatusMail;
+use App\Models\OrderStatusLog;
 use App\Models\Shipment;
+use Illuminate\Support\Facades\Auth;
 
 class ShipmentObserver
 {
@@ -16,11 +18,31 @@ class ShipmentObserver
             return;
         }
 
-        if ($shipment->status !== ShipmentStatus::Delivered) {
+        if (! $shipment->order_id) {
             return;
         }
 
-        if (! $shipment->order_id) {
+        $originalStatus = $shipment->getOriginal('status');
+        $fromEnum = $originalStatus instanceof ShipmentStatus
+            ? $originalStatus
+            : (is_string($originalStatus) ? ShipmentStatus::tryFrom($originalStatus) : null);
+        $from = $fromEnum?->value ?? (is_string($originalStatus) ? $originalStatus : null);
+
+        $status = $shipment->getAttribute('status');
+        $toEnum = $status instanceof ShipmentStatus ? $status : ShipmentStatus::from((string) $status);
+        $to = $toEnum->value;
+
+        OrderStatusLog::create([
+            'order_id' => $shipment->order_id,
+            'from_status' => $from,
+            'to_status' => $to,
+            'changed_by' => Auth::id(),
+            'note' => __('shop.orders.logs.shipment_status_note', [
+                'status' => __('shop.orders.shipment_status.' . $toEnum->value),
+            ]),
+        ]);
+
+        if ($toEnum !== ShipmentStatus::Delivered) {
             return;
         }
 

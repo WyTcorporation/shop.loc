@@ -509,6 +509,7 @@ return [
             'empty_state' => [
                 'heading' => 'O status ainda não foi alterado',
             ],
+            'shipment_status_note' => 'Status da remessa atualizado: :status',
         ],
         'shipment_status' => [
             'pending' => 'Pendente',

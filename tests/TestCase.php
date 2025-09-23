@@ -32,5 +32,11 @@ abstract class TestCase extends BaseTestCase
             'queue.default' => 'sync',
             'scout.driver' => null,
         ]);
+
+        ini_set('memory_limit', '-1');
+
+        if (! config('app.key')) {
+            config(['app.key' => 'base64:' . base64_encode(random_bytes(32))]);
+        }
     }
 }

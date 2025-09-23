@@ -33,6 +33,7 @@ class OrderController extends Controller
             'items.product.images' => fn ($query) => $query->orderBy('sort'),
             'items.product.vendor',
             'shipment',
+            'logs.user',
         ])->where('user_id', $user->id)
             ->latest('created_at')
             ->get();
@@ -60,7 +61,7 @@ class OrderController extends Controller
             'shipping_address.postal_code' => ['nullable', 'string', 'max:32'],
             'shipping_address.phone' => ['nullable', 'string', 'max:32'],
             'billing_address' => ['nullable', 'array'],
-            'delivery_method' => ['required', 'string', 'max:255'],
+            'delivery_method' => ['nullable', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:2000'],
             'locale' => ['nullable', 'string', 'max:16'],
         ]);
@@ -232,7 +233,7 @@ class OrderController extends Controller
             $order->shipment()->create([
                 'address_id' => $shippingAddress->id,
                 'status' => ShipmentStatus::Pending,
-                'delivery_method' => $data['delivery_method'],
+                'delivery_method' => $data['delivery_method'] ?? null,
             ]);
         });
 
@@ -249,6 +250,7 @@ class OrderController extends Controller
             'items.product.images' => fn($q) => $q->orderBy('sort'),
             'items.product.vendor',
             'shipment',
+            'logs.user',
         ])->where('number', $number)->firstOrFail();
 
         return response()->json($this->transformOrder($order, $currency));
