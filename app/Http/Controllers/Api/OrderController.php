@@ -48,6 +48,7 @@ class OrderController extends Controller
     public function store(Request $r): JsonResponse
     {
         $currency = $this->resolveCurrency($r);
+        $locale = $this->resolveLocale($r);
 
         $data = $r->validate([
             'cart_id' => ['required', 'uuid', 'exists:carts,id'],
@@ -61,11 +62,12 @@ class OrderController extends Controller
             'billing_address' => ['nullable', 'array'],
             'delivery_method' => ['required', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:2000'],
+            'locale' => ['nullable', 'string', 'max:16'],
         ]);
 
         $order = null;
 
-        DB::transaction(function () use (&$order, $data) {
+        DB::transaction(function () use (&$order, $data, $locale) {
             $cart = Cart::with(['items.product', 'coupon', 'user'])
                 ->where('status', 'active')
                 ->findOrFail($data['cart_id']);
@@ -176,6 +178,7 @@ class OrderController extends Controller
                 'note' => $data['note'] ?? null,
                 'inventory_committed_at' => now(),
                 'currency' => $this->converter->getBaseCurrency(),
+                'locale' => $locale,
             ]);
 
             $items = $cart->items->map(fn ($it) => new OrderItem([
@@ -306,5 +309,26 @@ class OrderController extends Controller
         $queryCurrency = $request->query('currency');
 
         return $this->converter->normalizeCurrency($routeCurrency ?? $queryCurrency);
+    }
+
+    private function resolveLocale(Request $request): string
+    {
+        $requestedLocale = $request->input('locale');
+
+        if (is_string($requestedLocale) && $requestedLocale !== '') {
+            return $requestedLocale;
+        }
+
+        $appLocale = app()->getLocale();
+
+        if (is_string($appLocale) && $appLocale !== '') {
+            return $appLocale;
+        }
+
+        $configLocale = config('app.locale');
+
+        return is_string($configLocale) && $configLocale !== ''
+            ? $configLocale
+            : 'en';
     }
 }
