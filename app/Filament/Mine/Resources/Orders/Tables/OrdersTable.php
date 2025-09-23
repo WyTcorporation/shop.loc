@@ -10,6 +10,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -94,7 +95,24 @@ class OrdersTable
                     ->icon('heroicon-o-truck')
                     ->visible(fn (Order $record) => $record->status === OrderStatus::Paid->value)
                     ->requiresConfirmation()
-                    ->action(function (Order $record) {
+                    ->form([
+                        TextInput::make('tracking_number')
+                            ->label(__('shop.common.tracking_number'))
+                            ->default(fn (Order $record) => $record->shipment?->tracking_number)
+                            ->maxLength(255),
+                    ])
+                    ->action(function (Order $record, array $data) {
+                        $trackingNumber = trim((string) ($data['tracking_number'] ?? ''));
+                        $trackingNumber = $trackingNumber === '' ? null : $trackingNumber;
+
+                        if ($record->shipment || $trackingNumber !== null) {
+                            $record->shipment()->updateOrCreate([], [
+                                'tracking_number' => $trackingNumber,
+                            ]);
+                            $record->unsetRelation('shipment');
+                            $record->load('shipment');
+                        }
+
                         $record->markShipped();
                         Notification::make()->title(__('shop.orders.notifications.marked_shipped'))->success()->send();
                     }),
