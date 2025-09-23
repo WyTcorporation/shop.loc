@@ -33,6 +33,8 @@ app (php-fpm для artisan, web), horizon (черги), nginx (порт 8080), 
 
 `app` і `horizon` автоматично виставляють права доступу до `storage/*` та `bootstrap/cache` під час старту контейнерів, тому додаткові `chown`/`mkdir` виконувати не потрібно.
 
+Локальний `composer run dev` піднімає `php artisan serve` на `http://localhost:8080`, тож усі axios/Livewire-запити використовують той самий хост, що і `APP_URL`.
+
 Vite hot reload для Laravel:    
 public/hot вказує на http://localhost:5173 (ми виставляли руками при потребі).
 
