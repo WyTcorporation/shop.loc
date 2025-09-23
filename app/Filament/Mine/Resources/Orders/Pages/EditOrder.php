@@ -102,7 +102,9 @@ class EditOrder extends EditRecord
     public function onOrderItemsUpdated(string $total = null): void
     {
         $this->record->refresh();
+        $this->record->loadMissing('items');
         $this->data['total'] = (string) ($total ?? $this->record->total);
+        $this->dispatch('$refresh');
     }
 
     protected function extractShipmentFormData(array &$data): array
