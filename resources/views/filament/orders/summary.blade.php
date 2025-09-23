@@ -9,7 +9,7 @@
     $currency = $record?->currency;
 @endphp
 
-<div class="rounded-xl border p-4 space-y-2" wire:poll.1500ms>
+<div class="rounded-xl border p-4 space-y-2">
     <div class="flex items-center justify-between">
         <div class="text-sm text-gray-500">{{ __('shop.orders.summary.positions') }}</div>
         <div class="font-medium">{{ $items->count() }}</div>
