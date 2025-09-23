@@ -82,7 +82,10 @@ class OrderForm
                     ])->columns(2),
                 ])->columns(1),
 
-                TextInput::make('note')->label(__('shop.common.note'))->columnSpanFull(),
+                Textarea::make('note')
+                    ->label(__('shop.common.note'))
+                    ->rows(4)
+                    ->columnSpanFull(),
 
                 Section::make(__('shop.orders.sections.shipment'))->schema([
                     TextInput::make('shipment_tracking_number')
