@@ -509,6 +509,10 @@ const messages = {
                     optionalLabel: 'Código postal (opcional)',
                     placeholder: '01001',
                 },
+                phone: {
+                    optionalLabel: 'Telefone (opcional)',
+                    placeholder: '+380 00 000 0000',
+                },
             },
         },
         errors: {
