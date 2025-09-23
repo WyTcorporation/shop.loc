@@ -59,6 +59,7 @@ class OrderController extends Controller
             'shipping_address.postal_code' => ['nullable', 'string', 'max:32'],
             'shipping_address.phone' => ['nullable', 'string', 'max:32'],
             'billing_address' => ['nullable', 'array'],
+            'delivery_method' => ['required', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -228,6 +229,7 @@ class OrderController extends Controller
             $order->shipment()->create([
                 'address_id' => $shippingAddress->id,
                 'status' => ShipmentStatus::Pending,
+                'delivery_method' => $data['delivery_method'],
             ]);
         });
 

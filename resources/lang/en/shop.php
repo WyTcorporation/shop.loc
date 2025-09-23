@@ -353,6 +353,7 @@ return [
         'note' => 'Note',
         'total' => 'Total',
         'tracking_number' => 'Tracking number',
+        'delivery_method' => 'Delivery method',
         'created' => 'Created',
         'updated' => 'Updated',
         'add' => 'Add',

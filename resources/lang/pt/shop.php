@@ -353,6 +353,7 @@ return [
         'note' => 'Observação',
         'total' => 'Total',
         'tracking_number' => 'Código de rastreamento',
+        'delivery_method' => 'Método de entrega',
         'created' => 'Criado',
         'updated' => 'Atualizado',
         'add' => 'Adicionar',

@@ -130,9 +130,10 @@ class EditOrder extends EditRecord
         $shipment = [
             'tracking_number' => $data['shipment_tracking_number'] ?? null,
             'status' => $data['shipment_status'] ?? null,
+            'delivery_method' => $data['shipment_delivery_method'] ?? null,
         ];
 
-        unset($data['shipment_tracking_number'], $data['shipment_status']);
+        unset($data['shipment_tracking_number'], $data['shipment_status'], $data['shipment_delivery_method']);
 
         return $shipment;
     }
@@ -161,6 +162,7 @@ class EditOrder extends EditRecord
         $payload = [
             'address_id' => $this->record->shipping_address_id,
             'tracking_number' => $this->shipmentFormData['tracking_number'] ?? $shipment?->tracking_number,
+            'delivery_method' => $this->shipmentFormData['delivery_method'] ?? $shipment?->delivery_method,
             'status' => $status,
         ];
 

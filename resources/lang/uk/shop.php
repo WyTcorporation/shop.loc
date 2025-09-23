@@ -353,6 +353,7 @@ return [
         'note' => 'Примітка',
         'total' => 'Разом',
         'tracking_number' => 'Номер відстеження',
+        'delivery_method' => 'Спосіб доставки',
         'created' => 'Створено',
         'updated' => 'Оновлено',
         'add' => 'Додати',

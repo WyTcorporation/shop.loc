@@ -43,9 +43,10 @@ class CreateOrder extends CreateRecord
         $shipment = [
             'tracking_number' => $data['shipment_tracking_number'] ?? null,
             'status' => $data['shipment_status'] ?? ShipmentStatus::Pending->value,
+            'delivery_method' => $data['shipment_delivery_method'] ?? null,
         ];
 
-        unset($data['shipment_tracking_number'], $data['shipment_status']);
+        unset($data['shipment_tracking_number'], $data['shipment_status'], $data['shipment_delivery_method']);
 
         return $shipment;
     }
@@ -86,6 +87,7 @@ class CreateOrder extends CreateRecord
         $payload = [
             'address_id' => $this->record->shipping_address_id,
             'tracking_number' => $this->shipmentFormData['tracking_number'] ?? null,
+            'delivery_method' => $this->shipmentFormData['delivery_method'] ?? null,
             'status' => $status,
         ];
 

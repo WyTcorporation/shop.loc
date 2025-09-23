@@ -417,15 +417,14 @@ export default function CheckoutPage() {
                   }
                 : null;
             const delivery = deliveryOptions.find((opt) => opt.id === deliveryMethod);
-            const noteParts = [delivery ? t('checkout.notes.delivery', { method: delivery.title }) : null];
-            if (deliveryComment.trim()) {
-                noteParts.push(t('checkout.notes.comment', { comment: deliveryComment.trim() }));
-            }
+            const deliveryLabel = delivery?.title ?? deliveryMethod;
+            const comment = deliveryComment.trim();
             const payload = {
                 email: trimmedEmail,
                 shipping_address: shipping,
                 ...(billing ? { billing_address: billing } : {}),
-                note: noteParts.filter(Boolean).join('\n') || undefined,
+                delivery_method: deliveryLabel,
+                ...(comment ? { note: comment } : {}),
             };
             const created = await OrdersApi.create(payload);
             setOrder(created);
@@ -454,7 +453,7 @@ export default function CheckoutPage() {
             };
             try {
                 await attemptRefresh(paymentIntentId);
-            } catch (error) {
+            } catch {
                 try {
                     await attemptRefresh();
                 } catch (secondaryError) {
