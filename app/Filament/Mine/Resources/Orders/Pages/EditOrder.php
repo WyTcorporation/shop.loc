@@ -7,6 +7,7 @@ use App\Filament\Mine\Resources\Orders\OrderResource;
 use App\Models\Address;
 use App\Models\Shipment;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\EditRecord;
 use Livewire\Attributes\On;
 use App\Enums\OrderStatus;
@@ -68,7 +69,24 @@ class EditOrder extends EditRecord
                 ->icon('heroicon-o-truck')
                 ->visible(fn () => $this->record->status === OrderStatus::Paid)
                 ->requiresConfirmation()
-                ->action(function () {
+                ->form([
+                    TextInput::make('tracking_number')
+                        ->label(__('shop.common.tracking_number'))
+                        ->default(fn (EditOrder $livewire) => $livewire->record->shipment?->tracking_number)
+                        ->maxLength(255),
+                ])
+                ->action(function (array $data) {
+                    $trackingNumber = trim((string) ($data['tracking_number'] ?? ''));
+                    $trackingNumber = $trackingNumber === '' ? null : $trackingNumber;
+
+                    if ($this->record->shipment || $trackingNumber !== null) {
+                        $this->record->shipment()->updateOrCreate([], [
+                            'tracking_number' => $trackingNumber,
+                        ]);
+                        $this->record->unsetRelation('shipment');
+                        $this->record->load('shipment');
+                    }
+
                     $this->record->markShipped();
                     $this->record->refresh();
                     $this->data['status'] = (string) $this->record->status->value;

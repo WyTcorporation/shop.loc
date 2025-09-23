@@ -13,6 +13,7 @@
     $loyaltyPointsUsed = (int) ($order->loyalty_points_used ?? 0);
     $loyaltyPointsValue = max(0, (float) ($order->loyalty_points_value ?? 0));
     $timezone = config('app.timezone', 'UTC');
+    $trackingNumber = $order->shipment?->tracking_number ?? null;
 @endphp
 
 <x-emails.orders.layout
@@ -63,6 +64,12 @@
             <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('shop.common.status') }}</td>
             <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#0052b4;font-weight:700;">{{ __('shop.common.shipped') }}</td>
         </tr>
+        @if(! empty($trackingNumber))
+            <tr>
+                <td style="padding:10px 0;border-bottom:1px solid #f1f1f1;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('shop.common.tracking_number') }}</td>
+                <td align="right" style="padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px;color:#111;font-weight:600;">{{ $trackingNumber }}</td>
+            </tr>
+        @endif
         @if($order->shipped_at)
             <tr>
                 <td style="padding:10px 0;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;">{{ __('shop.common.shipped_at') }}</td>
