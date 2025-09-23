@@ -23,7 +23,7 @@ class Order extends Model
         'shipping_address_id', 'subtotal', 'discount_total', 'coupon_id',
         'coupon_code', 'coupon_discount', 'loyalty_points_used', 'loyalty_points_value',
         'loyalty_points_earned',
-        'currency','payment_intent_id','payment_status','paid_at','inventory_committed_at'
+        'currency', 'locale', 'payment_intent_id', 'payment_status', 'paid_at', 'inventory_committed_at'
     ];
 
     protected $casts = [
@@ -37,6 +37,7 @@ class Order extends Model
         'loyalty_points_earned' => 'integer',
         'shipping_address' => 'array',
         'billing_address' => 'array',
+        'locale' => 'string',
         'paid_at' => 'datetime',
         'shipped_at' => 'datetime',
         'cancelled_at' => 'datetime',

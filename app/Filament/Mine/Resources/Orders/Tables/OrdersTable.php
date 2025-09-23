@@ -132,7 +132,7 @@ class OrdersTable
                     ->requiresConfirmation()
                     ->visible(fn ($record) => filled($record->email))
                     ->action(function ($record) {
-                        SendOrderConfirmation::dispatch($record);
+                        SendOrderConfirmation::dispatch($record, $record->locale);
                         \Filament\Notifications\Notification::make()
                             ->title(__('shop.orders.notifications.confirmation_resent'))
                             ->success()
