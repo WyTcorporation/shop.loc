@@ -229,6 +229,7 @@ export type Address = {
 export type Shipment = {
     status?: string | null;
     tracking_number?: string | null;
+    delivery_method?: string | null;
     shipped_at?: string | null;
     delivered_at?: string | null;
 };
@@ -631,6 +632,7 @@ export const OrdersApi = {
             postal_code?: string | null;
             phone?: string | null;
         } | null;
+        delivery_method: string;
         note?: string;
     }): Promise<OrderResponse> {
         const cart_id = await requireCartId();

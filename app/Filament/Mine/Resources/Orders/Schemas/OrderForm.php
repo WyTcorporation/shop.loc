@@ -96,6 +96,14 @@ class OrderForm
                         })
                         ->dehydrateStateUsing(fn ($state) => blank($state) ? null : $state),
 
+                    TextInput::make('shipment_delivery_method')
+                        ->label(__('shop.common.delivery_method'))
+                        ->maxLength(255)
+                        ->afterStateHydrated(function (TextInput $component, ?Order $record) {
+                            $component->state($record?->shipment?->delivery_method);
+                        })
+                        ->dehydrateStateUsing(fn ($state) => blank($state) ? null : $state),
+
                     Select::make('shipment_status')
                         ->label(__('shop.orders.fields.shipment_status'))
                         ->options(collect(ShipmentStatus::cases())->mapWithKeys(fn (ShipmentStatus $case) => [$case->value => $case->label()])->all())

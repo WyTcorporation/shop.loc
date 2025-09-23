@@ -16,6 +16,7 @@ class Shipment extends Model
         'address_id',
         'status',
         'tracking_number',
+        'delivery_method',
         'shipped_at',
         'delivered_at',
     ];
