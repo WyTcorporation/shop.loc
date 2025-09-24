@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Segments\Schemas;
 
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -29,7 +30,14 @@ class SegmentForm
                         ->default(true),
                     Select::make('campaigns')
                         ->label(__('Campaigns'))
-                        ->relationship('campaigns', 'name')
+                        ->relationship(
+                            name: 'campaigns',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query) => $query->select(
+                                'marketing_campaigns.id',
+                                'marketing_campaigns.name',
+                            ),
+                        )
                         ->multiple()
                         ->preload()
                         ->searchable()
