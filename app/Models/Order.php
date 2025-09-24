@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Casts\AddressCast;
 use App\Jobs\SendOrderStatusMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,8 +35,8 @@ class Order extends Model
         'loyalty_points_value' => 'decimal:2',
         'loyalty_points_used' => 'integer',
         'loyalty_points_earned' => 'integer',
-        'shipping_address' => AddressCast::class,
-        'billing_address' => AddressCast::class,
+        'shipping_address' => 'array',
+        'billing_address' => 'array',
         'locale' => 'string',
         'paid_at' => 'datetime',
         'shipped_at' => 'datetime',
@@ -68,7 +67,7 @@ class Order extends Model
             if (is_null($order->total)) {
                 $order->total = 0;
             }
-            // $order->loadCount('items');
+           // $order->loadCount('items');
         });
         static::updated(function (Order $order) {
             $order->recalculateTotal();
@@ -454,5 +453,4 @@ class Order extends Model
     {
         return (string) ($this->number ?? $this->id);
     }
-
 }

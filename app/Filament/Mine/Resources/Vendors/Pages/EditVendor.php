@@ -2,7 +2,6 @@
 
 namespace App\Filament\Mine\Resources\Vendors\Pages;
 
-use App\Filament\Mine\Resources\Vendors\Pages\Concerns\NormalizesVendorTranslations;
 use App\Filament\Mine\Resources\Vendors\VendorResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -10,8 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class EditVendor extends EditRecord
 {
-    use NormalizesVendorTranslations;
-
     protected static string $resource = VendorResource::class;
 
     protected function getHeaderActions(): array
@@ -47,8 +44,6 @@ class EditVendor extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data = $this->normalizeVendorFormTranslations($data);
-
         if ($user = Auth::user()) {
             if ($user->vendor && $this->record->user_id === $user->vendor->user_id) {
                 $data['user_id'] = $user->id;

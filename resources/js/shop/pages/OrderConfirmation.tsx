@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {useParams, Link, useSearchParams} from 'react-router-dom';
 import { OrdersApi, refreshOrderStatus, type Product } from '../api';
-import { formatPhoneForDisplay } from '../lib/phone';
 import { formatPrice } from '../ui/format';
 import SeoHead from '../components/SeoHead';
 import { GA } from '../ui/ga';
@@ -206,9 +205,7 @@ export default function OrderConfirmation() {
                         {order.shipping_address.city && <div>{order.shipping_address.city}</div>}
                         {order.shipping_address.addr && <div>{order.shipping_address.addr}</div>}
                         {order.shipping_address.postal_code && <div>{order.shipping_address.postal_code}</div>}
-                        {order.shipping_address.phone && (
-                            <div>{formatPhoneForDisplay(order.shipping_address.phone)}</div>
-                        )}
+                        {order.shipping_address.phone && <div>{order.shipping_address.phone}</div>}
                     </div>
                 )}
             </div>
@@ -226,9 +223,7 @@ export default function OrderConfirmation() {
                         {billingAddress.city && <div>{billingAddress.city}</div>}
                         {billingAddress.addr && <div>{billingAddress.addr}</div>}
                         {billingAddress.postal_code && <div>{billingAddress.postal_code}</div>}
-                        {billingAddress.phone && (
-                            <div>{formatPhoneForDisplay(billingAddress.phone)}</div>
-                        )}
+                        {billingAddress.phone && <div>{billingAddress.phone}</div>}
                     </div>
                 </div>
             )}

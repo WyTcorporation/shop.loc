@@ -5,7 +5,6 @@ import ProfileNavigation from '../components/ProfileNavigation';
 import useAuth from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
-import { formatPhoneForDisplay } from '../lib/phone';
 
 export default function ProfileAddressesPage() {
     const { t } = useLocale();
@@ -101,7 +100,7 @@ export default function ProfileAddressesPage() {
                                     {address.phone && (
                                         <div>
                                             <dt className="font-medium text-gray-900">{t('profile.addresses.list.fields.phone')}</dt>
-                                            <dd>{formatPhoneForDisplay(address.phone)}</dd>
+                                            <dd>{address.phone}</dd>
                                         </div>
                                     )}
                                 </dl>

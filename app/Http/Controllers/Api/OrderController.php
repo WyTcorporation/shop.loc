@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem, Warehouse};
-use App\Support\Phone;
 use App\Enums\ShipmentStatus;
 use App\Services\Carts\CartPricingService;
 use App\Services\Currency\CurrencyConverter;
@@ -147,7 +146,7 @@ class OrderController extends Controller
                 'city' => $data['shipping_address']['city'],
                 'addr' => $data['shipping_address']['addr'],
                 'postal_code' => $data['shipping_address']['postal_code'] ?? null,
-                'phone' => Phone::normalize($data['shipping_address']['phone'] ?? null),
+                'phone' => $data['shipping_address']['phone'] ?? null,
             ];
 
             $addressAttributes = array_merge([
@@ -176,11 +175,7 @@ class OrderController extends Controller
                 'total' => $totals->total,
                 'shipping_address' => $addressPayload,
                 'shipping_address_id' => $shippingAddress->id,
-                'billing_address' => isset($data['billing_address'])
-                    ? array_merge($data['billing_address'], [
-                        'phone' => Phone::normalize($data['billing_address']['phone'] ?? null),
-                    ])
-                    : null,
+                'billing_address' => $data['billing_address'] ?? null,
                 'note' => $data['note'] ?? null,
                 'inventory_committed_at' => now(),
                 'currency' => $this->converter->getBaseCurrency(),

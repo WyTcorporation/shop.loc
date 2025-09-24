@@ -3,13 +3,11 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTranslations;
-use App\Support\Phone;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Vendor extends Model
 {
@@ -34,63 +32,6 @@ class Vendor extends Model
         'description_translations' => 'array',
     ];
 
-
-    protected static function booted(): void
-    {
-        static::saving(function (self $vendor): void {
-            $vendor->syncBaseColumnFromTranslations('name');
-            $vendor->syncBaseColumnFromTranslations('description');
-        });
-    }
-
-    protected function nameTranslations(): Attribute
-    {
-        return Attribute::make(
-            set: function (?array $value): array {
-                $translations = collect($value)
-                    ->map(fn ($translation) => filled($translation) ? $translation : null)
-                    ->filter()
-                    ->all();
-
-                $primaryLocale = config('app.locale');
-
-                $this->attributes['name'] = $translations[$primaryLocale]
-                    ?? reset($translations)
-                    ?? null;
-
-                return [
-                    'name_translations' => $translations === []
-                        ? null
-                        : json_encode($translations, JSON_UNESCAPED_UNICODE),
-                ];
-            },
-        );
-    }
-
-    protected function descriptionTranslations(): Attribute
-    {
-        return Attribute::make(
-            set: function (?array $value): array {
-                $translations = collect($value)
-                    ->map(fn ($translation) => filled($translation) ? $translation : null)
-                    ->filter()
-                    ->all();
-
-                $primaryLocale = config('app.locale');
-
-                $this->attributes['description'] = $translations[$primaryLocale]
-                    ?? reset($translations)
-                    ?? null;
-
-                return [
-                    'description_translations' => $translations === []
-                        ? null
-                        : json_encode($translations, JSON_UNESCAPED_UNICODE),
-                ];
-            },
-        );
-    }
-
     public function initializeHasTranslations(): void
     {
         $this->translatable = ['name', 'description'];
@@ -114,34 +55,5 @@ class Vendor extends Model
         }
 
         return $query->whereKey($user->vendor->id);
-    }
-
-    protected function contactPhone(): Attribute
-    {
-        return Attribute::make(
-            get: static fn (?string $value): ?string => Phone::format($value),
-            set: static fn (?string $value): ?string => Phone::normalize($value),
-        );
-    }
-
-    protected function syncBaseColumnFromTranslations(string $attribute): void
-    {
-        $translations = $this->getAttribute($attribute . '_translations');
-
-        if (! is_array($translations) || $translations === []) {
-            return;
-        }
-
-        $primaryLocale = config('app.locale');
-        $fallbackLocale = config('app.fallback_locale');
-
-        $candidate = $translations[$primaryLocale]
-            ?? ($fallbackLocale ? ($translations[$fallbackLocale] ?? null) : null)
-            ?? reset($translations)
-            ?? null;
-
-        if ($candidate !== null && $candidate !== '') {
-            $this->attributes[$attribute] = $candidate;
-        }
     }
 }
