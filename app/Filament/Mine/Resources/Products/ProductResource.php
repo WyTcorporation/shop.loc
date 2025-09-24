@@ -110,7 +110,7 @@ class ProductResource extends Resource
             return null;
         }
 
-        return (string) Product::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getRelations(): array
