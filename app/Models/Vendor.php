@@ -46,7 +46,7 @@ class Vendor extends Model
     protected function nameTranslations(): Attribute
     {
         return Attribute::make(
-            set: function (?array $value): ?array {
+            set: function (?array $value): array {
                 $translations = collect($value)
                     ->map(fn ($translation) => filled($translation) ? $translation : null)
                     ->filter()
@@ -58,7 +58,11 @@ class Vendor extends Model
                     ?? reset($translations)
                     ?? null;
 
-                return $translations;
+                return [
+                    'name_translations' => $translations === []
+                        ? null
+                        : json_encode($translations, JSON_UNESCAPED_UNICODE),
+                ];
             },
         );
     }
@@ -66,7 +70,7 @@ class Vendor extends Model
     protected function descriptionTranslations(): Attribute
     {
         return Attribute::make(
-            set: function (?array $value): ?array {
+            set: function (?array $value): array {
                 $translations = collect($value)
                     ->map(fn ($translation) => filled($translation) ? $translation : null)
                     ->filter()
@@ -78,7 +82,11 @@ class Vendor extends Model
                     ?? reset($translations)
                     ?? null;
 
-                return $translations;
+                return [
+                    'description_translations' => $translations === []
+                        ? null
+                        : json_encode($translations, JSON_UNESCAPED_UNICODE),
+                ];
             },
         );
     }
