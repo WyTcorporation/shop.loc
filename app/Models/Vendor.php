@@ -41,6 +41,7 @@ class Vendor extends Model
             $vendor->syncBaseColumnFromTranslations('name');
             $vendor->syncBaseColumnFromTranslations('description');
         });
+    }
 
     protected function nameTranslations(): Attribute
     {
