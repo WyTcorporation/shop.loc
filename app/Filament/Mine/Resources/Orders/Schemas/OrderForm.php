@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\Phone;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -70,7 +71,15 @@ class OrderForm
                         TextInput::make('shipping_address.city')->label(__('shop.common.city')),
                         TextInput::make('shipping_address.addr')->label(__('shop.common.address')),
                         TextInput::make('shipping_address.postal_code')->label(__('shop.common.postal_code')),
-                        TextInput::make('shipping_address.phone')->label(__('shop.common.phone'))->tel(),
+                        TextInput::make('shipping_address.phone')
+                            ->label(__('shop.common.phone'))
+                            ->placeholder('+123 456 789 012')
+                            ->tel()
+                            ->live(onBlur: true)
+                            ->afterStateHydrated(fn (TextInput $component, $state) => $component->state(Phone::format($state)))
+                            ->afterStateUpdated(function (Set $set, $state): void {
+                                $set('shipping_address.phone', Phone::format($state));
+                            }),
                     ])->columns(2),
 
                     Fieldset::make(__('shop.orders.fieldsets.billing_address'))->schema([
@@ -78,7 +87,15 @@ class OrderForm
                         TextInput::make('billing_address.city')->label(__('shop.common.city')),
                         TextInput::make('billing_address.addr')->label(__('shop.common.address')),
                         TextInput::make('billing_address.postal_code')->label(__('shop.common.postal_code')),
-                        TextInput::make('billing_address.phone')->label(__('shop.common.phone'))->tel(),
+                        TextInput::make('billing_address.phone')
+                            ->label(__('shop.common.phone'))
+                            ->placeholder('+123 456 789 012')
+                            ->tel()
+                            ->live(onBlur: true)
+                            ->afterStateHydrated(fn (TextInput $component, $state) => $component->state(Phone::format($state)))
+                            ->afterStateUpdated(function (Set $set, $state): void {
+                                $set('billing_address.phone', Phone::format($state));
+                            }),
                     ])->columns(2),
                 ])->columns(1),
 

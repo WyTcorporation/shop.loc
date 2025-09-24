@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Jobs\SendOrderStatusMail;
+use App\Support\Phone;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
@@ -452,5 +454,47 @@ class Order extends Model
     private function orderNumber(): string
     {
         return (string) ($this->number ?? $this->id);
+    }
+
+    protected function shippingAddress(): Attribute
+    {
+        return Attribute::make(
+            get: static fn (?array $value): ?array => self::formatAddress($value),
+            set: static fn (?array $value): ?array => self::normalizeAddress($value),
+        );
+    }
+
+    protected function billingAddress(): Attribute
+    {
+        return Attribute::make(
+            get: static fn (?array $value): ?array => self::formatAddress($value),
+            set: static fn (?array $value): ?array => self::normalizeAddress($value),
+        );
+    }
+
+    private static function formatAddress(?array $address): ?array
+    {
+        if (! is_array($address)) {
+            return $address;
+        }
+
+        if (array_key_exists('phone', $address)) {
+            $address['phone'] = Phone::format($address['phone']);
+        }
+
+        return $address;
+    }
+
+    private static function normalizeAddress(?array $address): ?array
+    {
+        if (! is_array($address)) {
+            return $address;
+        }
+
+        if (array_key_exists('phone', $address)) {
+            $address['phone'] = Phone::normalize($address['phone']);
+        }
+
+        return $address;
     }
 }

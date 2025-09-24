@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Vendors\Schemas;
 
+use App\Support\Phone;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -49,6 +50,13 @@ class VendorForm
                     ->maxLength(255),
                 TextInput::make('contact_phone')
                     ->label(__('shop.common.phone'))
+                    ->placeholder('+123 456 789 012')
+                    ->tel()
+                    ->live(onBlur: true)
+                    ->afterStateHydrated(fn (TextInput $component, $state) => $component->state(Phone::format($state)))
+                    ->afterStateUpdated(function (Set $set, $state): void {
+                        $set('contact_phone', Phone::format($state));
+                    })
                     ->maxLength(255),
                 Textarea::make('description')
                     ->label(__('shop.vendor.fields.description'))
