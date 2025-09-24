@@ -23,8 +23,12 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => ProductResource::getScopedQueryFor()
-                ->with(['category', 'stocks']))
+            ->query(function (): Builder {
+                $query = ProductResource::getEloquentQuery();
+
+                return $query->with(['category', 'stocks']);
+            })
+
             ->columns([
                 ImageColumn::make('preview')
                     ->label(__('shop.products.fields.preview'))

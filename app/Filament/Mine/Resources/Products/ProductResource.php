@@ -89,7 +89,8 @@ class ProductResource extends Resource
             return null;
         }
 
-        return (string) static::getScopedQueryFor($user)->count();
+        return (string) static::getEloquentQuery()->count();
+
     }
 
     public static function getRelations(): array
