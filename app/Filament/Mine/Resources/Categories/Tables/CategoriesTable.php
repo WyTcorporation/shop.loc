@@ -20,10 +20,10 @@ class CategoriesTable
                 TextColumn::make('slug')
                     ->label(__('shop.categories.fields.slug'))
                     ->searchable(),
-                TextColumn::make('parent_id')
+                TextColumn::make('parent.name')
                     ->label(__('shop.categories.fields.parent'))
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('deleted_at')
                     ->label(__('shop.categories.fields.deleted_at'))
                     ->dateTime()
