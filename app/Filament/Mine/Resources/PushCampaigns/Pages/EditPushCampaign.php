@@ -50,8 +50,6 @@ class EditPushCampaign extends EditRecord
 
     public function afterSave(): void
     {
-        parent::afterSave();
-
         PushCampaignResource::persistSchedule($this->record, $this->scheduleData);
     }
 }

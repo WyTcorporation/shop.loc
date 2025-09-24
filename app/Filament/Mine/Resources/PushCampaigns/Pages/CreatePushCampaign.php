@@ -30,8 +30,6 @@ class CreatePushCampaign extends CreateRecord
 
     protected function afterCreate(): void
     {
-        parent::afterCreate();
-
         PushCampaignResource::persistSchedule($this->record, $this->scheduleData);
     }
 }
