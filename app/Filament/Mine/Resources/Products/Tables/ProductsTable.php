@@ -28,6 +28,7 @@ class ProductsTable
 
                 return $query->with(['category', 'stocks']);
             })
+
             ->columns([
                 ImageColumn::make('preview')
                     ->label(__('shop.products.fields.preview'))

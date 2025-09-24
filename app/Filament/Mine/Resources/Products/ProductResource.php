@@ -11,6 +11,8 @@ use App\Filament\Mine\Resources\Products\Pages\ListProducts;
 use App\Filament\Mine\Resources\Products\Schemas\ProductForm;
 use App\Filament\Mine\Resources\Products\Tables\ProductsTable;
 use App\Models\Product;
+use App\Models\User;
+use Filament\Facades\Filament;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -45,32 +47,7 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = Auth::user();
-
-        abort_if($user === null, 403);
-
-        if (! $user->can(Permission::ViewProducts->value) && ! $user->can(Permission::ManageProducts->value)) {
-            abort(403);
-        }
-
-        $query = parent::getEloquentQuery()
-            ->with(['images' => fn($q) => $q
-                ->select('id','product_id','path','disk','is_primary','sort')
-                ->orderByDesc('is_primary')
-                ->orderBy('sort')
-            ]);
-
-        $permittedCategoryIds = $user->permittedCategoryIds();
-
-        if ($permittedCategoryIds->isNotEmpty()) {
-            $query->whereIn('category_id', $permittedCategoryIds);
-        }
-
-        if ($user->vendor) {
-            $query->where('vendor_id', $user->vendor->id);
-        }
-
-        return $query;
+        return static::getScopedQueryFor();
     }
 
     public static function getPages(): array
@@ -106,11 +83,14 @@ class ProductResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (! auth()->user()?->can('viewAny', static::getModel())) {
+        $user = static::resolvePanelUser();
+
+        if (! $user?->can('viewAny', static::getModel())) {
             return null;
         }
 
         return (string) static::getEloquentQuery()->count();
+
     }
 
     public static function getRelations(): array
@@ -118,5 +98,55 @@ class ProductResource extends Resource
         return [
             RelationManagers\ImagesRelationManager::class,
         ];
+}
+
+    public static function getScopedQueryFor(?User $user = null): Builder
+    {
+        $query = parent::getEloquentQuery()
+            ->with(['images' => fn ($q) => $q
+                ->select('id', 'product_id', 'path', 'disk', 'is_primary', 'sort')
+                ->orderByDesc('is_primary')
+                ->orderBy('sort')
+            ]);
+
+        $user = $user instanceof User ? $user : static::resolvePanelUser();
+
+        if (! $user instanceof User) {
+            return static::emptyVisibilityQuery($query);
+        }
+
+        if (! $user->can(Permission::ViewProducts->value) && ! $user->can(Permission::ManageProducts->value)) {
+            return static::emptyVisibilityQuery($query);
+        }
+
+        $permittedCategoryIds = $user->permittedCategoryIds();
+
+        if ($permittedCategoryIds->isNotEmpty()) {
+            $query->whereIn('category_id', $permittedCategoryIds);
+        }
+
+        if ($user->vendor) {
+            $query->where('vendor_id', $user->vendor->id);
+        }
+
+        return $query;
+    }
+
+    protected static function resolvePanelUser(): ?User
+    {
+        $user = Filament::auth()->user();
+
+        if ($user instanceof User) {
+            return $user;
+        }
+
+        $fallback = Auth::user();
+
+        return $fallback instanceof User ? $fallback : null;
+    }
+
+    protected static function emptyVisibilityQuery(Builder $query): Builder
+    {
+        return $query->whereRaw('1 = 0');
     }
 }
