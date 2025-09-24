@@ -38,6 +38,36 @@ class Vendor extends Model
         $this->initializeTranslationsTrait();
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $vendor): void {
+            foreach (['name', 'description'] as $attribute) {
+                if ($vendor->isDirty($attribute)) {
+                    continue;
+                }
+
+                $translations = $vendor->getAttribute($attribute . '_translations');
+
+                if (! is_array($translations)) {
+                    continue;
+                }
+
+                $primaryLocale = config('app.locale');
+                $fallbackLocale = config('app.fallback_locale');
+
+                $value = $translations[$primaryLocale] ?? null;
+
+                if ($value === null && $fallbackLocale) {
+                    $value = $translations[$fallbackLocale] ?? null;
+                }
+
+                if ($value !== null) {
+                    $vendor->setAttribute($attribute, $value);
+                }
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
