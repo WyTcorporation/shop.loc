@@ -74,7 +74,10 @@ class Product extends Model
                 $product->price = round(((int) $product->price_cents) / 100, 2);
             }
 
-            if (blank($product->name)) {
+            $rawName = $product->getAttributes()['name'] ?? null;
+
+            if (blank($rawName)) {
+
                 $translations = array_filter((array) $product->name_translations, fn ($value) => filled($value));
                 $primaryLocale = config('app.locale');
 

@@ -35,6 +35,24 @@ it('returns localized names with fallback to configured fallback locale', functi
     expect($product->fresh()->description)->toBe('Laptop description');
 });
 
+it('hydrates the legacy name column from available translations when blank', function () {
+    $product = Product::factory()->create([
+        'name' => null,
+        'name_translations' => [
+            'uk' => 'Ноутбук',
+            'en' => 'Laptop',
+        ],
+        'description' => 'Опис ноутбука',
+        'description_translations' => [
+            'uk' => 'Опис ноутбука',
+            'en' => 'Laptop description',
+        ],
+    ]);
+
+    expect($product->getRawOriginal('name'))->toBe('Ноутбук');
+    expect($product->fresh()->name)->toBe('Ноутбук');
+});
+
 it('falls back to legacy attribute when translations are missing', function () {
     $product = Product::factory()->create([
         'name' => 'Стара назва',
