@@ -34,6 +34,14 @@ class Vendor extends Model
         'description_translations' => 'array',
     ];
 
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $vendor): void {
+            $vendor->syncBaseColumnFromTranslations('name');
+            $vendor->syncBaseColumnFromTranslations('description');
+        });
+
     protected function nameTranslations(): Attribute
     {
         return Attribute::make(
@@ -105,5 +113,26 @@ class Vendor extends Model
             get: static fn (?string $value): ?string => Phone::format($value),
             set: static fn (?string $value): ?string => Phone::normalize($value),
         );
+    }
+
+    protected function syncBaseColumnFromTranslations(string $attribute): void
+    {
+        $translations = $this->getAttribute($attribute . '_translations');
+
+        if (! is_array($translations) || $translations === []) {
+            return;
+        }
+
+        $primaryLocale = config('app.locale');
+        $fallbackLocale = config('app.fallback_locale');
+
+        $candidate = $translations[$primaryLocale]
+            ?? ($fallbackLocale ? ($translations[$fallbackLocale] ?? null) : null)
+            ?? reset($translations)
+            ?? null;
+
+        if ($candidate !== null && $candidate !== '') {
+            $this->attributes[$attribute] = $candidate;
+        }
     }
 }
