@@ -102,12 +102,12 @@ class OrderObserver
 
         SendOrderStatusMail::dispatch($order->getKey(), $to, $locale)->afterCommit();
 
-        if (in_array($toEnum, [OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
-            $fromLabel = $fromEnum ? __('shop.orders.statuses.' . $fromEnum->value) : null;
-            $toLabel = __('shop.orders.statuses.' . $toEnum->value);
-
-            SendOrderStatusUpdate::dispatch($order, $fromLabel, $toLabel, $locale)->afterCommit();
-        }
+//        if (in_array($toEnum, [OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
+//            $fromLabel = $fromEnum ? __('shop.orders.statuses.' . $fromEnum->value) : null;
+//            $toLabel = __('shop.orders.statuses.' . $toEnum->value);
+//
+//            SendOrderStatusUpdate::dispatch($order, $fromLabel, $toLabel, $locale)->afterCommit();
+//        }
     }
 
     private function cacheKey(Order $order): int|string
