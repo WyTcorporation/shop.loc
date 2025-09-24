@@ -88,7 +88,7 @@ class OrdersTable
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->markPaid();
-                        Notification::make()->title(__('shop.orders.notifications.marked_paid'))->success()->send();
+//                        Notification::make()->title(__('shop.orders.notifications.marked_paid'))->success()->send();
                     }),
                 Action::make('markShipped')
                     ->label(__('shop.orders.actions.mark_shipped'))
@@ -114,7 +114,7 @@ class OrdersTable
                         }
 
                         $record->markShipped();
-                        Notification::make()->title(__('shop.orders.notifications.marked_shipped'))->success()->send();
+//                        Notification::make()->title(__('shop.orders.notifications.marked_shipped'))->success()->send();
                     }),
                 Action::make('cancel')
                     ->label(__('shop.orders.actions.cancel'))
@@ -124,7 +124,7 @@ class OrdersTable
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->cancel();
-                        Notification::make()->title(__('shop.orders.notifications.cancelled'))->success()->send();
+//                        Notification::make()->title(__('shop.orders.notifications.cancelled'))->success()->send();
                     }),
                 Action::make('resend')
                     ->label(__('shop.orders.actions.resend_confirmation'))
