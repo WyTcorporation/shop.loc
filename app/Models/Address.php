@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\Phone;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,5 +35,13 @@ class Address extends Model
     public function shipments(): HasMany
     {
         return $this->hasMany(Shipment::class);
+    }
+
+    protected function phone(): Attribute
+    {
+        return Attribute::make(
+            get: static fn (?string $value): ?string => Phone::format($value),
+            set: static fn (?string $value): ?string => Phone::normalize($value),
+        );
     }
 }

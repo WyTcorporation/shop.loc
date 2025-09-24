@@ -15,6 +15,11 @@ import SeoHead from '../components/SeoHead';
 import { GA } from '../ui/ga';
 import { formatPrice } from '../ui/format';
 import { resolveErrorMessage } from '../lib/errors';
+import {
+    formatInternationalPhoneInput,
+    formatPhoneForDisplay,
+    normalizeInternationalPhone,
+} from '../lib/phone';
 import PayOrder from '../components/PayOrder';
 import useAuth from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleProvider';
@@ -233,7 +238,7 @@ export default function CheckoutPage() {
                             city: first.city ?? '',
                             addr: first.addr ?? '',
                             postal_code: first.postal_code ?? '',
-                            phone: first.phone ?? '',
+                            phone: formatPhoneForDisplay(first.phone),
                         });
                         addressInitialized.current = true;
                     }
@@ -280,7 +285,10 @@ export default function CheckoutPage() {
     const handleAddressInputChange = (field: keyof AddressFormState) => (
         event: React.ChangeEvent<HTMLInputElement>,
     ) => {
-        const value = event.target.value;
+        let value = event.target.value;
+        if (field === 'phone') {
+            value = formatInternationalPhoneInput(value);
+        }
         setAddressForm((prev) => ({ ...prev, [field]: value }));
         setAddressErrors((prev) => {
             if (!prev[field]) return prev;
@@ -293,7 +301,10 @@ export default function CheckoutPage() {
     const handleBillingInputChange = (field: keyof BillingFormState) => (
         event: React.ChangeEvent<HTMLInputElement>,
     ) => {
-        const value = event.target.value;
+        let value = event.target.value;
+        if (field === 'phone') {
+            value = formatInternationalPhoneInput(value);
+        }
         setBillingForm((prev) => ({ ...prev, [field]: value }));
         setBillingErrors((prev) => {
             if (!prev[field]) return prev;
@@ -330,7 +341,7 @@ export default function CheckoutPage() {
             city: addr.city ?? '',
             addr: addr.addr ?? '',
             postal_code: addr.postal_code ?? '',
-            phone: addr.phone ?? '',
+            phone: formatPhoneForDisplay(addr.phone),
         });
         setAddressErrors({});
     };
@@ -396,13 +407,15 @@ export default function CheckoutPage() {
         setCreateError(null);
         try {
             const trimmedEmail = email.trim();
+            const normalizedShippingPhone = normalizeInternationalPhone(addressForm.phone);
             const shipping = {
                 name: addressForm.name.trim(),
                 city: addressForm.city.trim(),
                 addr: addressForm.addr.trim(),
                 ...(addressForm.postal_code.trim() ? { postal_code: addressForm.postal_code.trim() } : {}),
-                ...(addressForm.phone.trim() ? { phone: addressForm.phone.trim() } : {}),
+                ...(normalizedShippingPhone ? { phone: normalizedShippingPhone } : {}),
             };
+            const normalizedBillingPhone = normalizeInternationalPhone(billingForm.phone);
             const billing = billingEnabled
                 ? {
                       name: billingForm.name.trim(),
@@ -413,7 +426,7 @@ export default function CheckoutPage() {
                       ...(billingForm.postal_code.trim()
                           ? { postal_code: billingForm.postal_code.trim() }
                           : {}),
-                      ...(billingForm.phone.trim() ? { phone: billingForm.phone.trim() } : {}),
+                      ...(normalizedBillingPhone ? { phone: normalizedBillingPhone } : {}),
                   }
                 : null;
             const delivery = deliveryOptions.find((opt) => opt.id === deliveryMethod);
@@ -538,7 +551,9 @@ export default function CheckoutPage() {
                                             <div className="text-xs text-gray-500">{addr.postal_code}</div>
                                         )}
                                         {addr.phone && (
-                                            <div className="text-xs text-gray-500">{addr.phone}</div>
+                                            <div className="text-xs text-gray-500">
+                                                {formatPhoneForDisplay(addr.phone)}
+                                            </div>
                                         )}
                                     </button>
                                 );
@@ -978,7 +993,7 @@ export default function CheckoutPage() {
                                                 <div>{order.billing_address.postal_code}</div>
                                             )}
                                             {order.billing_address.phone && (
-                                                <div>{order.billing_address.phone}</div>
+                                                <div>{formatPhoneForDisplay(order.billing_address.phone)}</div>
                                             )}
                                         </>
                                     ) : (
@@ -999,7 +1014,7 @@ export default function CheckoutPage() {
                                         <div>{order.shipping_address.postal_code}</div>
                                     )}
                                     {order.shipping_address?.phone && (
-                                        <div>{order.shipping_address.phone}</div>
+                                        <div>{formatPhoneForDisplay(order.shipping_address.phone)}</div>
                                     )}
                                     <div className="mt-2 text-gray-600">
                                         {t('checkout.payment.shippingMethod', { method: selectedDelivery.title })}

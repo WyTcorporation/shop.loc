@@ -7,6 +7,7 @@ import SeoHead from '../components/SeoHead';
 import WishlistButton from '../components/WishlistButton';
 import { fetchSellerProducts, type Product, type SellerProductsResponse, type Vendor } from '../api';
 import { resolveErrorMessage } from '../lib/errors';
+import { formatPhoneForDisplay, normalizeInternationalPhone } from '../lib/phone';
 import { formatPrice } from '../ui/format';
 import { GA } from '../ui/ga';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -92,10 +93,11 @@ export default function SellerPage() {
     useDocumentTitle(documentTitle);
 
     const seoTitle = t('sellerPage.seo.title', { name: vendor?.name, brand });
+    const formattedVendorPhone = formatPhoneForDisplay(vendor?.contact_phone);
     const seoDescription = t('sellerPage.seo.description', {
         description: vendor?.description ?? '',
         email: vendor?.contact_email ?? '',
-        phone: vendor?.contact_phone ?? '',
+        phone: formattedVendorPhone,
     });
 
     const canPrev = page > 1;
@@ -110,8 +112,9 @@ export default function SellerPage() {
     const emailLabel = vendor?.contact_email
         ? t('sellerPage.contact.email', { email: vendor.contact_email })
         : null;
-    const phoneLabel = vendor?.contact_phone
-        ? t('sellerPage.contact.phone', { phone: vendor.contact_phone })
+    const phoneHref = vendor?.contact_phone ? normalizeInternationalPhone(vendor.contact_phone) : null;
+    const phoneLabel = vendor?.contact_phone && formattedVendorPhone
+        ? t('sellerPage.contact.phone', { phone: formattedVendorPhone })
         : null;
 
     const paginationStatus = t('sellerPage.pagination.status', { page, lastPage });
@@ -137,9 +140,9 @@ export default function SellerPage() {
                                     {emailLabel}
                                 </a>
                             )}
-                            {vendor.contact_phone && phoneLabel && (
+                            {vendor.contact_phone && phoneLabel && phoneHref && (
                                 <a
-                                    href={`tel:${vendor.contact_phone}`}
+                                    href={`tel:${phoneHref}`}
                                     className="text-blue-600 hover:text-blue-800 hover:underline"
                                 >
                                     {phoneLabel}

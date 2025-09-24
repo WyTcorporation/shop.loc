@@ -3,6 +3,7 @@
 namespace App\Filament\Mine\Resources\Vendors\Tables;
 
 use App\Models\Vendor;
+use App\Support\Phone;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
@@ -41,6 +42,7 @@ class VendorsTable
                     ->toggleable(),
                 TextColumn::make('contact_phone')
                     ->label(__('shop.common.phone'))
+                    ->formatStateUsing(static fn (?string $state): ?string => Phone::format($state))
                     ->toggleable(),
                 TextColumn::make('created_at')
                     ->label(__('shop.vendor.fields.created_at'))

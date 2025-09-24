@@ -6,6 +6,7 @@ use App\Enums\ShipmentStatus;
 use App\Filament\Mine\Resources\Orders\OrderResource;
 use App\Models\Address;
 use App\Models\Shipment;
+use App\Support\Phone;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\EditRecord;
@@ -145,7 +146,7 @@ class EditOrder extends EditRecord
             'city' => $address['city'] ?? null,
             'addr' => $address['addr'] ?? null,
             'postal_code' => $address['postal_code'] ?? null,
-            'phone' => $address['phone'] ?? null,
+            'phone' => Phone::normalize($address['phone'] ?? null),
         ];
     }
 

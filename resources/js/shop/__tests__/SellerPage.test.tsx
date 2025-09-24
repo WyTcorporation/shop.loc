@@ -121,7 +121,7 @@ describe('SellerPage localization', () => {
         expect(lastSeoCallUk).toBeDefined();
         expect(lastSeoCallUk?.title).toBe('ACME Studio — Продавець — 3D-Print Shop');
         expect(lastSeoCallUk?.description).toBe(
-            'Handmade miniatures and accessories. Email: acme@example.com Телефон: +380501234567',
+            'Handmade miniatures and accessories. Email: acme@example.com Телефон: +380 501 234 567',
         );
 
         await act(async () => {
@@ -141,7 +141,7 @@ describe('SellerPage localization', () => {
         expect(lastSeoCallEn).toBeDefined();
         expect(lastSeoCallEn?.title).toBe('ACME Studio — Seller — 3D-Print Shop');
         expect(lastSeoCallEn?.description).toBe(
-            'Handmade miniatures and accessories. Email: acme@example.com Phone: +380501234567',
+            'Handmade miniatures and accessories. Email: acme@example.com Phone: +380 501 234 567',
         );
     });
 });
