@@ -14,7 +14,7 @@ class ListVendors extends ListRecords
     {
         return [
             CreateAction::make()
-                ->visible(fn () => ! auth()->user()?->vendor),
+                ->visible(fn () => auth()->user()?->can('create', VendorResource::getModel())),
         ];
     }
 }
