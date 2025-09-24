@@ -1,7 +1,9 @@
 <?php
 
 use App\Enums\ShipmentStatus;
+use App\Mail\OrderPlacedMail;
 use App\Models\{Address, Cart, CartItem, Order, Product, Shipment};
+use Illuminate\Support\Facades\Mail;
 
 it('creates order from cart', function () {
 
@@ -41,3 +43,30 @@ it('creates order from cart', function () {
     $response->assertJsonPath('shipment.status', 'pending');
 });
 
+it('sends a single confirmation email when order is created', function () {
+    Mail::fake();
+
+    $product = Product::factory()->create([
+        'stock' => 5,
+        'price' => 10.50,
+    ]);
+
+    $cart = Cart::factory()->create();
+
+    CartItem::factory()->create([
+        'cart_id' => $cart->id,
+        'product_id' => $product->id,
+        'qty' => 2,
+        'price' => $product->price,
+    ]);
+
+    $payload = [
+        'cart_id' => $cart->id,
+        'email' => 'test@example.com',
+        'shipping_address' => ['name' => 'John', 'city' => 'Kyiv', 'addr' => 'Street 1'],
+    ];
+
+    $this->postJson('/api/orders', $payload)->assertCreated();
+
+    Mail::assertSent(OrderPlacedMail::class, 1);
+});

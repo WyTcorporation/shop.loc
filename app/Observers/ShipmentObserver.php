@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Enums\ShipmentStatus;
+use App\Jobs\SendOrderStatusMail;
 use App\Models\OrderStatusLog;
 use App\Models\Shipment;
 use Illuminate\Support\Facades\Auth;
@@ -41,5 +42,18 @@ class ShipmentObserver
             ]),
         ]);
 
+        if ($toEnum !== ShipmentStatus::Delivered) {
+            return;
+        }
+
+        $locale = optional($shipment->order)->locale
+            ?? app()->getLocale()
+            ?? (string) config('app.locale');
+
+        SendOrderStatusMail::dispatch(
+            $shipment->order_id,
+            ShipmentStatus::Delivered->value,
+            $locale
+        )->afterCommit();
     }
 }
