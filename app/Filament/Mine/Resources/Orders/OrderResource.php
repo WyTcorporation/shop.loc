@@ -58,7 +58,9 @@ class OrderResource extends Resource
             $query->whereHas('items.product', fn ($builder) => $builder->where('vendor_id', $user->vendor->id));
         }
 
-        return $query->with(['items.product.vendor', 'logs.user']);
+        $query->with(['items.product.vendor', 'logs.user']);
+
+        return $query;
     }
 
     public static function getRelations(): array
