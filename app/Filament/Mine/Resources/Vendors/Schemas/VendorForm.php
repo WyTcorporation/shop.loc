@@ -37,6 +37,7 @@ class VendorForm
                     ->required()
                     ->maxLength(255)
                     ->hidden()
+                    ->dehydrated()
                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('name_translations.' . $primaryLocale) ?? $state),
                 TextInput::make('slug')
                     ->label(__('shop.vendor.fields.slug'))
@@ -55,6 +56,7 @@ class VendorForm
                     ->rows(4)
                     ->columnSpanFull()
                     ->hidden()
+                    ->dehydrated()
                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('description_translations.' . $primaryLocale) ?? $state),
                 Tabs::make('translations')
                     ->columnSpanFull()
