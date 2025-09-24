@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
@@ -37,8 +36,6 @@ class Order extends Model
         'loyalty_points_value' => 'decimal:2',
         'loyalty_points_used' => 'integer',
         'loyalty_points_earned' => 'integer',
-        'shipping_address' => 'array',
-        'billing_address' => 'array',
         'locale' => 'string',
         'paid_at' => 'datetime',
         'shipped_at' => 'datetime',
@@ -456,20 +453,38 @@ class Order extends Model
         return (string) ($this->number ?? $this->id);
     }
 
-    protected function shippingAddress(): Attribute
+    protected function getShippingAddressAttribute($value): ?array
     {
-        return Attribute::make(
-            get: static fn (?array $value): ?array => self::formatAddress($value),
-            set: static fn (?array $value): ?array => self::normalizeAddress($value),
-        );
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+
+        return self::formatAddress($decoded);
     }
 
-    protected function billingAddress(): Attribute
+    protected function setShippingAddressAttribute($value): void
     {
-        return Attribute::make(
-            get: static fn (?array $value): ?array => self::formatAddress($value),
-            set: static fn (?array $value): ?array => self::normalizeAddress($value),
-        );
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+        $normalized = self::normalizeAddress($decoded);
+
+        $this->attributes['shipping_address'] = is_null($normalized)
+            ? null
+            : json_encode($normalized);
+    }
+
+    protected function getBillingAddressAttribute($value): ?array
+    {
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+
+        return self::formatAddress($decoded);
+    }
+
+    protected function setBillingAddressAttribute($value): void
+    {
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+        $normalized = self::normalizeAddress($decoded);
+
+        $this->attributes['billing_address'] = is_null($normalized)
+            ? null
+            : json_encode($normalized);
     }
 
     private static function formatAddress(?array $address): ?array
