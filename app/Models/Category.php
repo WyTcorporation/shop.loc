@@ -36,6 +36,31 @@ class Category extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (self $category): void {
+            if ($category->isDirty('name')) {
+                return;
+            }
+
+            $translations = $category->getAttribute('name_translations');
+
+            if (! is_array($translations)) {
+                return;
+            }
+
+            $primaryLocale = config('app.locale');
+            $fallbackLocale = config('app.fallback_locale');
+
+            $name = $translations[$primaryLocale] ?? null;
+
+            if ($name === null && $fallbackLocale) {
+                $name = $translations[$fallbackLocale] ?? null;
+            }
+
+            if ($name !== null) {
+                $category->setAttribute('name', $name);
+            }
+        });
+
         $clear = fn () => static::clearCache();
 
         static::created($clear);
