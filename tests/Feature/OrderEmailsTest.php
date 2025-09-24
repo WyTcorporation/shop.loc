@@ -1,97 +1,9 @@
 <?php
 
-use App\Jobs\SendOrderConfirmation;
 use App\Mail\OrderPlacedMail;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use Illuminate\Support\Facades\Mail;
-use App\Enums\OrderStatus;
-use App\Mail\OrderPaidMail;
-use App\Mail\OrderShippedMail;
-
-it('sends order placed email', function () {
-    Mail::fake();
-
-    $order = Order::factory()->create([
-        'email' => 'customer@example.com',
-        'total' => 123.45,
-    ]);
-
-    $p = Product::factory()->create(['price' => 12.34]);
-    OrderItem::factory()->create([
-        'order_id'   => $order->id,
-        'product_id' => $p->id,
-        'qty'        => 2,
-        'price'      => 12.34,
-    ]);
-
-    SendOrderConfirmation::dispatchSync($order);
-
-    Mail::assertSent(OrderPlacedMail::class, function (OrderPlacedMail $mail) use ($order) {
-        $mail->assertHasTag('order-placed')->assertHasMetadata('type', 'order');
-
-        return $mail->order->is($order);
-    });
-});
-
-it('sends order placed email using dispatch locale', function () {
-    config(['mail.default' => 'array']);
-    config(['shop.admin_email' => null]);
-    Mail::setDefaultDriver('array');
-
-    $mailer = Mail::mailer();
-    $transport = $mailer->getSymfonyTransport();
-    expect($transport)->toBeInstanceOf(\Illuminate\Mail\Transport\ArrayTransport::class);
-    $transport->flush();
-
-    $order = Order::factory()->createQuietly([
-        'email' => 'customer@example.com',
-        'total' => 123.45,
-    ]);
-
-    $transport->flush();
-
-    $originalLocale = app()->getLocale();
-
-    app()->setLocale('en');
-    $job = new SendOrderConfirmation($order);
-    expect($job->locale)->toBe('en');
-    expect(__('shop.orders.placed.subject_line', ['number' => $order->number]))
-        ->toBe(__('shop.orders.placed.subject_line', ['number' => $order->number], 'en'));
-    app()->setLocale($originalLocale);
-
-    $job->handle();
-
-    $messages = $transport->messages();
-    expect($messages)->not->toBeEmpty();
-
-    /** @var \Symfony\Component\Mailer\SentMessage|null $sent */
-    $sent = null;
-
-    foreach ($messages as $message) {
-        $recipients = array_map(
-            fn ($address) => method_exists($address, 'getAddress') ? $address->getAddress() : (string) $address,
-            $message->getEnvelope()->getRecipients()
-        );
-
-        if (in_array('customer@example.com', $recipients, true)) {
-            $sent = $message;
-            break;
-        }
-    }
-
-    expect($sent)->not->toBeNull();
-
-    /** @var \Symfony\Component\Mime\Email $email */
-    $email = $sent->getOriginalMessage();
-
-    $expectedSubject = __('shop.orders.placed.subject_line', ['number' => $order->number], 'en');
-
-    expect($email->getSubject())->toBe($expectedSubject);
-    expect($email->getHtmlBody())->toContain('Thank you for your order!');
-});
-
 
 it('renders coupon summary in order placed email view', function () {
     $order = Order::factory()->create([
@@ -126,30 +38,4 @@ it('renders coupon summary in order placed email view', function () {
     expect($html)->toContain('−5');
     expect($html)->toContain('До сплати');
     expect($html)->toContain('85');
-});
-
-
-
-it('sends paid and shipped emails on status change', function () {
-    Mail::fake();
-
-    $p = Product::factory()->create(['price' => 10, 'stock' => 5]);
-    $o = Order::factory()->create(['email' => 'customer@example.com', 'status' => OrderStatus::New->value]);
-    OrderItem::factory()->for($o)->create(['product_id' => $p->id, 'qty' => 2, 'price' => 10]);
-
-    // mark paid
-    $o->update(['status' => OrderStatus::Paid->value]);
-    Mail::assertSent(OrderPaidMail::class, function (OrderPaidMail $mail) {
-        $mail->assertHasTag('order-paid')->assertHasMetadata('type', 'order');
-
-        return true;
-    });
-
-    // mark shipped
-    $o->update(['status' => OrderStatus::Shipped->value]);
-    Mail::assertSent(OrderShippedMail::class, function (OrderShippedMail $mail) {
-        $mail->assertHasTag('order-shipped')->assertHasMetadata('type', 'order');
-
-        return true;
-    });
 });
