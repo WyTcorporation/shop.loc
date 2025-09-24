@@ -48,7 +48,7 @@ class EditPushCampaign extends EditRecord
         return $data;
     }
 
-    protected function afterSave(): void
+    public function afterSave(): void
     {
         parent::afterSave();
 

@@ -19,7 +19,7 @@ class EditCurrency extends EditRecord
         ];
     }
 
-    protected function afterSave(): void
+    public function afterSave(): void
     {
         app(CurrencyConverter::class)->refreshRates();
     }
