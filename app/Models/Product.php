@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -71,6 +72,21 @@ class Product extends Model
                 $product->price_cents = (int) round($price * 100);
             } elseif ($product->isDirty('price_cents') && ! $product->isDirty('price')) {
                 $product->price = round(((int) $product->price_cents) / 100, 2);
+            }
+
+            if (blank($product->name)) {
+                $translations = array_filter((array) $product->name_translations, fn ($value) => filled($value));
+                $primaryLocale = config('app.locale');
+
+                if ($primaryLocale && isset($translations[$primaryLocale])) {
+                    $product->name = $translations[$primaryLocale];
+                } else {
+                    $fallback = Arr::first($translations, fn ($value) => filled($value));
+
+                    if ($fallback !== null) {
+                        $product->name = $fallback;
+                    }
+                }
             }
         });
 
