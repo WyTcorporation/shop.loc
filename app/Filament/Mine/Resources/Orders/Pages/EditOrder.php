@@ -108,7 +108,7 @@ class EditOrder extends EditRecord
         ];
     }
 
-    protected function afterSave(): void
+    public function afterSave(): void
     {
         $this->record->recalculateTotal();
         $this->record->shipment()->updateOrCreate([], $this->buildShipmentPayload($this->record->shipment));
