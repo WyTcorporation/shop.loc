@@ -34,12 +34,52 @@ class Vendor extends Model
         'description_translations' => 'array',
     ];
 
+
     protected static function booted(): void
     {
         static::saving(function (self $vendor): void {
             $vendor->syncBaseColumnFromTranslations('name');
             $vendor->syncBaseColumnFromTranslations('description');
         });
+
+    protected function nameTranslations(): Attribute
+    {
+        return Attribute::make(
+            set: function (?array $value): ?array {
+                $translations = collect($value)
+                    ->map(fn ($translation) => filled($translation) ? $translation : null)
+                    ->filter()
+                    ->all();
+
+                $primaryLocale = config('app.locale');
+
+                $this->attributes['name'] = $translations[$primaryLocale]
+                    ?? reset($translations)
+                    ?? null;
+
+                return $translations;
+            },
+        );
+    }
+
+    protected function descriptionTranslations(): Attribute
+    {
+        return Attribute::make(
+            set: function (?array $value): ?array {
+                $translations = collect($value)
+                    ->map(fn ($translation) => filled($translation) ? $translation : null)
+                    ->filter()
+                    ->all();
+
+                $primaryLocale = config('app.locale');
+
+                $this->attributes['description'] = $translations[$primaryLocale]
+                    ?? reset($translations)
+                    ?? null;
+
+                return $translations;
+            },
+        );
     }
 
     public function initializeHasTranslations(): void
