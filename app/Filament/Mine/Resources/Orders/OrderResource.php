@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Orders;
 
+use App\Enums\Permission;
 use App\Filament\Mine\Resources\Orders\Pages\CreateOrder;
 use App\Filament\Mine\Resources\Orders\Pages\EditOrder;
 use App\Filament\Mine\Resources\Orders\Pages\ListOrders;
@@ -54,7 +55,7 @@ class OrderResource extends Resource
 
         $query = parent::getEloquentQuery();
 
-        if ($user?->vendor) {
+        if ($user?->vendor && ! $user->can(Permission::ManageVendors->value)) {
             $query->whereHas('items.product', fn ($builder) => $builder->where('vendor_id', $user->vendor->id));
         }
 
@@ -96,10 +97,18 @@ class OrderResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (! auth()->user()?->can('viewAny', static::getModel())) {
+        $user = auth()->user();
+
+        if (! $user?->can('viewAny', static::getModel())) {
             return null;
         }
 
-        return (string) Order::count();
+        $query = Order::query();
+
+        if ($user->vendor && ! $user->can(Permission::ManageVendors->value)) {
+            $query->whereHas('items.product', fn ($builder) => $builder->where('vendor_id', $user->vendor->id));
+        }
+
+        return (string) $query->count();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Products\Tables;
 
+use App\Filament\Mine\Resources\Products\ProductResource;
 use App\Models\Product;
 use App\Models\Vendor;
 use Filament\Actions\BulkActionGroup;
@@ -25,8 +26,8 @@ class ProductsTable
             ->query(function (): Builder {
                 $query = Product::query()->with(['images', 'category', 'stocks']);
 
-                if ($vendor = Auth::user()?->vendor) {
-                    $query->where('vendor_id', $vendor->id);
+                if ($user = Auth::user()) {
+                    $query = ProductResource::applyVisibilityScopes($query, $user);
                 }
 
                 return $query;

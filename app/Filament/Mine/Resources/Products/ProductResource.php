@@ -11,6 +11,7 @@ use App\Filament\Mine\Resources\Products\Pages\ListProducts;
 use App\Filament\Mine\Resources\Products\Schemas\ProductForm;
 use App\Filament\Mine\Resources\Products\Tables\ProductsTable;
 use App\Models\Product;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -60,17 +61,7 @@ class ProductResource extends Resource
                 ->orderBy('sort')
             ]);
 
-        $permittedCategoryIds = $user->permittedCategoryIds();
-
-        if ($permittedCategoryIds->isNotEmpty()) {
-            $query->whereIn('category_id', $permittedCategoryIds);
-        }
-
-        if ($user->vendor) {
-            $query->where('vendor_id', $user->vendor->id);
-        }
-
-        return $query;
+        return static::applyVisibilityScopes($query, $user);
     }
 
     public static function getPages(): array
@@ -106,11 +97,13 @@ class ProductResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (! auth()->user()?->can('viewAny', static::getModel())) {
+        $user = auth()->user();
+
+        if (! $user?->can('viewAny', static::getModel())) {
             return null;
         }
 
-        return (string) Product::count();
+        return (string) static::applyVisibilityScopes(Product::query(), $user)->count();
     }
 
     public static function getRelations(): array
@@ -118,5 +111,20 @@ class ProductResource extends Resource
         return [
             RelationManagers\ImagesRelationManager::class,
         ];
+    }
+
+    public static function applyVisibilityScopes(Builder $query, User $user): Builder
+    {
+        $permittedCategoryIds = $user->permittedCategoryIds();
+
+        if ($permittedCategoryIds->isNotEmpty()) {
+            $query->whereIn('category_id', $permittedCategoryIds);
+        }
+
+        if ($user->vendor && ! $user->can(Permission::ManageVendors->value)) {
+            $query->where('vendor_id', $user->vendor->id);
+        }
+
+        return $query;
     }
 }
