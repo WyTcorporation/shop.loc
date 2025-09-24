@@ -2,10 +2,7 @@
 
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
-use App\Jobs\SendOrderStatusMail;
-use App\Jobs\SendOrderStatusUpdate;
 use App\Models\{Order, OrderItem, OrderStatusLog, Product, User};
-use Illuminate\Support\Facades\Queue;
 
 it('marks order paid and decrements stock', function () {
     $product = Product::factory()->create(['stock' => 5, 'price' => 10]);
@@ -29,8 +26,7 @@ it('cancels paid order and restocks', function () {
     expect($product->refresh()->stock)->toBe(5);
 });
 
-it('creates a status log and dispatches notifications when the order status changes', function () {
-    Queue::fake();
+it('creates a status log when the order status changes', function () {
 
     $user = User::factory()->create();
     $this->actingAs($user);
@@ -48,20 +44,9 @@ it('creates a status log and dispatches notifications when the order status chan
     expect($log->changed_by)->toBe($user->id);
     expect($log->note)->toBeNull();
 
-    Queue::assertPushed(SendOrderStatusMail::class, function (SendOrderStatusMail $job) use ($order) {
-        return $job->orderId === $order->id
-            && $job->status === OrderStatus::Paid->value;
-    });
-
-    Queue::assertPushed(SendOrderStatusUpdate::class, function (SendOrderStatusUpdate $job) use ($order) {
-        return $job->order->is($order)
-            && $job->toStatus === __('shop.orders.statuses.' . OrderStatus::Paid->value);
-    });
 });
 
 it('records shipment status changes in the order log', function () {
-    Queue::fake();
-
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -82,9 +67,4 @@ it('records shipment status changes in the order log', function () {
             'status' => __('shop.orders.shipment_status.' . ShipmentStatus::Delivered->value),
         ])
     );
-
-    Queue::assertPushed(SendOrderStatusMail::class, function (SendOrderStatusMail $job) use ($order) {
-        return $job->orderId === $order->id
-            && $job->status === ShipmentStatus::Delivered->value;
-    });
 });

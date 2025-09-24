@@ -16,7 +16,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
-use App\Jobs\SendOrderConfirmation;
 
 class OrdersTable
 {
@@ -125,18 +124,6 @@ class OrdersTable
                     ->action(function (Order $record) {
                         $record->cancel();
 //                        Notification::make()->title(__('shop.orders.notifications.cancelled'))->success()->send();
-                    }),
-                Action::make('resend')
-                    ->label(__('shop.orders.actions.resend_confirmation'))
-                    ->icon('heroicon-o-paper-airplane')
-                    ->requiresConfirmation()
-                    ->visible(fn ($record) => filled($record->email))
-                    ->action(function ($record) {
-                        SendOrderConfirmation::dispatch($record, $record->locale);
-                        \Filament\Notifications\Notification::make()
-                            ->title(__('shop.orders.notifications.confirmation_resent'))
-                            ->success()
-                            ->send();
                     }),
                 DeleteAction::make(),
             ])

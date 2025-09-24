@@ -3,9 +3,6 @@
 namespace App\Observers;
 
 use App\Enums\OrderStatus;
-use App\Jobs\SendOrderConfirmation;
-use App\Jobs\SendOrderStatusMail;
-use App\Jobs\SendOrderStatusUpdate;
 use App\Models\Order;
 use App\Models\OrderStatusLog;
 use BackedEnum;
@@ -50,16 +47,6 @@ class OrderObserver
         self::$previousStatuses[$cacheKey] = (string) $originalStatus;
     }
 
-    public function created(Order $order): void
-    {
-        $locale = $order->getAttribute('locale')
-            ?? $order->getOriginal('locale')
-            ?? app()->getLocale()
-            ?? (string) config('app.locale');
-
-        SendOrderConfirmation::dispatch($order, $locale)->afterCommit();
-    }
-
     public function updated(Order $order): void
     {
         if (! $order->wasChanged('status')) {
@@ -94,20 +81,6 @@ class OrderObserver
             'changed_by' => Auth::id(),
             'note' => $this->resolveStatusNote(),
         ]);
-
-        $locale = $order->getAttribute('locale')
-            ?? $order->getOriginal('locale')
-            ?? app()->getLocale()
-            ?? (string) config('app.locale');
-
-        SendOrderStatusMail::dispatch($order->getKey(), $to, $locale)->afterCommit();
-
-        if (in_array($toEnum, [OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
-            $fromLabel = $fromEnum ? __('shop.orders.statuses.' . $fromEnum->value) : null;
-            $toLabel = __('shop.orders.statuses.' . $toEnum->value);
-
-            SendOrderStatusUpdate::dispatch($order, $fromLabel, $toLabel, $locale)->afterCommit();
-        }
     }
 
     private function cacheKey(Order $order): int|string
