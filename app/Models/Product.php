@@ -77,6 +77,7 @@ class Product extends Model
             $rawName = $product->getAttributes()['name'] ?? null;
 
             if (blank($rawName)) {
+
                 $translations = array_filter((array) $product->name_translations, fn ($value) => filled($value));
                 $primaryLocale = config('app.locale');
 
