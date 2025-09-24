@@ -6,7 +6,6 @@ use App\Enums\ShipmentStatus;
 use App\Filament\Mine\Resources\Orders\OrderResource;
 use App\Models\Address;
 use App\Models\Order;
-use App\Support\Phone;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateOrder extends CreateRecord
@@ -74,7 +73,7 @@ class CreateOrder extends CreateRecord
             'city' => $address['city'] ?? null,
             'addr' => $address['addr'] ?? null,
             'postal_code' => $address['postal_code'] ?? null,
-            'phone' => Phone::normalize($address['phone'] ?? null),
+            'phone' => $address['phone'] ?? null,
         ];
     }
 
