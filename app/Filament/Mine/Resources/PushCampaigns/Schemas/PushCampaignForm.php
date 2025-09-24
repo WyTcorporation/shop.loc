@@ -53,7 +53,11 @@ class PushCampaignForm
                     DateTimePicker::make('scheduled_for')
                         ->label(__('Scheduled for')),
                     Select::make('segments')
-                        ->relationship('segments', 'name')
+                        ->relationship(
+                            'segments',
+                            'name',
+                            fn ($query) => $query->select(['customer_segments.id', 'customer_segments.name'])
+                        )
                         ->multiple()
                         ->preload()
                         ->searchable()
