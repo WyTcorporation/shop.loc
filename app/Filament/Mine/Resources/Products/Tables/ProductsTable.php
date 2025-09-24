@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Products\Tables;
 
+use App\Filament\Mine\Resources\Products\ProductResource;
 use App\Models\Product;
 use App\Models\Vendor;
 use Filament\Actions\BulkActionGroup;
@@ -22,15 +23,8 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(function (): Builder {
-                $query = Product::query()->with(['images', 'category', 'stocks']);
-
-                if ($vendor = Auth::user()?->vendor) {
-                    $query->where('vendor_id', $vendor->id);
-                }
-
-                return $query;
-            })
+            ->query(fn (): Builder => ProductResource::getScopedQueryFor()
+                ->with(['category', 'stocks']))
             ->columns([
                 ImageColumn::make('preview')
                     ->label(__('shop.products.fields.preview'))

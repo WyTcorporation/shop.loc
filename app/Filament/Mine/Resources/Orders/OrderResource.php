@@ -100,6 +100,6 @@ class OrderResource extends Resource
             return null;
         }
 
-        return (string) Order::count();
+        return (string) static::getEloquentQuery()->count();
     }
 }
