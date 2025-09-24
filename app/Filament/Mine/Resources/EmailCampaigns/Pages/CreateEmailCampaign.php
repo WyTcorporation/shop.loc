@@ -30,8 +30,6 @@ class CreateEmailCampaign extends CreateRecord
 
     protected function afterCreate(): void
     {
-        parent::afterCreate();
-
         EmailCampaignResource::persistSchedule($this->record, $this->scheduleData);
     }
 }

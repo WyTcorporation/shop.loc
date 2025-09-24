@@ -50,8 +50,6 @@ class EditEmailCampaign extends EditRecord
 
     public function afterSave(): void
     {
-        parent::afterSave();
-
-        EmailCampaignResource::persistSchedule($this->record, $this->scheduleData);
+       EmailCampaignResource::persistSchedule($this->record, $this->scheduleData);
     }
 }
