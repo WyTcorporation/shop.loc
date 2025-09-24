@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\AddressCast;
 use App\Jobs\SendOrderStatusMail;
 use App\Support\Phone;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,8 +38,8 @@ class Order extends Model
         'loyalty_points_value' => 'decimal:2',
         'loyalty_points_used' => 'integer',
         'loyalty_points_earned' => 'integer',
-        'shipping_address' => 'array',
-        'billing_address' => 'array',
+        'shipping_address' => AddressCast::class,
+        'billing_address' => AddressCast::class,
         'locale' => 'string',
         'paid_at' => 'datetime',
         'shipped_at' => 'datetime',
