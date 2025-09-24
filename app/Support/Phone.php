@@ -2,13 +2,29 @@
 
 namespace App\Support;
 
+use Stringable;
+
 final class Phone
 {
     private const MAX_DIGITS = 15;
 
-    public static function format(?string $value): ?string
+    public static function format(null|string|int|float|Stringable $value): ?string
     {
         if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof Stringable) {
+            $value = (string) $value;
+        }
+
+        if (is_int($value)) {
+            $value = (string) $value;
+        } elseif (is_float($value)) {
+            $value = rtrim(rtrim(sprintf('%.0f', $value), '0'), '.');
+        }
+
+        if (! is_string($value)) {
             return null;
         }
 
@@ -43,7 +59,7 @@ final class Phone
         return '+' . implode(' ', $chunks);
     }
 
-    public static function normalize(?string $value): ?string
+    public static function normalize(null|string|int|float|Stringable $value): ?string
     {
         if ($value === null) {
             return null;
