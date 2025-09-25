@@ -448,6 +448,15 @@ const messages = {
             orderCreateSuccess: 'Замовлення створено. Завершіть оплату.',
             orderCreateFailed: 'Не вдалося створити замовлення.',
         },
+        soldOutPage: {
+            seoTitle: ({ brand }: { brand: string }) => `Товар недоступний — ${brand}`,
+            title: 'Товар недоступний',
+            description: 'На жаль, товар закінчився на всіх наших складах. Просимо вибачення за незручності.',
+            descriptionWithProduct: ({ product }: { product: string }) =>
+                `На жаль, «${product}» закінчився на всіх наших складах. Просимо вибачення за незручності.`,
+            backToCart: 'Повернутися до кошика',
+            backToCatalog: 'До каталогу',
+        },
         address: {
             emailLabel: 'Контактний email',
             emailPlaceholder: 'you@example.com',

@@ -448,6 +448,15 @@ const messages = {
             orderCreateSuccess: 'Encomenda criada. Conclua o pagamento.',
             orderCreateFailed: 'Não foi possível criar a encomenda.',
         },
+        soldOutPage: {
+            seoTitle: ({ brand }: { brand: string }) => `Produto indisponível — ${brand}`,
+            title: 'Produto indisponível',
+            description: 'Infelizmente, o produto está esgotado em todos os nossos armazéns. Pedimos desculpa pelo transtorno.',
+            descriptionWithProduct: ({ product }: { product: string }) =>
+                `Infelizmente, “${product}” está esgotado em todos os nossos armazéns. Pedimos desculpa pelo transtorno.`,
+            backToCart: 'Voltar ao carrinho',
+            backToCatalog: 'Voltar ao catálogo',
+        },
         address: {
             emailLabel: 'Email de contacto',
             emailPlaceholder: 'you@example.com',
