@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use function currencySymbol;
 use function data_get;
+use function localeLabel;
 
 class ProductForm
 {
@@ -45,7 +46,7 @@ class ProductForm
                     ->columnSpanFull()
                     ->tabs(
                         $supportedLocales
-                            ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                            ->map(fn (string $locale): Tab => Tab::make(localeLabel($locale))
                                 ->schema([
                                     TextInput::make("name_translations.{$locale}")
                                         ->label(__('shop.products.fields.name'))
@@ -150,7 +151,7 @@ class ProductForm
                             ->schema(
                                 $supportedLocales
                                     ->map(fn (string $locale): TextInput => TextInput::make($locale)
-                                        ->label(strtoupper($locale))
+                                        ->label(localeLabel($locale))
                                         ->live(onBlur: true)
                                         ->afterStateHydrated(function (TextInput $component, $state, Set $set, Get $get) use ($locale, $primaryLocale): void {
                                             if ($locale !== $primaryLocale || filled($state)) {

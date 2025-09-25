@@ -50,3 +50,13 @@ if (! function_exists('resolveMailLocale')) {
         return $locale;
     }
 }
+
+if (! function_exists('localeLabel')) {
+    function localeLabel(string $locale): string
+    {
+        return match ($locale) {
+            'uk' => 'UA',
+            default => strtoupper($locale),
+        };
+    }
+}

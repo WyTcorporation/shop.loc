@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
+use function localeLabel;
 
 class CategoryForm
 {
@@ -32,7 +33,7 @@ class CategoryForm
                     ->columnSpanFull()
                     ->tabs(
                         $supportedLocales
-                            ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                            ->map(fn (string $locale): Tab => Tab::make(localeLabel($locale))
                                 ->schema([
                                     TextInput::make("name_translations.{$locale}")
                                         ->label(__('shop.categories.fields.name'))

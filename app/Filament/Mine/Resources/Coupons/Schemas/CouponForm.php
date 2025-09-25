@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use function currencySymbol;
+use function localeLabel;
 
 class CouponForm
 {
@@ -46,7 +47,7 @@ class CouponForm
                 ->columnSpanFull()
                 ->tabs(
                     $supportedLocales
-                        ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                        ->map(fn (string $locale): Tab => Tab::make(localeLabel($locale))
                             ->schema([
                                 TextInput::make("name_translations.{$locale}")
                                     ->label(__('shop.common.name'))
