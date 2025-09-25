@@ -3,7 +3,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import LanguageSwitcher, { swapLangInPath } from '../components/LanguageSwitcher';
+import LanguageSwitcher, { LANGUAGE_LABELS, swapLangInPath } from '../components/LanguageSwitcher';
 import LocaleProvider from '../i18n/LocaleProvider';
 import { SUPPORTED_LANGS, type Lang } from '../i18n/config';
 
@@ -60,7 +60,9 @@ describe('LanguageSwitcher', () => {
         const buttons = screen.getAllByRole('button');
         const labels = buttons.map((button) => button.textContent);
 
-        expect(labels).toEqual(SUPPORTED_LANGS.map((lang) => lang.toUpperCase()));
+        expect(labels).toEqual(
+            SUPPORTED_LANGS.map((lang) => LANGUAGE_LABELS[lang] ?? lang.toUpperCase()),
+        );
     });
 
     it('replaces the language prefix in the current path', async () => {
@@ -69,7 +71,7 @@ describe('LanguageSwitcher', () => {
 
         renderSwitcher('en');
 
-        await user.click(screen.getByRole('button', { name: 'RU' }));
+        await user.click(screen.getByRole('button', { name: LANGUAGE_LABELS.ru }));
 
         expect(assignMock).toHaveBeenCalledWith('/ru/catalog?foo=1#hash');
     });
@@ -80,7 +82,7 @@ describe('LanguageSwitcher', () => {
 
         renderSwitcher('uk');
 
-        await user.click(screen.getByRole('button', { name: 'PT' }));
+        await user.click(screen.getByRole('button', { name: LANGUAGE_LABELS.pt }));
 
         expect(assignMock).toHaveBeenCalledWith('/pt/catalog');
     });
