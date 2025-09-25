@@ -23,6 +23,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
+use function localeLabel;
 
 class ImagesRelationManager extends RelationManager
 {
@@ -101,7 +102,7 @@ class ImagesRelationManager extends RelationManager
                 ->columnSpanFull()
                 ->tabs(
                     $supportedLocales
-                        ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                        ->map(fn (string $locale): Tab => Tab::make(localeLabel($locale))
                             ->schema([
                                 TextInput::make("alt_translations.{$locale}")
                                     ->label(__('shop.products.images.fields.alt_text'))

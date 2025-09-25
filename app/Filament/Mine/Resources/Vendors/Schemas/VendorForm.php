@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use function localeLabel;
 
 class VendorForm
 {
@@ -62,7 +63,7 @@ class VendorForm
                     ->columnSpanFull()
                     ->tabs(
                         $supportedLocales
-                            ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                            ->map(fn (string $locale): Tab => Tab::make(localeLabel($locale))
                                 ->schema([
                                     TextInput::make("name_translations.{$locale}")
                                         ->label(__('shop.common.name'))

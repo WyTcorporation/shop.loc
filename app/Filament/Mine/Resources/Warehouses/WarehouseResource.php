@@ -22,6 +22,7 @@ use Filament\Schemas\Components\Utilities\Set as SchemaSet;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use function localeLabel;
 
 class WarehouseResource extends Resource
 {
@@ -64,7 +65,7 @@ class WarehouseResource extends Resource
                 ->columnSpanFull()
                 ->tabs(
                     $supportedLocales
-                        ->map(fn (string $locale): Tab => Tab::make(strtoupper($locale))
+                        ->map(fn (string $locale): Tab => Tab::make(localeLabel($locale))
                             ->schema([
                                 TextInput::make("name_translations.{$locale}")
                                     ->label(__('shop.common.name'))
