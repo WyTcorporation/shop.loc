@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Mine\Resources\SaftExportLogs\Pages;
+namespace App\Filament\Mine\Resources\SoftExportLogs\Pages;
 
-use App\Filament\Mine\Resources\SaftExportLogs\SaftExportLogResource;
+use App\Filament\Mine\Resources\SoftExportLogs\SoftExportLogResource;
 use App\Models\Order;
 use App\Models\SaftExportLog;
 use App\Services\Documents\SaftExporter;
@@ -20,7 +20,7 @@ class ExportSaft extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string $resource = SaftExportLogResource::class;
+    protected static string $resource = SoftExportLogResource::class;
 
     protected string $view = 'filament.mine.resources.saft-export-logs.pages.export';
 

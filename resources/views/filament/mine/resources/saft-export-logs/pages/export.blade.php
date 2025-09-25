@@ -26,14 +26,16 @@
                     </div>
                     @if($this->latestLog->message)
                         <div>
-                            <span class="font-semibold">{{ __('shop.admin.resources.saft_exports.fields.message') }}:</span>
+                            <span
+                                class="font-semibold">{{ __('shop.admin.resources.saft_exports.fields.message') }}:</span>
                             <span>{{ $this->latestLog->message }}</span>
                         </div>
                     @endif
                 </div>
 
                 <div class="mt-4 flex items-center gap-2">
-                    <x-filament::button tag="a" color="gray" href="{{ \App\Filament\Mine\Resources\SaftExportLogs\SaftExportLogResource::getUrl('index') }}">
+                    <x-filament::button tag="a" color="gray"
+                                        href="{{ \App\Filament\Mine\Resources\SoftExportLogs\SoftExportLogResource::getUrl('index') }}">
                         {{ __('shop.admin.resources.saft_exports.actions.view_logs') }}
                     </x-filament::button>
                 </div>

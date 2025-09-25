@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Filament\Mine\Resources\SaftExportLogs;
+namespace App\Filament\Mine\Resources\SoftExportLogs;
 
-use App\Filament\Mine\Resources\SaftExportLogs\Pages\ExportSaft;
-use App\Filament\Mine\Resources\SaftExportLogs\Pages\ListSaftExportLogs;
+use App\Filament\Mine\Resources\SoftExportLogs\Pages\ExportSaft;
+use App\Filament\Mine\Resources\SoftExportLogs\Pages\ListSaftExportLogs;
 use App\Models\SaftExportLog;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
-class SaftExportLogResource extends Resource
+class SoftExportLogResource extends Resource
 {
     protected static ?string $model = SaftExportLog::class;
 
