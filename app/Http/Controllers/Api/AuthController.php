@@ -40,7 +40,7 @@ class AuthController extends Controller
 
         $locale = resolveMailLocale($request);
 
-        $verificationUrl = $this->queueEmailVerification($user, $locale, true);
+        $verificationUrl = $this->queueEmailVerification($user, $locale);
 
         Mail::to($user)
             ->locale($locale)
