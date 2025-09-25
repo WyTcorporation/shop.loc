@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'languages' => [
+        'uk' => 'Ucraniano',
+        'en' => 'Inglês',
+        'ru' => 'Russo',
+        'pt' => 'Português',
+    ],
     'admin' => [
         'brand' => 'Administração da Loja',
         'navigation' => [

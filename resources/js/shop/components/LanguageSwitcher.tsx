@@ -1,6 +1,13 @@
 import { useLocale } from '../i18n/LocaleProvider';
 import { SUPPORTED_LANGS, Lang, DEFAULT_LANG } from '../i18n/config';
 
+export const LANGUAGE_LABELS: Record<Lang, string> = {
+    uk: 'UA',
+    en: 'EN',
+    ru: 'RU',
+    pt: 'PT',
+};
+
 export function swapLangInPath(next: Lang) {
     const u = new URL(window.location.href);
     const parts = u.pathname.split('/').filter(Boolean);
@@ -28,7 +35,7 @@ export default function LanguageSwitcher() {
                     onClick={() => { setLang(l); window.location.assign(swapLangInPath(l)); }}
                     className={`text-xs underline ${l===lang ? 'font-semibold' : ''}`}
                 >
-                    {l.toUpperCase()}
+                    {LANGUAGE_LABELS[l] ?? l.toUpperCase()}
                 </button>
             ))}
         </div>
