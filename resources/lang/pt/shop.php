@@ -643,6 +643,7 @@ return [
         'orders' => [
             'cart_empty' => 'Carrinho vazio',
             'insufficient_stock' => 'Estoque insuficiente para o produto nº :product',
+            'sold_out' => 'O produto está esgotado no momento. Pedimos desculpa pelo transtorno.',
             'coupon_unavailable' => 'O cupom não está mais disponível.',
             'coupon_usage_limit_reached' => 'Limite de uso do cupom atingido.',
             'not_enough_points' => 'Pontos de fidelidade insuficientes para resgatar o valor solicitado.',

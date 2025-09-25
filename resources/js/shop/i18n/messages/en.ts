@@ -447,6 +447,15 @@ const messages = {
             orderCreateSuccess: 'Order created. Complete the payment.',
             orderCreateFailed: 'Could not create the order.',
         },
+        soldOutPage: {
+            seoTitle: ({ brand }: { brand: string }) => `Product unavailable — ${brand}`,
+            title: 'Product unavailable',
+            description: 'Unfortunately, the product ran out across all our warehouses. We are sorry for the inconvenience.',
+            descriptionWithProduct: ({ product }: { product: string }) =>
+                `Unfortunately, “${product}” ran out across all our warehouses. We are sorry for the inconvenience.`,
+            backToCart: 'Back to cart',
+            backToCatalog: 'Back to catalog',
+        },
         address: {
             emailLabel: 'Contact email',
             emailPlaceholder: 'you@example.com',

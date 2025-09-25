@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
     AddressesApi,
@@ -436,6 +437,35 @@ export default function CheckoutPage() {
             }
             setStep('payment');
         } catch (error) {
+            if (isAxiosError(error)) {
+                const payload = error.response?.data as
+                    | { code?: string; product_id?: number; message?: string }
+                    | undefined;
+
+                if (payload?.code === 'sold_out') {
+                    const productId = payload.product_id;
+                    const matchingItem = cart?.items?.find((item) => item.product_id === productId);
+                    const productName = matchingItem?.name ?? matchingItem?.product?.name ?? null;
+                    const apologyMessage = typeof payload.message === 'string' ? payload.message : undefined;
+
+                    try {
+                        await reload();
+                    } catch {
+                        /* no-op */
+                    }
+
+                    nav('sold-out', {
+                        replace: true,
+                        state: {
+                            productName: productName ?? undefined,
+                            message: apologyMessage,
+                        },
+                    });
+
+                    return;
+                }
+            }
+
             const message = resolveErrorMessage(error, t('checkout.notifications.orderCreateFailed'));
             setCreateError(message);
             notifyError({ title: message });

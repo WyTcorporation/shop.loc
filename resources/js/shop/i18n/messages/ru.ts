@@ -450,6 +450,15 @@ const messages = {
             orderCreateSuccess: 'Заказ создан. Завершите оплату.',
             orderCreateFailed: 'Не удалось создать заказ.',
         },
+        soldOutPage: {
+            seoTitle: ({ brand }: { brand: string }) => `Товар недоступен — ${brand}`,
+            title: 'Товар недоступен',
+            description: 'К сожалению, товар закончился на всех наших складах. Приносим извинения за неудобства.',
+            descriptionWithProduct: ({ product }: { product: string }) =>
+                `К сожалению, «${product}» закончился на всех наших складах. Приносим извинения за неудобства.`,
+            backToCart: 'Вернуться в корзину',
+            backToCatalog: 'Вернуться в каталог',
+        },
         address: {
             emailLabel: 'Контактный email',
             emailPlaceholder: 'you@example.com',

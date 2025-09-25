@@ -643,6 +643,7 @@ return [
         'orders' => [
             'cart_empty' => 'Cart is empty',
             'insufficient_stock' => 'Insufficient stock for product #:product',
+            'sold_out' => 'The product is sold out at the moment. We apologize for the inconvenience.',
             'coupon_unavailable' => 'Coupon is no longer available.',
             'coupon_usage_limit_reached' => 'Coupon usage limit reached.',
             'not_enough_points' => 'Not enough loyalty points to redeem the requested amount.',

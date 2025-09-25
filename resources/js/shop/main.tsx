@@ -13,6 +13,7 @@ import { initMonitoring } from './monitoring';
 import CartPage from './pages/Cart';
 import CatalogPage from './pages/Catalog';
 import CheckoutPage from './pages/Checkout';
+import CheckoutSoldOutPage from './pages/CheckoutSoldOut';
 import ForgotPasswordPage from './pages/ForgotPassword';
 import LoginPage from './pages/Login';
 import NotFoundPage from './pages/NotFound';
@@ -114,6 +115,7 @@ if (el) {
                                                 <Route path="product/:slug" element={<ProductPage />} />
                                                 <Route path="seller/:id" element={<SellerPage />} />
                                                 <Route path="cart" element={<CartPage />} />
+                                                <Route path="checkout/sold-out" element={<CheckoutSoldOutPage />} />
                                                 <Route path="checkout" element={<CheckoutPage />} />
                                                 <Route path="order/:number" element={<OrderConfirmationPage />} />
                                                 <Route path="wishlist" element={<WishlistPage />} />

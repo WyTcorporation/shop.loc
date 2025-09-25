@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Address, Cart, Coupon, LoyaltyPointTransaction, Order, OrderItem, Warehouse};
+use App\Models\{Address, Cart, CartItem, Coupon, LoyaltyPointTransaction, Order, OrderItem, Warehouse};
 use App\Enums\ShipmentStatus;
 use App\Services\Carts\CartPricingService;
 use App\Services\Currency\CurrencyConverter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use DomainException;
 
@@ -77,15 +79,24 @@ class OrderController extends Controller
                 abort(422, __('shop.api.orders.cart_empty'));
             }
 
-            $warehouse = Warehouse::getDefault();
+            $warehouses = Warehouse::query()->orderBy('id')->get();
+
+            if ($warehouses->isEmpty()) {
+                $warehouses = collect([Warehouse::getDefault()]);
+            }
+
+            $preferredWarehouses = [];
 
             foreach ($cart->items as $item) {
-                if ($item->product->availableStock($warehouse->id) < $item->qty) {
-                    abort(422, __('shop.inventory.not_enough_stock', [
-                        'product_id' => $item->product_id,
-                        'warehouse_id' => $warehouse->id,
-                    ]));
+                $preferred = $warehouses->first(function (Warehouse $candidate) use ($item) {
+                    return $item->product->availableStock($candidate->id) >= $item->qty;
+                });
+
+                if (! $preferred) {
+                    throw $this->soldOutException($item->product_id);
                 }
+
+                $preferredWarehouses[$item->id] = $preferred->id;
             }
 
             $hadCoupon = (bool) $cart->coupon_id;
@@ -111,12 +122,14 @@ class OrderController extends Controller
 
             CartPricingService::syncCartAdjustments($cart, $totals);
 
+            $assignedWarehouses = [];
+
             foreach ($cart->items as $item) {
-                try {
-                    $item->product->reserveStock($item->qty, $warehouse->id);
-                } catch (DomainException $e) {
-                    abort(422, $e->getMessage());
-                }
+                $assignedWarehouses[$item->id] = $this->reserveAcrossWarehouses(
+                    $item,
+                    $warehouses,
+                    $preferredWarehouses[$item->id] ?? null,
+                );
             }
 
             $coupon = $totals->coupon
@@ -184,7 +197,7 @@ class OrderController extends Controller
 
             $items = $cart->items->map(fn ($it) => new OrderItem([
                 'product_id' => $it->product_id,
-                'warehouse_id' => $warehouse->id,
+                'warehouse_id' => $assignedWarehouses[$it->id] ?? null,
                 'qty' => $it->qty,
                 'price' => $it->price,
             ]));
@@ -332,5 +345,43 @@ class OrderController extends Controller
         return is_string($configLocale) && $configLocale !== ''
             ? $configLocale
             : 'en';
+    }
+
+    /**
+     * @param  Collection<int, Warehouse>  $warehouses
+     */
+    private function reserveAcrossWarehouses(CartItem $item, Collection $warehouses, ?int $preferredId): int
+    {
+        $orderedWarehouses = $warehouses;
+
+        if ($preferredId !== null) {
+            $preferred = $warehouses->firstWhere('id', $preferredId);
+
+            if ($preferred) {
+                $orderedWarehouses = collect([$preferred])
+                    ->merge($warehouses->reject(fn (Warehouse $warehouse) => $warehouse->id === $preferredId));
+            }
+        }
+
+        foreach ($orderedWarehouses as $warehouse) {
+            try {
+                $item->product->reserveStock($item->qty, $warehouse->id);
+
+                return $warehouse->id;
+            } catch (DomainException $e) {
+                continue;
+            }
+        }
+
+        throw $this->soldOutException($item->product_id);
+    }
+
+    private function soldOutException(int $productId): HttpResponseException
+    {
+        return new HttpResponseException(response()->json([
+            'message' => __('shop.api.orders.sold_out'),
+            'code' => 'sold_out',
+            'product_id' => $productId,
+        ], 409));
     }
 }
