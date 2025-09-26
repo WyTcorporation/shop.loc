@@ -42,6 +42,11 @@ class MergeGuestCart
                 return;
             }
 
+            if ($guest->user_id && (string) $guest->user_id === (string) $user->id) {
+                Cookie::queue(Cookie::forget('cart_id'));
+                return;
+            }
+
             /** @var Cart|null $userCart */
             $userCart = Cart::query()
                 ->where('user_id', $user->id)
@@ -52,8 +57,8 @@ class MergeGuestCart
 // 1) Немає активного кошика у користувача — просто “прикріплюємо” guest.
             if (! $userCart) {
                 $guest->forceFill([
-                    'status'  => 'merged',      // ← новий статус
-                    'user_id' => $user->id,     // для аудиту хто «власник» архівованого кошика
+                    'status'  => 'active',      // залишаємо кошик активним для подальших запитів
+                    'user_id' => $user->id,     // фіксуємо власника активного кошика
                 ])->saveQuietly();
                 Cookie::queue(Cookie::forget('cart_id'));
                 return; // критично, щоб не дійти до видалення guest
