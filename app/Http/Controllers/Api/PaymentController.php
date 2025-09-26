@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Invoices\CreateInvoiceFromOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Stripe\StripeClient;
@@ -20,7 +21,9 @@ class PaymentController extends Controller
         $currency    = strtolower($order->currency ?: 'EUR');
         $amountMinor = (int) round(((float) $order->total) * 100);
 
-        $stripe = new StripeClient(config('services.stripe.secret'));
+        $stripe = app()->bound(StripeClient::class)
+            ? app(StripeClient::class)
+            : new StripeClient(config('services.stripe.secret'));
 
         if ($order->payment_intent_id) {
             $pi = $stripe->paymentIntents->retrieve($order->payment_intent_id);
@@ -70,7 +73,9 @@ class PaymentController extends Controller
             return response()->json(['ok' => false, 'error' => __('shop.api.payments.missing_intent')], 400);
         }
 
-        $stripe = new StripeClient(config('services.stripe.secret'));
+        $stripe = app()->bound(StripeClient::class)
+            ? app(StripeClient::class)
+            : new StripeClient(config('services.stripe.secret'));
         $pi     = $stripe->paymentIntents->retrieve($piId);
 
         $stripeStatus = (string) $pi->status; // succeeded|processing|requires_payment_method|canceled
@@ -99,6 +104,14 @@ class PaymentController extends Controller
         }
 
         $order->save();
+
+        if ($next === OrderStatus::Paid) {
+            $freshOrder = $order->fresh();
+
+            if ($freshOrder && $freshOrder->invoices()->doesntExist()) {
+                app(CreateInvoiceFromOrder::class)->handle($freshOrder);
+            }
+        }
 
         return response()->json([
             'ok'             => true,
