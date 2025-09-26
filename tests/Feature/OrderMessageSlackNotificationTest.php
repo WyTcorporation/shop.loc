@@ -47,4 +47,26 @@ class OrderMessageSlackNotificationTest extends TestCase
                 && str_contains($data['blocks'][0]['text']['text'] ?? '', $user->name);
         });
     }
+
+    public function test_slack_notification_is_not_sent_for_admin_messages(): void
+    {
+        Http::fake();
+
+        config([
+            'services.slack.order_messages' => [
+                'webhook_url' => 'https://hooks.slack.test/services/T000/B000/XXXX',
+            ],
+        ]);
+
+        $customer = User::factory()->create();
+        $order = Order::factory()->for($customer)->create();
+
+        $admin = User::factory()->create();
+
+        $service = app(OrderMessageService::class);
+
+        $service->create($order, $admin->getKey(), 'Адмінське повідомлення.');
+
+        Http::assertSentCount(0);
+    }
 }
