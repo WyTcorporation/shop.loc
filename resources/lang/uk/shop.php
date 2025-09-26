@@ -245,6 +245,12 @@ return [
                     'tax_total' => 'Податок',
                     'metadata' => 'Метадані',
                 ],
+                'statuses' => [
+                    'draft' => 'Чернетка',
+                    'issued' => 'Виставлено',
+                    'paid' => 'Оплачено',
+                    'void' => 'Анулювано',
+                ],
             ],
             'delivery_notes' => [
                 'label' => 'Накладна',

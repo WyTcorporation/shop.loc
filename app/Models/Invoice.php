@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Concerns\HasDocumentAuditing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
+        'status' => InvoiceStatus::class,
         'issued_at' => 'date',
         'due_at' => 'date',
         'subtotal' => 'decimal:2',
@@ -56,7 +58,7 @@ class Invoice extends Model
             'order_number' => $order?->number,
             'issued_at' => $this->issued_at?->toDateString(),
             'due_at' => $this->due_at?->toDateString(),
-            'status' => $this->status,
+            'status' => $this->status?->value,
             'currency' => $this->currency ?? $order?->currency,
             'subtotal' => (string) $this->subtotal,
             'tax_total' => (string) $this->tax_total,

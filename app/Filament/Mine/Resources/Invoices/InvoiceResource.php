@@ -2,6 +2,7 @@
 
 namespace App\Filament\Mine\Resources\Invoices;
 
+use App\Enums\InvoiceStatus;
 use App\Filament\Mine\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Mine\Resources\Invoices\Pages\EditInvoice;
 use App\Filament\Mine\Resources\Invoices\Pages\ListInvoices;
@@ -48,10 +49,11 @@ class InvoiceResource extends Resource
                     ->label(__('shop.common.order_number'))
                     ->required()
                     ->maxLength(64),
-                TextInput::make('status')
+                Select::make('status')
                     ->label(__('shop.common.status'))
-                    ->maxLength(64)
-                    ->default('draft'),
+                    ->options(InvoiceStatus::options())
+                    ->default(InvoiceStatus::Draft->value)
+                    ->native(false),
                 TextInput::make('currency')
                     ->label(__('shop.orders.fields.currency'))
                     ->maxLength(3),
@@ -103,17 +105,22 @@ class InvoiceResource extends Resource
                     ->sortable(),
                 TextColumn::make('status')
                     ->label(__('shop.common.status'))
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match (true) {
+                        $state instanceof InvoiceStatus => $state->label(),
+                        is_string($state) && ($status = InvoiceStatus::tryFrom($state)) => $status->label(),
+                        default => (string) $state,
+                    })
+                    ->color(fn ($state) => match (true) {
+                        $state instanceof InvoiceStatus => $state->badgeColor(),
+                        is_string($state) && ($status = InvoiceStatus::tryFrom($state)) => $status->badgeColor(),
+                        default => 'gray',
+                    }),
             ])
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('shop.common.status'))
-                    ->options(fn () => Invoice::query()
-                        ->select('status')
-                        ->whereNotNull('status')
-                        ->distinct()
-                        ->pluck('status', 'status')
-                        ->toArray()),
+                    ->options(InvoiceStatus::options()),
             ])
             ->actions([
                 EditAction::make(),
