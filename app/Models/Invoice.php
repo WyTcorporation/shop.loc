@@ -64,6 +64,7 @@ class Invoice extends Model
             'tax_total' => (string) $this->tax_total,
             'total' => (string) $this->total,
             'customer' => $order?->user?->name ?? $order?->email,
+            'metadata' => $this->metadata ?? [],
         ];
     }
 }
