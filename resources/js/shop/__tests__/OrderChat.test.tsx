@@ -22,15 +22,16 @@ const { authState, useAuthMock, listMessagesMock, sendMessageMock } = vi.hoisted
     };
 });
 
-vi.mock('../../hooks/useAuth', () => ({
+vi.mock('../hooks/useAuth', () => ({
     default: useAuthMock,
 }));
 
-vi.mock('../../api', () => ({
+vi.mock('../api', () => ({
     OrdersApi: {
         listMessages: listMessagesMock,
         sendMessage: sendMessageMock,
     },
+    setApiLocale: vi.fn(),
 }));
 
 function Testbed(props: React.ComponentProps<typeof OrderChat>) {

@@ -23,6 +23,8 @@ class OrderMessageController extends Controller
 
         $this->authorize('view', $order);
 
+        $this->orderMessageService->markAsRead($order, $user->id);
+
         $messages = $order->messages()
             ->with('user:id,name')
             ->oldest('created_at')
@@ -35,8 +37,10 @@ class OrderMessageController extends Controller
                 'meta' => $message->meta,
                 'created_at' => optional($message->created_at)->toISOString(),
                 'updated_at' => optional($message->updated_at)->toISOString(),
+                'read_at' => optional($message->read_at)->toISOString(),
                 'user' => $message->user,
                 'is_author' => $message->user_id === $user->id,
+                'is_read' => $message->isRead(),
             ])
             ->values();
 
@@ -69,8 +73,10 @@ class OrderMessageController extends Controller
             'meta' => $message->meta,
             'created_at' => optional($message->created_at)->toISOString(),
             'updated_at' => optional($message->updated_at)->toISOString(),
+            'read_at' => optional($message->read_at)->toISOString(),
             'user' => $message->user,
             'is_author' => true,
+            'is_read' => $message->isRead(),
         ], 201);
     }
 }

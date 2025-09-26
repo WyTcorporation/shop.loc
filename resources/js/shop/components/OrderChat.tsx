@@ -12,9 +12,10 @@ type OrderChatProps = {
     orderId: number;
     orderNumber?: string;
     className?: string;
+    onMessagesRead?: () => void;
 };
 
-export default function OrderChat({ orderId, orderNumber, className }: OrderChatProps) {
+export default function OrderChat({ orderId, orderNumber, className, onMessagesRead }: OrderChatProps) {
     const { isAuthenticated, isReady, user } = useAuth();
     const { t, locale } = useLocale();
     const [messages, setMessages] = React.useState<OrderMessage[]>([]);
@@ -44,6 +45,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
             .then((data) => {
                 if (!ignore) {
                     setMessages(data);
+                    onMessagesRead?.();
                 }
             })
             .catch((error) => {
@@ -72,6 +74,7 @@ export default function OrderChat({ orderId, orderNumber, className }: OrderChat
         try {
             const data = await OrdersApi.listMessages(orderId);
             setMessages(data);
+            onMessagesRead?.();
         } catch (error) {
             setLoadError(resolveErrorMessage(error, () => t('orderChat.errors.load')));
         } finally {

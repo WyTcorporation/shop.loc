@@ -12,11 +12,11 @@ const { useAuthMock } = vi.hoisted(() => ({
     useAuthMock: vi.fn(),
 }));
 
-vi.mock('../../hooks/useWishlist', () => ({
+vi.mock('../hooks/useWishlist', () => ({
     default: () => mockUseWishlist(),
 }));
 
-vi.mock('../../hooks/useAuth', () => ({
+vi.mock('../hooks/useAuth', () => ({
     default: useAuthMock,
 }));
 

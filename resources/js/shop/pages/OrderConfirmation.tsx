@@ -8,6 +8,7 @@ import PayOrder from "@/shop/components/PayOrder";
 import OrderChat from '../components/OrderChat';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '../i18n/LocaleProvider';
+import { Badge } from '@/components/ui/badge';
 
 type OrderItem = {
     id: number;
@@ -54,6 +55,7 @@ type Order = {
         phone?: string | null;
     } | null;
     currency?: string | null;
+    unread_responses_count?: number | null;
 };
 
 export default function OrderConfirmation() {
@@ -61,6 +63,7 @@ export default function OrderConfirmation() {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [chatOpen, setChatOpen] = useState(false);
+    const [unreadResponses, setUnreadResponses] = useState(0);
     const { t } = useLocale();
 
     const [sp] = useSearchParams();
@@ -82,6 +85,7 @@ export default function OrderConfirmation() {
                     const o = await OrdersApi.show(number);
                     if (!on) return;
                     setOrder(o);
+                    setUnreadResponses(o.unread_responses_count ?? 0);
                     GA.purchase(o);
                 }
             } finally {
@@ -104,6 +108,7 @@ export default function OrderConfirmation() {
             try {
                 const updatedOrder = await OrdersApi.show(number);
                 setOrder(updatedOrder);
+                setUnreadResponses(updatedOrder.unread_responses_count ?? 0);
             } catch (error) {
                 console.error('Failed to fetch updated order after payment', error);
             }
@@ -178,13 +183,23 @@ export default function OrderConfirmation() {
                         variant="outline"
                         size="sm"
                         onClick={() => setChatOpen((open) => !open)}
+                        className="inline-flex items-center gap-2"
                     >
                         {chatOpen ? t('order.confirmation.chat.close') : t('order.confirmation.chat.open')}
+                        {!chatOpen && unreadResponses > 0 && (
+                            <Badge variant="destructive" className="ml-1">
+                                {t('order.confirmation.chat.unreadBadge', { count: unreadResponses })}
+                            </Badge>
+                        )}
                     </Button>
                 )}
             </div>
             {chatOpen && order.id && (
-                <OrderChat orderId={order.id} orderNumber={order.number} />
+                <OrderChat
+                    orderId={order.id}
+                    orderNumber={order.number}
+                    onMessagesRead={() => setUnreadResponses(0)}
+                />
             )}
             <div className="rounded-xl border border-gray-200 p-4 space-y-2">
                 <h2 className="text-lg font-semibold">{t('order.confirmation.shipping.title')}</h2>

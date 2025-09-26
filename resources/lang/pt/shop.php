@@ -323,6 +323,10 @@ return [
         'send' => 'Enviar',
         'sent' => 'Mensagem enviada',
         'message' => 'Mensagem',
+        'indicators' => [
+            'awaiting_customer' => 'A aguardar o cliente',
+            'read' => 'Lida há :time',
+        ],
     ],
 
     'common' => [
@@ -461,6 +465,7 @@ return [
             'total' => 'Total',
             'shipment_status' => 'Status da remessa',
             'currency' => 'Moeda',
+            'unread_messages' => 'Mensagens por ler',
         ],
         'helpers' => [
             'email_auto' => 'Se um usuário for selecionado, o e-mail será preenchido automaticamente.',

@@ -346,10 +346,13 @@ const messages = {
                     number: 'Number',
                     date: 'Date',
                     status: 'Status',
+                    messages: 'Messages',
                     total: 'Total',
                     actions: 'Actions',
                 },
                 view: 'View order details',
+                unreadBadge: ({ count }: { count: number }) => `${count} new`,
+                noUnread: 'No new replies',
             },
         },
         addresses: {
@@ -601,6 +604,7 @@ const messages = {
             chat: {
                 open: 'Message the seller',
                 close: 'Hide chat',
+                unreadBadge: ({ count }: { count: number }) => `New: ${count}`,
             },
             shipping: {
                 title: 'Shipping & tracking',

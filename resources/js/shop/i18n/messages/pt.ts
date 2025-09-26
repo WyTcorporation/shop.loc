@@ -346,10 +346,13 @@ const messages = {
                     number: 'Número',
                     date: 'Data',
                     status: 'Estado',
+                    messages: 'Mensagens',
                     total: 'Total',
                     actions: 'Ações',
                 },
                 view: 'Ver detalhes da encomenda',
+                unreadBadge: ({ count }: { count: number }) => `${count} novas`,
+                noUnread: 'Sem novas respostas',
             },
         },
         addresses: {
@@ -602,6 +605,7 @@ const messages = {
             chat: {
                 open: 'Contactar o vendedor',
                 close: 'Ocultar chat',
+                unreadBadge: ({ count }: { count: number }) => `Novas: ${count}`,
             },
             shipping: {
                 title: 'Envio e seguimento',

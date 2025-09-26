@@ -281,6 +281,8 @@ export type OrderResponse = {
     note?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
+    unread_messages_count?: number;
+    unread_responses_count?: number;
 };
 
 export type OrderMessage = {
@@ -291,8 +293,10 @@ export type OrderMessage = {
     meta?: Record<string, unknown> | null;
     created_at?: string | null;
     updated_at?: string | null;
+    read_at?: string | null;
     user?: { id: number; name: string } | null;
     is_author?: boolean;
+    is_read?: boolean;
 };
 
 export type LoyaltyPointTransaction = {

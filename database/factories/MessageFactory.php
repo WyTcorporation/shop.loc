@@ -21,6 +21,8 @@ class MessageFactory extends Factory
             'user_id' => User::factory(),
             'body' => $this->faker->paragraph(),
             'meta' => null,
+            'read_at' => null,
+            'read_by' => null,
         ];
     }
 }

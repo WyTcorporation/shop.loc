@@ -81,6 +81,10 @@ class OrderMessages extends Page implements HasForms
     {
         $currentUserId = Auth::id();
 
+        if ($currentUserId !== null) {
+            app(OrderMessageService::class)->markAsRead($this->record, $currentUserId);
+        }
+
         $this->messages = $this->record->messages()
             ->with('user:id,name')
             ->oldest('created_at')
@@ -89,8 +93,10 @@ class OrderMessages extends Page implements HasForms
                 'id' => $message->id,
                 'body' => $message->body,
                 'created_at' => $message->created_at,
+                'read_at' => $message->read_at,
                 'user' => $message->user,
                 'is_author' => $message->user_id === $currentUserId,
+                'is_read' => $message->isRead(),
             ])
             ->all();
     }

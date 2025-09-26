@@ -346,10 +346,13 @@ const messages = {
                     number: 'Номер',
                     date: 'Дата',
                     status: 'Статус',
+                    messages: 'Повідомлення',
                     total: 'Сума',
                     actions: 'Дії',
                 },
                 view: 'Деталі замовлення',
+                unreadBadge: ({ count }: { count: number }) => `${count} нових`,
+                noUnread: 'Немає нових',
             },
         },
         addresses: {
@@ -602,6 +605,7 @@ const messages = {
             chat: {
                 open: 'Написати продавцю',
                 close: 'Сховати чат',
+                unreadBadge: ({ count }: { count: number }) => `Нових: ${count}`,
             },
             shipping: {
                 title: 'Доставка та відстеження',

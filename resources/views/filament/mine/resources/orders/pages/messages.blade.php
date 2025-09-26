@@ -17,6 +17,19 @@
                                     {{ optional($message['created_at'])->diffForHumans() }}
                                 </p>
                             </div>
+                            @if ($message['is_author'])
+                                <span @class([
+                                    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide',
+                                    'bg-emerald-100 text-emerald-700' => $message['is_read'],
+                                    'bg-amber-100 text-amber-800' => ! $message['is_read'],
+                                ])>
+                                    @if ($message['is_read'])
+                                        {{ __('shop.conversation.indicators.read', ['time' => optional($message['read_at'])->diffForHumans()]) }}
+                                    @else
+                                        {{ __('shop.conversation.indicators.awaiting_customer') }}
+                                    @endif
+                                </span>
+                            @endif
                         </div>
                         <div class="mt-3 text-sm text-gray-700 whitespace-pre-line">
                             {{ $message['body'] }}

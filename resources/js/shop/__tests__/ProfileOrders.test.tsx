@@ -6,22 +6,22 @@ import type { Mock } from 'vitest';
 import ProfileOrdersPage from '../pages/ProfileOrders';
 import { OrdersApi } from '../api';
 
-vi.mock('../../components/ProfileNavigation', () => ({
+vi.mock('../components/ProfileNavigation', () => ({
     __esModule: true,
     default: () => <div data-testid="profile-navigation" />,
 }));
 
-vi.mock('../../components/SeoHead', () => ({
+vi.mock('../components/SeoHead', () => ({
     __esModule: true,
     default: () => null,
 }));
 
-vi.mock('../../hooks/useAuth', () => ({
+vi.mock('../hooks/useAuth', () => ({
     __esModule: true,
     default: vi.fn(),
 }));
 
-vi.mock('../../i18n/LocaleProvider', () => ({
+vi.mock('../i18n/LocaleProvider', () => ({
     useLocale: vi.fn(),
 }));
 
@@ -49,6 +49,7 @@ describe('ProfileOrdersPage localization', () => {
             currency: 'USD',
             status: 'processing',
             created_at: '2024-02-15T12:30:00Z',
+            unread_responses_count: 2,
         } as const;
 
         useAuth.mockReturnValue({
@@ -94,5 +95,8 @@ describe('ProfileOrdersPage localization', () => {
         const amountMatcher = (content: string) => content.replace(/\u00a0/g, ' ') === expectedTotal.replace(/\u00a0/g, ' ');
         expect(within(orderRow as HTMLTableRowElement).getByText(amountMatcher)).toBeInTheDocument();
         expect(within(orderRow as HTMLTableRowElement).getByText(expectedDate)).toBeInTheDocument();
+        expect(within(orderRow as HTMLTableRowElement).getByTestId(`order-unread-${order.number}`)).toHaveTextContent(
+            'profile.orders.table.unreadBadge',
+        );
     });
 });

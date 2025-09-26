@@ -348,10 +348,13 @@ const messages = {
                     number: 'Номер',
                     date: 'Дата',
                     status: 'Статус',
+                    messages: 'Сообщения',
                     total: 'Сумма',
                     actions: 'Действия',
                 },
                 view: 'Подробнее о заказе',
+                unreadBadge: ({ count }: { count: number }) => `${count} новых`,
+                noUnread: 'Нет новых',
             },
         },
         addresses: {
@@ -604,6 +607,7 @@ const messages = {
             chat: {
                 open: 'Написать продавцу',
                 close: 'Скрыть чат',
+                unreadBadge: ({ count }: { count: number }) => `Новых: ${count}`,
             },
             shipping: {
                 title: 'Доставка и отслеживание',

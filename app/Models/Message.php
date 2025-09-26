@@ -15,10 +15,13 @@ class Message extends Model
         'user_id',
         'body',
         'meta',
+        'read_at',
+        'read_by',
     ];
 
     protected $casts = [
         'meta' => 'array',
+        'read_at' => 'datetime',
     ];
 
     public function order(): BelongsTo
@@ -29,5 +32,27 @@ class Message extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function readBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'read_by');
+    }
+
+    public function markAsRead(int|string $userId): void
+    {
+        if ($this->read_at !== null) {
+            return;
+        }
+
+        $this->forceFill([
+            'read_at' => now(),
+            'read_by' => $userId,
+        ])->save();
+    }
+
+    public function isRead(): bool
+    {
+        return $this->read_at !== null;
     }
 }
