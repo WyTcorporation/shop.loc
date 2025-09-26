@@ -4,6 +4,7 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetLocaleFromRequest;
 use App\Providers\EventServiceProvider;
+use Barryvdh\DomPDF\ServiceProvider as DompdfServiceProvider;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -13,6 +14,7 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         EventServiceProvider::class,
+        DompdfServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

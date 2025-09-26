@@ -2,6 +2,7 @@
 
 namespace App\Services\Documents;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -52,15 +53,14 @@ class DocumentExporter
 
     private static function toPseudoPdf(array $payload): string
     {
-        $flat = self::flattenPayload($payload);
+        $flattened = self::flattenPayload($payload);
 
-        $lines = ['Document export'];
+        $pdf = Pdf::loadView('documents.export', [
+            'payload' => $payload,
+            'flattened' => $flattened,
+        ]);
 
-        foreach ($flat as $key => $value) {
-            $lines[] = sprintf('%s: %s', Str::headline((string) $key), $value);
-        }
-
-        return implode("\n", $lines);
+        return $pdf->output();
     }
 
     private static function toCsv(array $payload): string
