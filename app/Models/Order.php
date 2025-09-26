@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Jobs\SendOrderStatusMail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -153,6 +154,36 @@ class Order extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class)->latest('created_at');
+    }
+
+    public function scopeWithUnreadMessageCounts(Builder $query): Builder
+    {
+        return $query->withCount(self::unreadMessageCountAggregates());
+    }
+
+    public function loadUnreadMessageCounts(): static
+    {
+        return $this->loadCount(self::unreadMessageCountAggregates());
+    }
+
+    /**
+     * @return array<string, callable(Builder):void>
+     */
+    protected static function unreadMessageCountAggregates(): array
+    {
+        return [
+            'messages as unread_messages_count' => function (Builder $subQuery) {
+                $subQuery->whereNull('read_at')
+                    ->whereColumn('messages.user_id', '=', 'orders.user_id');
+            },
+            'messages as unread_responses_count' => function (Builder $subQuery) {
+                $subQuery->whereNull('read_at')
+                    ->where(function (Builder $builder) {
+                        $builder->whereNull('orders.user_id')
+                            ->orWhereColumn('messages.user_id', '!=', 'orders.user_id');
+                    });
+            },
+        ];
     }
 
     public function invoices(): HasMany

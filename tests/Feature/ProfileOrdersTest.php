@@ -43,6 +43,7 @@ it('returns the current user orders with related data', function () {
     $firstOrder = $response[0];
     expect($firstOrder['items'])->not()->toBeEmpty();
     expect($firstOrder['shipment'])->not()->toBeNull();
+    expect($firstOrder)->toHaveKey('unread_responses_count');
 
     $firstItem = $firstOrder['items'][0];
     expect($firstItem['product'])->not()->toBeNull();

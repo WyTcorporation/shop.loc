@@ -6,6 +6,7 @@ import useAuth from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleProvider';
 import { resolveErrorMessage } from '../lib/errors';
 import { formatCurrency, formatDateTime } from '../ui/format';
+import { Badge } from '@/components/ui/badge';
 
 export default function ProfileOrdersPage() {
     const { t, locale } = useLocale();
@@ -91,6 +92,7 @@ export default function ProfileOrdersPage() {
                                         <th className="px-4 py-3">{t('profile.orders.table.headers.number')}</th>
                                         <th className="px-4 py-3">{t('profile.orders.table.headers.date')}</th>
                                         <th className="px-4 py-3">{t('profile.orders.table.headers.status')}</th>
+                                        <th className="px-4 py-3">{t('profile.orders.table.headers.messages')}</th>
                                         <th className="px-4 py-3">{t('profile.orders.table.headers.total')}</th>
                                         <th className="px-4 py-3">{t('profile.orders.table.headers.actions')}</th>
                                     </tr>
@@ -101,6 +103,7 @@ export default function ProfileOrdersPage() {
                                             currency: order.currency ?? 'EUR',
                                             locale,
                                         });
+                                        const unread = order.unread_responses_count ?? 0;
                                         return (
                                             <tr key={order.number} className="hover:bg-gray-50">
                                                 <td className="px-4 py-4 font-medium text-gray-900">{order.number}</td>
@@ -111,6 +114,15 @@ export default function ProfileOrdersPage() {
                                                     })}
                                                 </td>
                                                 <td className="px-4 py-4 text-gray-700">{order.status ?? '—'}</td>
+                                                <td className="px-4 py-4">
+                                                    {unread > 0 ? (
+                                                        <Badge variant="destructive" data-testid={`order-unread-${order.number}`}>
+                                                            {t('profile.orders.table.unreadBadge', { count: unread })}
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-500">{t('profile.orders.table.noUnread')}</span>
+                                                    )}
+                                                </td>
                                                 <td className="px-4 py-4 text-gray-900">{total}</td>
                                                 <td className="px-4 py-4">
                                                     <Link

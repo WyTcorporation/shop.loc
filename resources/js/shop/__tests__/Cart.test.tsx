@@ -21,7 +21,7 @@ vi.mock('../../ui/ga', () => ({
     },
 }));
 
-vi.mock('../../i18n/LocaleProvider', () => ({
+vi.mock('../i18n/LocaleProvider', () => ({
     useLocale: vi.fn(),
 }));
 

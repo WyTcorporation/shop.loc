@@ -59,6 +59,7 @@ class OrderResource extends Resource
         }
 
         $query->with(['items.product.vendor', 'logs.user']);
+        $query->withUnreadMessageCounts();
 
         return $query;
     }

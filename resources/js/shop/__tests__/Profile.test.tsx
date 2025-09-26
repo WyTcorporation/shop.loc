@@ -8,7 +8,7 @@ import { AuthApi, TwoFactorApi } from '../api';
 
 const mockUseAuth = vi.fn();
 
-vi.mock('../../hooks/useAuth', () => ({
+vi.mock('../hooks/useAuth', () => ({
     default: () => mockUseAuth(),
 }));
 

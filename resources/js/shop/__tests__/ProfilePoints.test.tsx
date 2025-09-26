@@ -6,17 +6,17 @@ import type { Mock } from 'vitest';
 import ProfilePointsPage from '../pages/ProfilePoints';
 import { ProfileApi } from '../api';
 
-vi.mock('../../components/ProfileNavigation', () => ({
+vi.mock('../components/ProfileNavigation', () => ({
     __esModule: true,
     default: () => <div data-testid="profile-navigation" />,
 }));
 
-vi.mock('../../hooks/useAuth', () => ({
+vi.mock('../hooks/useAuth', () => ({
     __esModule: true,
     default: vi.fn(),
 }));
 
-vi.mock('../../i18n/LocaleProvider', () => ({
+vi.mock('../i18n/LocaleProvider', () => ({
     useLocale: vi.fn(),
 }));
 

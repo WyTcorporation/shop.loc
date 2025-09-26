@@ -31,6 +31,13 @@ class OrdersTable
                 TextColumn::make('number')
                     ->label(__('shop.orders.fields.number'))
                     ->searchable(),
+                TextColumn::make('unread_messages_count')
+                    ->label(__('shop.orders.fields.unread_messages'))
+                    ->badge()
+                    ->sortable()
+                    ->color(fn (?int $state) => ($state ?? 0) > 0 ? 'danger' : 'gray')
+                    ->formatStateUsing(fn (?int $state) => (string) ($state ?? 0))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total')
                     ->label(__('shop.orders.fields.total'))
                     ->numeric()
@@ -79,6 +86,8 @@ class OrdersTable
                     ->label(__('shop.orders.actions.messages'))
                     ->icon('heroicon-o-chat-bubble-left-right')
                     ->color('gray')
+                    ->badge(fn (Order $record) => $record->unread_messages_count > 0 ? (string) $record->unread_messages_count : null)
+                    ->badgeColor(fn (Order $record) => $record->unread_messages_count > 0 ? 'danger' : 'gray')
                     ->url(fn (Order $record) => OrderResource::getUrl('messages', ['record' => $record]))
                     ->visible(fn (Order $record) => auth()->user()?->can('view', $record)),
                 Action::make('markPaid')

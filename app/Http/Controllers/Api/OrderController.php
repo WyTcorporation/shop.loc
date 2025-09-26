@@ -36,7 +36,8 @@ class OrderController extends Controller
             'items.product.vendor',
             'shipment',
             'logs.user',
-        ])->where('user_id', $user->id)
+        ])->withUnreadMessageCounts()
+            ->where('user_id', $user->id)
             ->latest('created_at')
             ->get();
 
@@ -251,6 +252,7 @@ class OrderController extends Controller
         });
 
         $order->load('items.product.images', 'items.product.vendor', 'shipment');
+        $order->loadUnreadMessageCounts();
 
         return response()->json($this->transformOrder($order, $currency), 201);
     }
@@ -264,7 +266,8 @@ class OrderController extends Controller
             'items.product.vendor',
             'shipment',
             'logs.user',
-        ])->where('number', $number)->firstOrFail();
+        ])->withUnreadMessageCounts()
+            ->where('number', $number)->firstOrFail();
 
         return response()->json($this->transformOrder($order, $currency));
     }
@@ -295,6 +298,9 @@ class OrderController extends Controller
         });
 
         $payload = $order->toArray();
+
+        $payload['unread_messages_count'] = (int) ($order->getAttribute('unread_messages_count') ?? 0);
+        $payload['unread_responses_count'] = (int) ($order->getAttribute('unread_responses_count') ?? 0);
 
         foreach (['subtotal', 'discount_total', 'total', 'coupon_discount', 'loyalty_points_value'] as $field) {
             if (! array_key_exists($field, $payload)) {
