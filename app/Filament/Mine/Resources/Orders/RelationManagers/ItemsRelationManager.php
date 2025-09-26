@@ -6,13 +6,10 @@ use App\Enums\OrderStatus;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Filament\Mine\Resources\Orders\Pages\EditOrder;
-use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DetachAction;
-use Filament\Actions\DetachBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -94,12 +91,6 @@ class ItemsRelationManager extends RelationManager
                         $livewire->dispatch('order-items-updated')
                             ->to(EditOrder::class);
                     }),
-                AttachAction::make()->after(function (RelationManager $livewire) {
-                    $order = $livewire->getOwnerRecord();
-                    $order->recalculateTotal();
-                    $livewire->dispatch('order-items-updated')
-                        ->to(EditOrder::class);
-                }),
             ])
             ->recordActions([
                 EditAction::make()
@@ -121,7 +112,6 @@ class ItemsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ])
