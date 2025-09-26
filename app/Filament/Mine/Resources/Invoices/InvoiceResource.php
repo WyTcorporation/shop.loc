@@ -56,15 +56,15 @@ class InvoiceResource extends Resource
                     ->label(__('shop.orders.fields.currency'))
                     ->maxLength(3),
                 DatePicker::make('issued_at')
-                    ->label(__('shop.orders.fields.issued_at')),
+                    ->label(__('shop.admin.resources.invoices.fields.issued_at')),
                 DatePicker::make('due_at')
-                    ->label(__('shop.orders.fields.due_at')),
+                    ->label(__('shop.admin.resources.invoices.fields.due_at')),
                 TextInput::make('subtotal')
                     ->label(__('shop.common.items_subtotal'))
                     ->numeric()
                     ->default(0),
                 TextInput::make('tax_total')
-                    ->label(__('shop.orders.fields.tax_total'))
+                    ->label(__('shop.admin.resources.invoices.fields.tax_total'))
                     ->numeric()
                     ->default(0),
                 TextInput::make('total')
@@ -72,7 +72,7 @@ class InvoiceResource extends Resource
                     ->numeric()
                     ->default(0),
                 KeyValue::make('metadata')
-                    ->label(__('shop.orders.fields.metadata'))
+                    ->label(__('shop.admin.resources.invoices.fields.metadata'))
                     ->addButtonLabel(__('shop.common.add'))
                     ->columnSpanFull(),
             ])->columns(2),
@@ -98,7 +98,7 @@ class InvoiceResource extends Resource
                 TextColumn::make('currency')
                     ->label(__('shop.orders.fields.currency')),
                 TextColumn::make('issued_at')
-                    ->label(__('shop.orders.fields.issued_at'))
+                    ->label(__('shop.admin.resources.invoices.fields.issued_at'))
                     ->date()
                     ->sortable(),
                 TextColumn::make('status')
