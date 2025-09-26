@@ -245,6 +245,12 @@ return [
                     'tax_total' => 'Tax total',
                     'metadata' => 'Metadata',
                 ],
+                'statuses' => [
+                    'draft' => 'Draft',
+                    'issued' => 'Issued',
+                    'paid' => 'Paid',
+                    'void' => 'Void',
+                ],
             ],
             'delivery_notes' => [
                 'label' => 'Delivery note',

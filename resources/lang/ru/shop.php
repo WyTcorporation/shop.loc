@@ -245,6 +245,12 @@ return [
                     'tax_total' => 'Налог',
                     'metadata' => 'Метаданные',
                 ],
+                'statuses' => [
+                    'draft' => 'Черновик',
+                    'issued' => 'Выставлен',
+                    'paid' => 'Оплачен',
+                    'void' => 'Аннулирован',
+                ],
             ],
             'delivery_notes' => [
                 'label' => 'Накладная',

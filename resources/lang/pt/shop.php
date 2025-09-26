@@ -245,6 +245,12 @@ return [
                     'tax_total' => 'Impostos',
                     'metadata' => 'Metadados',
                 ],
+                'statuses' => [
+                    'draft' => 'Rascunho',
+                    'issued' => 'Emitida',
+                    'paid' => 'Paga',
+                    'void' => 'Anulada',
+                ],
             ],
             'delivery_notes' => [
                 'label' => 'Nota de entrega',
