@@ -4,6 +4,7 @@ namespace App\Filament\Mine\Resources\Orders\Pages;
 
 use App\Filament\Mine\Resources\Orders\OrderResource;
 use App\Models\Message;
+use App\Services\Orders\OrderMessageService;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -59,10 +60,13 @@ class OrderMessages extends Page implements HasForms
 
         $data = $this->form->getState();
 
-        $this->record->messages()->create([
-            'user_id' => Auth::id(),
-            'body' => $data['body'],
-        ]);
+        $userId = Auth::id();
+
+        if ($userId === null) {
+            abort(401);
+        }
+
+        app(OrderMessageService::class)->create($this->record, $userId, $data['body']);
 
         $this->form->fill(['body' => '']);
         $this->loadMessages();

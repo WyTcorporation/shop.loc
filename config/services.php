@@ -33,6 +33,11 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+        'order_messages' => [
+            'webhook_url' => env('SLACK_ORDER_MESSAGES_WEBHOOK_URL'),
+            'channel' => env('SLACK_ORDER_MESSAGES_CHANNEL'),
+            'thread_ts' => env('SLACK_ORDER_MESSAGES_THREAD_TS'),
+        ],
     ],
     'stripe' => [
         'key'            => env('STRIPE_PUBLISHABLE_KEY'),
