@@ -21,12 +21,23 @@ class SendOrderMessageToSlack
             return;
         }
 
-        $message = $event->message->loadMissing('order.user');
+        $message = $event->message->loadMissing('order.user', 'user');
         $order = $message->order;
 
         if ($order === null) {
             Log::warning('Cannot send Slack notification: message order is missing.', [
                 'message_id' => $message->getKey(),
+            ]);
+
+            return;
+        }
+
+        if ($order->user_id === null || $message->user_id !== $order->user_id) {
+            Log::info('Skipping Slack notification for order message: author is not the order customer.', [
+                'message_id' => $message->getKey(),
+                'order_id' => $order->getKey(),
+                'message_user_id' => $message->user_id,
+                'order_user_id' => $order->user_id,
             ]);
 
             return;
