@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use DomainException;
+use App\Services\Invoices\CreateInvoiceFromOrder;
 
 class OrderStateService
 {
@@ -24,6 +25,8 @@ class OrderStateService
         DB::transaction(function () use ($order) {
             $order->reserveInventory();
             $order->update(['status' => OrderStatus::Paid]);
+
+            app(CreateInvoiceFromOrder::class)->handle($order->fresh());
         });
     }
 

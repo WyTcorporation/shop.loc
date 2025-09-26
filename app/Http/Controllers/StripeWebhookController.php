@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Services\Invoices\CreateInvoiceFromOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Webhook;
@@ -64,6 +65,14 @@ class StripeWebhookController extends Controller
                     }
 
                     $order->save();
+
+                    $status = $order->status instanceof OrderStatus
+                        ? $order->status
+                        : OrderStatus::from((string) $order->status);
+
+                    if ($status === OrderStatus::Paid) {
+                        app(CreateInvoiceFromOrder::class)->handle($order->fresh());
+                    }
                     break;
 
                 default:

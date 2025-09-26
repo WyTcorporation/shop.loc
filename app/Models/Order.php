@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Jobs\SendOrderStatusMail;
+use App\Services\Invoices\CreateInvoiceFromOrder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -275,6 +276,8 @@ class Order extends Model
             }
             $this->reserveInventory();
             $this->update(['status' => OrderStatus::Paid]);
+
+            app(CreateInvoiceFromOrder::class)->handle($this->fresh());
         });
     }
 

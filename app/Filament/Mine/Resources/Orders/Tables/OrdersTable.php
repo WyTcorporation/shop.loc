@@ -93,7 +93,7 @@ class OrdersTable
                 Action::make('markPaid')
                     ->label(__('shop.orders.actions.mark_paid'))
                     ->icon('heroicon-o-banknotes')
-                    ->visible(fn (Order $record) => $record->status === OrderStatus::New->value)
+                    ->visible(fn (Order $record) => ($record->status instanceof OrderStatus ? $record->status->value : (string) $record->status) === OrderStatus::New->value)
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->markPaid();
@@ -102,7 +102,7 @@ class OrdersTable
                 Action::make('markShipped')
                     ->label(__('shop.orders.actions.mark_shipped'))
                     ->icon('heroicon-o-truck')
-                    ->visible(fn (Order $record) => $record->status === OrderStatus::Paid->value)
+                    ->visible(fn (Order $record) => ($record->status instanceof OrderStatus ? $record->status->value : (string) $record->status) === OrderStatus::Paid->value)
                     ->requiresConfirmation()
                     ->form([
                         TextInput::make('tracking_number')
@@ -129,7 +129,7 @@ class OrdersTable
                     ->label(__('shop.orders.actions.cancel'))
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
-                    ->visible(fn (Order $record) => in_array($record->status, [OrderStatus::New->value, OrderStatus::Paid->value], true))
+                    ->visible(fn (Order $record) => in_array($record->status instanceof OrderStatus ? $record->status->value : (string) $record->status, [OrderStatus::New->value, OrderStatus::Paid->value], true))
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->cancel();
