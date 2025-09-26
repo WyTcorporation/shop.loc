@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Order;
+use App\Services\Orders\OrderMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OrderMessageController extends Controller
 {
+    public function __construct(private readonly OrderMessageService $orderMessageService)
+    {
+    }
+
     public function index(Request $request, Order $order): JsonResponse
     {
         $user = $request->user();
@@ -52,10 +57,9 @@ class OrderMessageController extends Controller
             'body' => ['required', 'string', 'max:2000'],
         ]);
 
-        $message = $order->messages()->create([
-            'user_id' => $user->id,
-            'body' => $data['body'],
-        ])->load('user:id,name');
+        $message = $this->orderMessageService
+            ->create($order, $user->id, $data['body'])
+            ->load('user:id,name');
 
         return response()->json([
             'id' => $message->id,
