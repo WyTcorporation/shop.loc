@@ -40,7 +40,14 @@ class AuthController extends Controller
 
         $locale = resolveMailLocale($request);
 
-        $verificationUrl = $this->queueEmailVerification($user, $locale, true);
+        $verificationUrl = URL::temporarySignedRoute(
+            'api.email.verify',
+            now()->addMinutes(config('auth.verification.expire', 60)),
+            [
+                'id' => $user->getKey(),
+                'hash' => sha1($user->getEmailForVerification()),
+            ]
+        );
 
         Mail::to($user)
             ->locale($locale)
