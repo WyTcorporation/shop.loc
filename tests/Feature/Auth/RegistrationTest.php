@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Mail\VerifyEmailMail;
 use App\Mail\WelcomeMail;
 use App\Models\User;
@@ -29,6 +30,7 @@ it('sends verification and welcome mails when registering', function () {
     /** @var User|null $user */
     $user = User::where('email', 'jane@example.com')->first();
     expect($user)->not->toBeNull();
+    expect($user->hasRole(Role::Buyer->value))->toBeTrue();
 
     Mail::assertQueued(VerifyEmailMail::class, function (VerifyEmailMail $mail) use ($user) {
         expect($mail->verificationUrl)->toBeString();
