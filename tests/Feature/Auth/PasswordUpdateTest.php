@@ -23,7 +23,9 @@ it('queues password changed email when password is updated', function () {
     $response->assertOk();
 
     Mail::assertQueued(PasswordChangedMail::class, function (PasswordChangedMail $mail) use ($user) {
-        $mail->assertHasTag('auth-password-changed')->assertHasMetadata('type', 'auth');
+        $mail->assertHasTag('buyer')
+            ->assertHasMetadata('type', 'auth')
+            ->assertHasMetadata('mail_type', 'auth-password-changed');
         expect($mail->locale)->toBe('es');
 
         return $mail->user->is($user);

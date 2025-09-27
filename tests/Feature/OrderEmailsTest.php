@@ -29,7 +29,9 @@ it('sends order placed email', function () {
     SendOrderConfirmation::dispatchSync($order);
 
     Mail::assertSent(OrderPlacedMail::class, function (OrderPlacedMail $mail) use ($order) {
-        $mail->assertHasTag('order-placed')->assertHasMetadata('type', 'order');
+        $mail->assertHasTag('buyer')
+            ->assertHasMetadata('type', 'order')
+            ->assertHasMetadata('mail_type', 'order-placed');
 
         return $mail->order->is($order);
     });
@@ -140,7 +142,9 @@ it('sends paid and shipped emails on status change', function () {
     // mark paid
     $o->update(['status' => OrderStatus::Paid->value]);
     Mail::assertSent(OrderPaidMail::class, function (OrderPaidMail $mail) {
-        $mail->assertHasTag('order-paid')->assertHasMetadata('type', 'order');
+        $mail->assertHasTag('buyer')
+            ->assertHasMetadata('type', 'order')
+            ->assertHasMetadata('mail_type', 'order-paid');
 
         return true;
     });
@@ -148,7 +152,9 @@ it('sends paid and shipped emails on status change', function () {
     // mark shipped
     $o->update(['status' => OrderStatus::Shipped->value]);
     Mail::assertSent(OrderShippedMail::class, function (OrderShippedMail $mail) {
-        $mail->assertHasTag('order-shipped')->assertHasMetadata('type', 'order');
+        $mail->assertHasTag('buyer')
+            ->assertHasMetadata('type', 'order')
+            ->assertHasMetadata('mail_type', 'order-shipped');
 
         return true;
     });

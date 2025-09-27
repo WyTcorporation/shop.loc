@@ -23,7 +23,9 @@ it('queues password changed email when password is reset via the api', function 
     $response->assertOk();
 
     Mail::assertQueued(PasswordChangedMail::class, function (PasswordChangedMail $mail) use ($user) {
-        $mail->assertHasTag('auth-password-changed')->assertHasMetadata('type', 'auth');
+        $mail->assertHasTag('buyer')
+            ->assertHasMetadata('type', 'auth')
+            ->assertHasMetadata('mail_type', 'auth-password-changed');
         expect($mail->locale)->toBe('ru');
 
         return $mail->user->is($user);
@@ -40,7 +42,9 @@ it('queues reset password email with locale from cookie', function () {
     ])->assertOk();
 
     Mail::assertQueued(ResetPasswordMail::class, function (ResetPasswordMail $mail) use ($user) {
-        $mail->assertHasTag('auth-password-reset')->assertHasMetadata('type', 'auth');
+        $mail->assertHasTag('buyer')
+            ->assertHasMetadata('type', 'auth')
+            ->assertHasMetadata('mail_type', 'auth-password-reset');
         expect($mail->locale)->toBe('pt');
 
         return $mail->user->is($user);

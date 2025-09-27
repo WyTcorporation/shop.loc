@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\Mail\UserRoleTag;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -22,11 +23,17 @@ class OrderPlacedMail extends Mailable
         $locale = $this->locale ?: app()->getLocale();
 
         return $this->withLocale($locale, function () use ($locale) {
-            return $this->subject(__('shop.orders.placed.subject_line', ['number' => $this->order->number], $locale))
-                ->tag('order-placed')
-                ->metadata(['type' => 'order'])
+            $order = $this->order->loadMissing(['items.product', 'user']);
+            $tag = UserRoleTag::for($order->user);
+
+            return $this->subject(__('shop.orders.placed.subject_line', ['number' => $order->number], $locale))
+                ->tag($tag)
+                ->metadata([
+                    'type' => 'order',
+                    'mail_type' => 'order-placed',
+                ])
                 ->view('emails.orders.placed', [
-                    'order' => $this->order->loadMissing(['items.product']),
+                    'order' => $order,
                 ]);
         });
     }

@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Support\Mail\UserRoleTag;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -29,11 +30,17 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
         return $this->withLocale($locale, function () use ($locale) {
             $appName = config('app.name', 'Shop');
 
+            $user = $this->user->loadMissing('roles');
+            $tag = UserRoleTag::primaryRoleSlug($user);
+
             return $this->subject(__('shop.auth.reset.subject', ['app' => $appName], $locale))
-                ->tag('auth-password-reset')
-                ->metadata(['type' => 'auth'])
+                ->tag($tag)
+                ->metadata([
+                    'type' => 'auth',
+                    'mail_type' => 'auth-password-reset',
+                ])
                 ->view('emails.auth.reset-password', [
-                    'user' => $this->user,
+                    'user' => $user,
                     'resetUrl' => $this->resetUrl,
                     'displayUrl' => $this->displayUrl,
                 ]);
