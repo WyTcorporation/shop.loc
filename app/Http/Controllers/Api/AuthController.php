@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Mail\PasswordChangedMail;
 use App\Mail\VerifyEmailMail;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\PermissionRegistrar;
+use Spatie\Permission\Models\Role as SpatieRole;
 
 class AuthController extends Controller
 {
@@ -36,18 +39,16 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
+        SpatieRole::findOrCreate(Role::Buyer->value, 'web');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $user->assignRole(Role::Buyer->value);
+
         $user->loadMissing('twoFactorSecret');
 
         $locale = resolveMailLocale($request);
 
-        $verificationUrl = URL::temporarySignedRoute(
-            'api.email.verify',
-            now()->addMinutes(config('auth.verification.expire', 60)),
-            [
-                'id' => $user->getKey(),
-                'hash' => sha1($user->getEmailForVerification()),
-            ]
-        );
+        $verificationUrl = $this->queueEmailVerification($user, $locale, true);
 
         Mail::to($user)
             ->locale($locale)

@@ -149,6 +149,7 @@ class FullDemoSeeder extends Seeder
                     PermissionEnum::ManageOrders->value,
                     PermissionEnum::ViewUsers->value,
                 ],
+                RoleEnum::Buyer => [],
             };
 
             $role->syncPermissions($permissionNames);

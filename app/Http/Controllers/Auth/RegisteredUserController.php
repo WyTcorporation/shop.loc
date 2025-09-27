@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\PermissionRegistrar;
+use Spatie\Permission\Models\Role as SpatieRole;
 
 class RegisteredUserController extends Controller
 {
@@ -41,6 +44,11 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        SpatieRole::findOrCreate(Role::Buyer->value, 'web');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $user->assignRole(Role::Buyer->value);
 
         event(new Registered($user));
 

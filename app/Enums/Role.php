@@ -10,4 +10,5 @@ enum Role: string
     case OrderManager = 'order manager';
     case MarketingManager = 'marketing manager';
     case Support = 'support';
+    case Buyer = 'buyer';
 }
