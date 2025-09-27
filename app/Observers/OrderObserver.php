@@ -100,7 +100,7 @@ class OrderObserver
             ?? app()->getLocale()
             ?? (string) config('app.locale');
 
-        SendOrderStatusMail::dispatch($order->getKey(), $to, $locale)->afterCommit();
+//        SendOrderStatusMail::dispatch($order->getKey(), $to, $locale)->afterCommit();
 
         if (in_array($toEnum, [OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Cancelled], true)) {
             $fromLabel = $fromEnum ? __('shop.orders.statuses.' . $fromEnum->value) : null;
